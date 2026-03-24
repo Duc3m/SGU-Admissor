@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="com.sgu.admissor.entity.Nganh" table="nganh">
+        <id name="id" column="id">
+            <generator class="identity"/>
+        </id>
+
+        <property name="maNganh" column="manganh" length="45" not-null="true"/>
+        <property name="tenNganh" column="tennganh" length="100" not-null="true"/>
+        <property name="toHopGoc" column="tohopgoc" length="3"/>
+        <property name="chiTieu" column="chitieu" not-null="true"/>
+        <property name="diemSan" column="diemsan"/>
+        <property name="diemTrungTuyen" column="diemtrungtuyen"/>
+        
+        <property name="tuyenThang" column="tuyenthang" type="boolean"/>
+        <property name="dgnl" column="dgnl" type="boolean"/>
+        <property name="thpt" column="thpt" type="boolean"/>
+        <property name="vsat" column="vsat" type="boolean"/>
+        
+        <property name="slXtt" column="sl_xtt"/>
+        <property name="slDgnl" column="sl_dgnl"/>
+        <property name="slVsat" column="sl_vsat"/>
+        <property name="slThpt" column="sl_thpt"/>
+    </class>
+</hibernate-mapping>

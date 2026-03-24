@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="com.sgu.admissor.entity.ThiSinh2025" table="thisinh2025">
+        <id name="id" column="id"><generator class="identity"/></id>
+        <property name="cccd" column="cccd" unique="true" length="20"/>
+        <property name="soBaoDanh" column="sobaodanh" length="45"/>
+        <property name="hoTen" column="hoten" length="100"/>
+        <property name="ngaySinh" column="ngay_sinh" type="java.time.LocalDate"/>
+        <property name="dienThoai" column="dien_thoai" length="20"/>
+        <property name="password" column="password" length="100"/>
+        <property name="gioiTinh" column="gioi_tinh" length="10"/>
+        <property name="email" column="email" length="100"/>
+        <property name="noiSinh" column="noi_sinh" length="45"/>
+        <property name="updatedAt" column="updated_at" type="java.time.LocalDate"/>
+        <property name="doiTuong" column="doi_tuong" length="45"/>
+        <property name="khuVuc" column="khu_vuc" length="45"/>
+    </class>
+</hibernate-mapping>

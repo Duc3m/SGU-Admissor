@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="com.sgu.admissor.entity.DiemThi" table="diemthi">
+        <id name="id" column="id"><generator class="identity"/></id>
+        <property name="cccd" column="cccd" length="20" unique="true" not-null="true"/>
+        <property name="soBaoDanh" column="sobaodanh" length="45"/>
+        <property name="phuongThuc" column="phuongthuc" length="10"/>
+        <property name="to" column="TO"/> <property name="li" column="LI"/>
+        <property name="ho" column="HO"/> <property name="si" column="SI"/>
+        <property name="su" column="SU"/> <property name="di" column="DI"/>
+        <property name="va" column="VA"/> <property name="n1Thi" column="N1_THI"/>
+        <property name="n1Cc" column="N1_CC"/> <property name="cncn" column="CNCN"/>
+        <property name="cnnn" column="CNNN"/> <property name="ti" column="TI"/>
+        <property name="ktpl" column="KTPL"/> <property name="nl1" column="NL1"/>
+        <property name="nk1" column="NK1"/> <property name="nk2" column="NK2"/>
+    </class>
+</hibernate-mapping>

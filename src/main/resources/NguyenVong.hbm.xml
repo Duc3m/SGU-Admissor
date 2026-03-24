@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="com.sgu.admissor.entity.NguyenVong" table="nguyenvong">
+        <id name="id" column="id"><generator class="identity"/></id>
+        <property name="cccd" column="cccd" length="45" not-null="true"/>
+        <property name="maNganh" column="manganh" length="45" not-null="true"/>
+        <property name="thuTu" column="thutu" not-null="true"/>
+        <property name="diemThxt" column="diem_thxt"/>
+        <property name="diemUtqd" column="diem_utqd"/>
+        <property name="diemCong" column="diem_cong"/>
+        <property name="diemXetTuyen" column="diem_xettuyen"/>
+        <property name="ketQua" column="ketqua" length="45"/>
+        <property name="nvKey" column="nv_key" length="45" unique="true"/>
+        <property name="phuongThuc" column="phuongthuc" length="45"/>
+        <property name="toHopMon" column="tohopmon" length="45"/>
+    </class>
+</hibernate-mapping>
