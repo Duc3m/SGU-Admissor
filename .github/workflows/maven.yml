@@ -36,7 +36,7 @@ jobs:
 
     - name: Initialize Database
       run: |
-        mysql -h 127.0.0.1 -u root -p"${{ secrets.DB_PASSWORD }}" sguadmissor < database/script.sql
+        mysql -h 127.0.0.1 -u root -p"${{ secrets.DB_PASSWORD }}" sguadmissor < database/sguadmissor_empty.sql
 
     - name: Build with Maven
 
