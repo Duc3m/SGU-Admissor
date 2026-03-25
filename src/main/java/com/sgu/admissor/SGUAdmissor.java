@@ -5,8 +5,10 @@
 package com.sgu.admissor;
 
 import com.sgu.admissor.bus.RoleBUS;
+import com.sgu.admissor.bus.SysFunctionBUS;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.Role;
+import com.sgu.admissor.entity.SysFunction;
 
 /**
  *
@@ -19,7 +21,12 @@ public class SGUAdmissor {
         Role newRole = new Role();
         newRole.setName("admin");
         BUSResult result = roleBUS.addRole(newRole);
-        System.out.println(result.getMessage());
+        
+        SysFunctionBUS sysFunctionBUS = new SysFunctionBUS();
+        SysFunction newFunction = new SysFunction();
+        newFunction.setName("Quat roi thang dia");
+        SysFunction result2 = sysFunctionBUS.getSysFunctionByID(1);
+        System.out.println(result.getMessage() + "\n" + result2);
     }
     
 }
