@@ -25,7 +25,7 @@ public class SysFunctionBUS {
         this.sysFunctionDAO = sysFunctionDAO;
     }
     
-    public List<SysFunction> getALlSysFunction(){
+    public List<SysFunction> getAllSysFunction(){
         return sysFunctionDAO.findAll();
     }
     
@@ -56,7 +56,7 @@ public class SysFunctionBUS {
         }
     }
     
-    public BUSResult deleteSysFuntion(SysFunction sysFunction){
+    public BUSResult deleteSysFunction(SysFunction sysFunction){
         if ( sysFunction == null || sysFunction.getId() == null) {
             return BUSResult.error("Không tìm thấy Function!");
         }
