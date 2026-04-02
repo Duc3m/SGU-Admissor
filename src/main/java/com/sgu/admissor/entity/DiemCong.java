@@ -4,106 +4,69 @@
  */
 package com.sgu.admissor.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author Admin
  */
+
+@NoArgsConstructor
+@Data
+@Entity
+@Table(name = "diemcong")
 public class DiemCong {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
-    private String cccd;
-    private String maNganh;
-    private String maToHop;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "cccd",
+            referencedColumnName = "cccd"
+    )
+    private ThiSinh2025 thiSinh;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "manganh",
+            referencedColumnName = "manganh"
+    )
+    private Nganh nganh;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "matohop",
+            referencedColumnName = "matohop"
+    )
+    private ToHop toHop;
+    
+    @Column(name = "phuongthuc", length = 45)
     private String phuongThuc;
+    
+    @Column(name = "diemCC", precision = 6, scale = 2)
     private BigDecimal diemCc;
+    @Column(name = "diemUtxt", precision = 6, scale = 2)
     private BigDecimal diemUtxt;
+    @Column(name = "diemTong", precision = 6, scale = 2)
     private BigDecimal diemTong;
+    
+    @Column(name = "ghichu")
     private String ghiChu;
+    
+    @Column(name = "dc_key")
     private String dcKey;
 
-    public DiemCong() {
-    
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getCccd() {
-        return cccd;
-    }
-
-    public void setCccd(String cccd) {
-        this.cccd = cccd;
-    }
-
-    public String getMaNganh() {
-        return maNganh;
-    }
-
-    public void setMaNganh(String maNganh) {
-        this.maNganh = maNganh;
-    }
-
-    public String getMaToHop() {
-        return maToHop;
-    }
-
-    public void setMaToHop(String maToHop) {
-        this.maToHop = maToHop;
-    }
-
-    public String getPhuongThuc() {
-        return phuongThuc;
-    }
-
-    public void setPhuongThuc(String phuongThuc) {
-        this.phuongThuc = phuongThuc;
-    }
-
-    public BigDecimal getDiemCc() {
-        return diemCc;
-    }
-
-    public void setDiemCc(BigDecimal diemCc) {
-        this.diemCc = diemCc;
-    }
-
-    public BigDecimal getDiemUtxt() {
-        return diemUtxt;
-    }
-
-    public void setDiemUtxt(BigDecimal diemUtxt) {
-        this.diemUtxt = diemUtxt;
-    }
-
-    public BigDecimal getDiemTong() {
-        return diemTong;
-    }
-
-    public void setDiemTong(BigDecimal diemTong) {
-        this.diemTong = diemTong;
-    }
-
-    public String getGhiChu() {
-        return ghiChu;
-    }
-
-    public void setGhiChu(String ghiChu) {
-        this.ghiChu = ghiChu;
-    }
-
-    public String getDcKey() {
-        return dcKey;
-    }
-
-    public void setDcKey(String dcKey) {
-        this.dcKey = dcKey;
-    }
-    
 }

@@ -4,42 +4,32 @@
  */
 package com.sgu.admissor.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author Admin
  */
-public class RoleDetailId implements Serializable{
-    private Integer roleId;
-    private Integer functionId;
 
-    public RoleDetailId() {}
+@NoArgsConstructor
+@Data
+@Embeddable
+public class RoleDetailId implements Serializable{
+    
+    @Column(name = "role_id")
+    private Integer roleId;
+    
+    @Column(name = "function_id")
+    private Integer functionId;
 
     public RoleDetailId(Integer roleId, Integer functionId) {
         this.roleId = roleId;
         this.functionId = functionId;
     }
 
-    public Integer getRoleId() { return roleId; }
-    public void setRoleId(Integer roleId) { this.roleId = roleId; }
-
-    public Integer getFunctionId() { return functionId; }
-    public void setFunctionId(Integer functionId) { this.functionId = functionId; }
-
-    // Bắt buộc phải có equals và hashCode cho Composite Key
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RoleDetailId that = (RoleDetailId) o;
-        return Objects.equals(roleId, that.roleId) &&
-               Objects.equals(functionId, that.functionId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(roleId, functionId);
-    }
 }

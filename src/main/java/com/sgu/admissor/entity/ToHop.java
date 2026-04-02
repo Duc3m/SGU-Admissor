@@ -10,11 +10,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  *
@@ -24,15 +21,25 @@ import lombok.Setter;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "role")
-public class Role {
+@Table(name = "tohop")
+public class ToHop {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
     
-    @Column(name = "name")
-    private String name;
+    @Column(name = "matohop", length = 45)
+    private String maToHop;
+    
+    @Column(name = "mon1", length = 10)
+    private String mon1;
+    @Column(name = "mon2", length = 10)
+    private String mon2;
+    @Column(name = "mon3", length = 10)
+    private String mon3;
+    
+    @Column(name = "tentohop", length = 100)
+    private String tenToHop;
 
 }

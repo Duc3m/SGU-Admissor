@@ -4,6 +4,7 @@
  */
 package com.sgu.admissor.bus;
 
+import com.google.inject.Inject;
 import com.sgu.admissor.dao.RoleDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.Role;
@@ -13,11 +14,14 @@ import java.util.List;
  *
  * @author Admin
  */
+
 public class RoleBUS {
+    
     private final RoleDAO roleDAO;
 
-    public RoleBUS() {
-        this.roleDAO = new RoleDAO();
+    @Inject
+    public RoleBUS(RoleDAO roleDAO) {
+        this.roleDAO = roleDAO;
     }
 
     public List<Role> getAllRoles() {

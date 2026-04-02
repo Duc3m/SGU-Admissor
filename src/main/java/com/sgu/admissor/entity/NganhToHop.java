@@ -4,200 +4,86 @@
  */
 package com.sgu.admissor.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author Admin
  */
+
+@NoArgsConstructor
+@Data
+@Entity
+@Table(name = "nganh_tohop")
 public class NganhToHop {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
-    private String maNganh, maToHop;
-    private String mon1; private Integer hsMon1;
-    private String mon2; private Integer hsMon2;
-    private String mon3; private Integer hsMon3;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "manganh",
+            referencedColumnName = "manganh"
+    )
+    private Nganh nganh;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumns({
+            @JoinColumn(name = "matohop", referencedColumnName = "matohop"),
+            @JoinColumn(name = "mon1", referencedColumnName = "mon1"),
+            @JoinColumn(name = "mon2", referencedColumnName = "mon2"),
+            @JoinColumn(name = "mon3", referencedColumnName = "mon3")
+    })
+    private ToHop toHop;
+    
+    @Column(name = "hs_mon1")
+    private Integer hsMon1;
+    @Column(name = "hs_mon2")
+    private Integer hsMon2;
+    @Column(name = "hs_mon3")
+    private Integer hsMon3;
+    
+    @Column(name = "tb_keys", length = 45)
     private String tbKey;
-    private Boolean n1, to, li, ho, si, va, su, di, ti, khac, ktpl;
+    
+    @Column(name = "N1")
+    private Boolean n1;
+    @Column(name = "TO")
+    private Boolean to;
+    @Column(name = "LI")
+    private Boolean li;
+    @Column(name = "HO")
+    private Boolean ho;
+    @Column(name = "SI")
+    private Boolean si;
+    @Column(name = "VA")
+    private Boolean va;
+    @Column(name = "SU")
+    private Boolean su;
+    @Column(name = "DI")
+    private Boolean di;
+    @Column(name = "TI")
+    private Boolean ti;
+    @Column(name = "KHAC")
+    private Boolean khac;
+    @Column(name = "KTPL")
+    private Boolean ktpl;
+    
+    @Column(name = "dolech", precision = 6, scale = 2)
     private BigDecimal doLech;
 
-    public NganhToHop() {
-    
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getMaNganh() {
-        return maNganh;
-    }
-
-    public void setMaNganh(String maNganh) {
-        this.maNganh = maNganh;
-    }
-
-    public String getMaToHop() {
-        return maToHop;
-    }
-
-    public void setMaToHop(String maToHop) {
-        this.maToHop = maToHop;
-    }
-
-    public String getMon1() {
-        return mon1;
-    }
-
-    public void setMon1(String mon1) {
-        this.mon1 = mon1;
-    }
-
-    public Integer getHsMon1() {
-        return hsMon1;
-    }
-
-    public void setHsMon1(Integer hsMon1) {
-        this.hsMon1 = hsMon1;
-    }
-
-    public String getMon2() {
-        return mon2;
-    }
-
-    public void setMon2(String mon2) {
-        this.mon2 = mon2;
-    }
-
-    public Integer getHsMon2() {
-        return hsMon2;
-    }
-
-    public void setHsMon2(Integer hsMon2) {
-        this.hsMon2 = hsMon2;
-    }
-
-    public String getMon3() {
-        return mon3;
-    }
-
-    public void setMon3(String mon3) {
-        this.mon3 = mon3;
-    }
-
-    public Integer getHsMon3() {
-        return hsMon3;
-    }
-
-    public void setHsMon3(Integer hsMon3) {
-        this.hsMon3 = hsMon3;
-    }
-
-    public String getTbKey() {
-        return tbKey;
-    }
-
-    public void setTbKey(String tbKey) {
-        this.tbKey = tbKey;
-    }
-
-    public Boolean getN1() {
-        return n1;
-    }
-
-    public void setN1(Boolean n1) {
-        this.n1 = n1;
-    }
-
-    public Boolean getTo() {
-        return to;
-    }
-
-    public void setTo(Boolean to) {
-        this.to = to;
-    }
-
-    public Boolean getLi() {
-        return li;
-    }
-
-    public void setLi(Boolean li) {
-        this.li = li;
-    }
-
-    public Boolean getHo() {
-        return ho;
-    }
-
-    public void setHo(Boolean ho) {
-        this.ho = ho;
-    }
-
-    public Boolean getSi() {
-        return si;
-    }
-
-    public void setSi(Boolean si) {
-        this.si = si;
-    }
-
-    public Boolean getVa() {
-        return va;
-    }
-
-    public void setVa(Boolean va) {
-        this.va = va;
-    }
-
-    public Boolean getSu() {
-        return su;
-    }
-
-    public void setSu(Boolean su) {
-        this.su = su;
-    }
-
-    public Boolean getDi() {
-        return di;
-    }
-
-    public void setDi(Boolean di) {
-        this.di = di;
-    }
-
-    public Boolean getTi() {
-        return ti;
-    }
-
-    public void setTi(Boolean ti) {
-        this.ti = ti;
-    }
-
-    public Boolean getKhac() {
-        return khac;
-    }
-
-    public void setKhac(Boolean khac) {
-        this.khac = khac;
-    }
-
-    public Boolean getKtpl() {
-        return ktpl;
-    }
-
-    public void setKtpl(Boolean ktpl) {
-        this.ktpl = ktpl;
-    }
-
-    public BigDecimal getDoLech() {
-        return doLech;
-    }
-
-    public void setDoLech(BigDecimal doLech) {
-        this.doLech = doLech;
-    }
-    
 }
