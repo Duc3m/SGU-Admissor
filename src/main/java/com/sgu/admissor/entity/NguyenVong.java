@@ -4,124 +4,74 @@
  */
 package com.sgu.admissor.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author Admin
  */
+
+@NoArgsConstructor
+@Data
+@Entity
+@Table(name = "nguyenvong")
 public class NguyenVong {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
-    private String cccd;
-    private String maNganh;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "cccd",
+            referencedColumnName = "cccd"
+    )
+    private ThiSinh2025 thiSinh;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "manganh",
+            referencedColumnName = "manganh"
+    )
+    private Nganh nganh;
+    
+    @Column(name = "thutu")
     private Integer thuTu;
+    
+    @Column(name = "diem_thxt", precision = 10, scale = 5)
     private BigDecimal diemThxt;
+    
+    @Column(name = "diem_utqd", precision = 10, scale = 5)
     private BigDecimal diemUtqd;
+    
+    @Column(name = "diem_cong", precision = 6, scale = 2)
     private BigDecimal diemCong;
+    
+    @Column(name = "diem_xettuyen", precision = 10, scale = 5)
     private BigDecimal diemXetTuyen;
+    
+    @Column(name = "ketqua", length = 45)
     private String ketQua;
+    
+    @Column(name = "nv_key", length = 45)
     private String nvKey;
+    
+    @Column(name = "phuongthuc", length = 45)
     private String phuongThuc;
+    
+    @Column(name = "tohopmon", length = 45)
     private String toHopMon;
 
-    public NguyenVong() {
-    
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getCccd() {
-        return cccd;
-    }
-
-    public void setCccd(String cccd) {
-        this.cccd = cccd;
-    }
-
-    public String getMaNganh() {
-        return maNganh;
-    }
-
-    public void setMaNganh(String maNganh) {
-        this.maNganh = maNganh;
-    }
-
-    public Integer getThuTu() {
-        return thuTu;
-    }
-
-    public void setThuTu(Integer thuTu) {
-        this.thuTu = thuTu;
-    }
-
-    public BigDecimal getDiemThxt() {
-        return diemThxt;
-    }
-
-    public void setDiemThxt(BigDecimal diemThxt) {
-        this.diemThxt = diemThxt;
-    }
-
-    public BigDecimal getDiemUtqd() {
-        return diemUtqd;
-    }
-
-    public void setDiemUtqd(BigDecimal diemUtqd) {
-        this.diemUtqd = diemUtqd;
-    }
-
-    public BigDecimal getDiemCong() {
-        return diemCong;
-    }
-
-    public void setDiemCong(BigDecimal diemCong) {
-        this.diemCong = diemCong;
-    }
-
-    public BigDecimal getDiemXetTuyen() {
-        return diemXetTuyen;
-    }
-
-    public void setDiemXetTuyen(BigDecimal diemXetTuyen) {
-        this.diemXetTuyen = diemXetTuyen;
-    }
-
-    public String getKetQua() {
-        return ketQua;
-    }
-
-    public void setKetQua(String ketQua) {
-        this.ketQua = ketQua;
-    }
-
-    public String getNvKey() {
-        return nvKey;
-    }
-
-    public void setNvKey(String nvKey) {
-        this.nvKey = nvKey;
-    }
-
-    public String getPhuongThuc() {
-        return phuongThuc;
-    }
-
-    public void setPhuongThuc(String phuongThuc) {
-        this.phuongThuc = phuongThuc;
-    }
-
-    public String getToHopMon() {
-        return toHopMon;
-    }
-
-    public void setToHopMon(String toHopMon) {
-        this.toHopMon = toHopMon;
-    }
-    
 }

@@ -4,50 +4,48 @@
  */
 package com.sgu.admissor.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  *
  * @author Admin
  */
+
+@NoArgsConstructor
+@Data
+@Entity
+@Table(name = "user")
 public class User {
-    private int id;
-    private String username;
-    private String password;
-    private int roleId;
-
-    public User() {
-
-    }
     
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public int getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(int roleId) {
-        this.roleId = roleId;
-    }
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private int id;
+    
+    @Column(name = "username", length = 45)
+    private String username;
+    
+    @Column(name = "password", length = 255)
+    private String password;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "role_id",
+            referencedColumnName = "id"
+    )
+    private Role role;
+    
+    @Column(name = "is_active")
+    private Boolean isActive;
     
 }

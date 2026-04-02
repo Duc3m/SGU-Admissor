@@ -4,6 +4,7 @@
  */
 package com.sgu.admissor.bus;
 
+import com.google.inject.Inject;
 import com.sgu.admissor.dao.UserDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.User;
@@ -16,8 +17,9 @@ import java.util.List;
 public class UserBUS {
     private final UserDAO userDAO;
     
-    public UserBUS() {
-        this.userDAO = new UserDAO();
+    @Inject
+    public UserBUS(UserDAO userDAO) {
+        this.userDAO = userDAO;
     }
     
     public List<User> getAllUser(){
@@ -74,7 +76,7 @@ public class UserBUS {
             return BUSResult.error("Không tìm thấy user này trong hệ thống!");
         }
         
-        existingUser.setRoleId(user.getRoleId());
+        existingUser.setRole(user.getRole());
         
         boolean isUpdated = userDAO.update(existingUser);
         if(isUpdated){

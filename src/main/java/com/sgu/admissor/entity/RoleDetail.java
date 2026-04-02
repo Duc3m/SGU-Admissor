@@ -4,19 +4,28 @@
  */
 package com.sgu.admissor.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  *
  * @author Admin
  */
+
+@NoArgsConstructor
+@Data
+@Entity
+@Table(name = "role_detail")
 public class RoleDetail {
+    
+    @EmbeddedId
     private RoleDetailId id;
+    
+    @Column(name = "action", length = 20)
     private String action;
 
-    public RoleDetail() {}
-
-    public RoleDetailId getId() { return id; }
-    public void setId(RoleDetailId id) { this.id = id; }
-
-    public String getAction() { return action; }
-    public void setAction(String action) { this.action = action; }
 }

@@ -187,6 +187,20 @@ CREATE TABLE IF NOT EXISTS `role_detail` (
 
 -- Data exporting was unselected.
 
+-- Dumping structure for table sguadmissor.tohop
+CREATE TABLE IF NOT EXISTS `tohop` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `matohop` varchar(45) NOT NULL,
+  `mon1` varchar(10) NOT NULL,
+  `mon2` varchar(10) NOT NULL,
+  `mon3` varchar(10) NOT NULL,
+  `tentohop` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `matohop_UNIQUE` (`matohop`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Data exporting was unselected.
+
 -- Dumping structure for table sguadmissor.thisinh2025
 CREATE TABLE IF NOT EXISTS `thisinh2025` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -208,26 +222,13 @@ CREATE TABLE IF NOT EXISTS `thisinh2025` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table sguadmissor.tohop_monthi
-CREATE TABLE IF NOT EXISTS `tohop_monthi` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `matohop` varchar(45) NOT NULL,
-  `mon1` varchar(10) NOT NULL,
-  `mon2` varchar(10) NOT NULL,
-  `mon3` varchar(10) NOT NULL,
-  `tentohop` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `matohop_UNIQUE` (`matohop`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Data exporting was unselected.
-
 -- Dumping structure for table sguadmissor.user
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(45) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
   `role_id` int DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`),
   KEY `FK_user_role` (`role_id`),
   CONSTRAINT `FK_user_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`)

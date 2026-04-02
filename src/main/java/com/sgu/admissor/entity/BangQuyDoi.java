@@ -4,103 +4,61 @@
  */
 package com.sgu.admissor.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author Admin
  */
+
+@NoArgsConstructor
+@Data
+@Entity
+@Table(name = "bangquydoi")
 public class BangQuyDoi {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
+    
+    @Column(name = "phuongthuc", length = 45)
     private String phuongThuc;
-    private String toHop;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "tohop",
+            referencedColumnName = "matohop"
+    )
+    private ToHop toHop;
+    
+    @Column(name = "mon", length = 45)
     private String mon;
-    private BigDecimal diemA, diemB, diemC, diemD;
+    
+    @Column(name = "diema", precision = 6, scale = 2)
+    private BigDecimal diemA;
+    @Column(name = "diemb", precision = 6, scale = 2)
+    private BigDecimal diemB;
+    @Column(name = "diemc", precision = 6, scale = 2)
+    private BigDecimal diemC;
+    @Column(name = "diemd", precision = 6, scale = 2)
+    private BigDecimal diemD;
+    
+    @Column(name = "maquydoi", length = 45)
     private String maQuyDoi;
+    
+    @Column(name = "phanvi", length = 45)
     private String phanVi;
 
-    public BangQuyDoi() {
-    
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getPhuongThuc() {
-        return phuongThuc;
-    }
-
-    public void setPhuongThuc(String phuongThuc) {
-        this.phuongThuc = phuongThuc;
-    }
-
-    public String getToHop() {
-        return toHop;
-    }
-
-    public void setToHop(String toHop) {
-        this.toHop = toHop;
-    }
-
-    public String getMon() {
-        return mon;
-    }
-
-    public void setMon(String mon) {
-        this.mon = mon;
-    }
-
-    public BigDecimal getDiemA() {
-        return diemA;
-    }
-
-    public void setDiemA(BigDecimal diemA) {
-        this.diemA = diemA;
-    }
-
-    public BigDecimal getDiemB() {
-        return diemB;
-    }
-
-    public void setDiemB(BigDecimal diemB) {
-        this.diemB = diemB;
-    }
-
-    public BigDecimal getDiemC() {
-        return diemC;
-    }
-
-    public void setDiemC(BigDecimal diemC) {
-        this.diemC = diemC;
-    }
-
-    public BigDecimal getDiemD() {
-        return diemD;
-    }
-
-    public void setDiemD(BigDecimal diemD) {
-        this.diemD = diemD;
-    }
-
-    public String getMaQuyDoi() {
-        return maQuyDoi;
-    }
-
-    public void setMaQuyDoi(String maQuyDoi) {
-        this.maQuyDoi = maQuyDoi;
-    }
-
-    public String getPhanVi() {
-        return phanVi;
-    }
-
-    public void setPhanVi(String phanVi) {
-        this.phanVi = phanVi;
-    }
-    
 }

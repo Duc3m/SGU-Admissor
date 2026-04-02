@@ -6,6 +6,7 @@ package com.sgu.admissor.bus;
 
 //import com.sgu.admissor.dao.SysFuntionDAO;
 
+import com.google.inject.Inject;
 import com.sgu.admissor.dao.SysFunctionDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.SysFunction;
@@ -19,8 +20,9 @@ import java.util.List;
 public class SysFunctionBUS {
     private final SysFunctionDAO sysFunctionDAO;
     
-    public SysFunctionBUS(){
-        this.sysFunctionDAO = new SysFunctionDAO();
+    @Inject
+    public SysFunctionBUS(SysFunctionDAO sysFunctionDAO){
+        this.sysFunctionDAO = sysFunctionDAO;
     }
     
     public List<SysFunction> getALlSysFunction(){
