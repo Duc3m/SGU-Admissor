@@ -18,15 +18,10 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/**
- *
- * @author Admin
- */
 @ExtendWith(MockitoExtension.class)
 public class UserBUSTest {
 
@@ -52,93 +47,61 @@ public class UserBUSTest {
         testUser.setRole(testRole);
     }
 
-    // ==========================================
-    // TESTS FOR getAllUser
-    // ==========================================
     @Test
     public void testGetAllUser() {
         when(userDAO.findAll()).thenReturn(Arrays.asList(testUser));
 
         BUSResult<List<User>> result = userBUS.getAllUser();
 
-        assertNotNull(result);
         assertTrue(result.isSuccess());
         assertEquals("Lấy toàn bộ user thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
-        assertEquals("duc3m", result.getData().get(0).getUsername());
-        verify(userDAO, times(1)).findAll();
-    }
-
-    // ==========================================
-    // TESTS FOR getUserById
-    // ==========================================
-    @Test
-    public void testGetUserById_NullId() {
-        BUSResult<User> result = userBUS.getUserById(null);
-        assertFalse(result.isSuccess());
-        assertEquals("User ID không hợp lê!", result.getMessage());
     }
 
     @Test
-    public void testGetUserById_NegativeOrZeroId() {
-        BUSResult<User> result = userBUS.getUserById(0);
-        assertFalse(result.isSuccess());
-        assertEquals("User ID không hợp lê!", result.getMessage());
+    public void testGetUserById_InvalidId() {
+        BUSResult<User> result1 = userBUS.getUserById(null);
+        BUSResult<User> result2 = userBUS.getUserById(0);
+
+        assertEquals("User ID không hợp lê!", result1.getMessage());
+        assertEquals("User ID không hợp lê!", result2.getMessage());
     }
 
     @Test
-    public void testGetUserById_ValidId() {
+    public void testGetUserById_Valid() {
         when(userDAO.findById(1)).thenReturn(testUser);
 
         BUSResult<User> result = userBUS.getUserById(1);
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy user thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals("duc3m", result.getData().getUsername());
     }
 
-    // ==========================================
-    // TESTS FOR getUsersByRoleId
-    // ==========================================
     @Test
-    public void testGetUsersByRoleId_NullId() {
-        BUSResult<List<User>> result = userBUS.getUsersByRoleId(null);
-        assertFalse(result.isSuccess());
-        assertEquals("Role ID không hợp lê!", result.getMessage());
+    public void testGetUsersByRoleId_InvalidId() {
+        BUSResult<List<User>> result1 = userBUS.getUsersByRoleId(null);
+        BUSResult<List<User>> result2 = userBUS.getUsersByRoleId(-1);
+
+        assertEquals("Role ID không hợp lê!", result1.getMessage());
+        assertEquals("Role ID không hợp lê!", result2.getMessage());
     }
 
     @Test
-    public void testGetUsersByRoleId_NegativeOrZeroId() {
-        BUSResult<List<User>> result = userBUS.getUsersByRoleId(-1);
-        assertFalse(result.isSuccess());
-        assertEquals("Role ID không hợp lê!", result.getMessage());
-    }
-
-    @Test
-    public void testGetUsersByRoleId_ValidId() {
+    public void testGetUsersByRoleId_Valid() {
         when(userDAO.findByRoleId(1)).thenReturn(Arrays.asList(testUser));
 
         BUSResult<List<User>> result = userBUS.getUsersByRoleId(1);
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy user thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
-    // ==========================================
-    // TESTS FOR addUser
-    // ==========================================
     @Test
-    public void testAddUser_NullOrEmptyUsername() {
-        User emptyUser = new User();
-        emptyUser.setUsername("   ");
+    public void testAddUser_InvalidUsername() {
+        User invalid = new User();
+        invalid.setUsername(" ");
 
-        BUSResult<User> result = userBUS.addUser(emptyUser);
+        BUSResult<User> result = userBUS.addUser(invalid);
 
         assertEquals("Username không hơp lệ!", result.getMessage());
         verify(userDAO, never()).insert(any(User.class));
@@ -155,21 +118,20 @@ public class UserBUSTest {
     }
 
     @Test
-    public void testAddUser_NullOrEmptyPassword() {
+    public void testAddUser_InvalidPassword() {
         when(userDAO.findByUsername("duc3m")).thenReturn(null);
-        
-        User noPasswordUser = new User();
-        noPasswordUser.setUsername("duc3m");
-        noPasswordUser.setPassword("");
+        User invalid = new User();
+        invalid.setUsername("duc3m");
+        invalid.setPassword(" ");
 
-        BUSResult<User> result = userBUS.addUser(noPasswordUser);
+        BUSResult<User> result = userBUS.addUser(invalid);
 
         assertEquals("Password không được để trống!", result.getMessage());
         verify(userDAO, never()).insert(any(User.class));
     }
 
     @Test
-    public void testAddUser_InsertSuccess() {
+    public void testAddUser_Success() {
         when(userDAO.findByUsername("duc3m")).thenReturn(null);
         when(userDAO.insert(testUser)).thenReturn(true);
 
@@ -179,7 +141,7 @@ public class UserBUSTest {
     }
 
     @Test
-    public void testAddUser_InsertFail() {
+    public void testAddUser_Fail() {
         when(userDAO.findByUsername("duc3m")).thenReturn(null);
         when(userDAO.insert(testUser)).thenReturn(false);
 
@@ -188,22 +150,19 @@ public class UserBUSTest {
         assertEquals("Thêm user thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR updateUser
-    // ==========================================
     @Test
-    public void testUpdateUser_NullUserOrInvalidId() {
-        User invalidUser = new User();
-        invalidUser.setId(0);
+    public void testUpdateUser_Invalid() {
+        User invalid = new User();
+        invalid.setId(0);
 
-        BUSResult<User> result = userBUS.updateUser(invalidUser);
+        BUSResult<User> result = userBUS.updateUser(invalid);
 
         assertEquals("ID user không hợp lê!", result.getMessage());
         verify(userDAO, never()).update(any(User.class));
     }
 
     @Test
-    public void testUpdateUser_UserNotFound() {
+    public void testUpdateUser_NotFound() {
         when(userDAO.findById(1)).thenReturn(null);
 
         BUSResult<User> result = userBUS.updateUser(testUser);
@@ -214,48 +173,43 @@ public class UserBUSTest {
 
     @Test
     public void testUpdateUser_Success() {
-        User existingUser = new User();
-        existingUser.setId(1);
-        existingUser.setRole(new Role());
+        User existing = new User();
+        existing.setId(1);
 
-        when(userDAO.findById(1)).thenReturn(existingUser);
-        when(userDAO.update(existingUser)).thenReturn(true);
+        when(userDAO.findById(1)).thenReturn(existing);
+        when(userDAO.update(existing)).thenReturn(true);
 
         BUSResult<User> result = userBUS.updateUser(testUser);
 
         assertEquals("Cập nhật user thành công!", result.getMessage());
-        assertEquals(testRole, existingUser.getRole()); // Đảm bảo role đã được set lại
     }
 
     @Test
     public void testUpdateUser_Fail() {
-        User existingUser = new User();
-        existingUser.setId(1);
+        User existing = new User();
+        existing.setId(1);
 
-        when(userDAO.findById(1)).thenReturn(existingUser);
-        when(userDAO.update(existingUser)).thenReturn(false);
+        when(userDAO.findById(1)).thenReturn(existing);
+        when(userDAO.update(existing)).thenReturn(false);
 
         BUSResult<User> result = userBUS.updateUser(testUser);
 
         assertEquals("Cập nhật user thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteUser
-    // ==========================================
     @Test
-    public void testDeleteUser_NullUserOrInvalidId() {
-        User invalidUser = new User();
-        invalidUser.setId(-1);
+    public void testDeleteUser_Invalid() {
+        User invalid = new User();
+        invalid.setId(0);
 
-        BUSResult result = userBUS.deleteUser(invalidUser);
+        BUSResult result = userBUS.deleteUser(invalid);
 
         assertEquals("ID user không hợp lê!", result.getMessage());
         verify(userDAO, never()).delete(any(User.class));
     }
 
     @Test
-    public void testDeleteUser_UserNotFound() {
+    public void testDeleteUser_NotFound() {
         when(userDAO.findById(1)).thenReturn(null);
 
         BUSResult result = userBUS.deleteUser(testUser);

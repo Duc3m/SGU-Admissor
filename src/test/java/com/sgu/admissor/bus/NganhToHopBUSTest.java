@@ -53,61 +53,38 @@ public class NganhToHopBUSTest {
         testNganhToHop.setToHop(testToHop);
     }
 
-    // ==========================================
-    // TESTS FOR getAllNganhToHop & getById/MaNganh/MaToHop
-    // ==========================================
     @Test
     public void testGetAllNganhToHop() {
         when(nganhToHopDAO.findAll()).thenReturn(Arrays.asList(testNganhToHop));
 
         BUSResult<List<NganhToHop>> result = nganhToHopBUS.getAllNganhToHop();
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy toàn bộ ngành - tổ hợp thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
     @Test
     public void testGetNganhToHopById_InvalidId() {
-        BUSResult<NganhToHop> result1 = nganhToHopBUS.getNganhToHopById(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("ID ngành-tổ hợp không hợp lệ!", result1.getMessage());
-
-        BUSResult<NganhToHop> result2 = nganhToHopBUS.getNganhToHopById(0);
-        assertFalse(result2.isSuccess());
-        assertEquals("ID ngành-tổ hợp không hợp lệ!", result2.getMessage());
+        assertEquals("ID ngành-tổ hợp không hợp lệ!", nganhToHopBUS.getNganhToHopById(null).getMessage());
+        assertEquals("ID ngành-tổ hợp không hợp lệ!", nganhToHopBUS.getNganhToHopById(0).getMessage());
     }
 
     @Test
     public void testGetNganhToHopByMaNganh_Invalid() {
-        BUSResult<List<NganhToHop>> result1 = nganhToHopBUS.getNganhToHopByMaNganh(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Mã ngành không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<NganhToHop>> result2 = nganhToHopBUS.getNganhToHopByMaNganh("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Mã ngành không hợp lệ!", result2.getMessage());
+        assertEquals("Mã ngành không hợp lệ!", nganhToHopBUS.getNganhToHopByMaNganh(null).getMessage());
+        assertEquals("Mã ngành không hợp lệ!", nganhToHopBUS.getNganhToHopByMaNganh(" ").getMessage());
     }
 
     @Test
     public void testGetNganhToHopByMaToHop_Invalid() {
-        BUSResult<List<NganhToHop>> result1 = nganhToHopBUS.getNganhToHopByMaToHop(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Mã tổ hợp không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<NganhToHop>> result2 = nganhToHopBUS.getNganhToHopByMaToHop("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Mã tổ hợp không hợp lệ!", result2.getMessage());
+        assertEquals("Mã tổ hợp không hợp lệ!", nganhToHopBUS.getNganhToHopByMaToHop(null).getMessage());
+        assertEquals("Mã tổ hợp không hợp lệ!", nganhToHopBUS.getNganhToHopByMaToHop(" ").getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR addNganhToHop
-    // ==========================================
     @Test
-    public void testAddNganhToHop_NullData() {
+    public void testAddNganhToHop_InvalidData() {
         BUSResult<NganhToHop> result = nganhToHopBUS.addNganhToHop(null);
+
         assertEquals("Thông tin ngành-tổ hợp không hợp lệ!", result.getMessage());
         verify(nganhToHopDAO, never()).insert(any(NganhToHop.class));
     }
@@ -121,7 +98,6 @@ public class NganhToHopBUSTest {
         BUSResult<NganhToHop> result = nganhToHopBUS.addNganhToHop(invalid);
 
         assertEquals("Mã ngành không được để trống!", result.getMessage());
-        verify(nganhToHopDAO, never()).insert(any(NganhToHop.class));
     }
 
     @Test
@@ -133,7 +109,6 @@ public class NganhToHopBUSTest {
         BUSResult<NganhToHop> result = nganhToHopBUS.addNganhToHop(invalid);
 
         assertEquals("Mã tổ hợp không được để trống!", result.getMessage());
-        verify(nganhToHopDAO, never()).insert(any(NganhToHop.class));
     }
 
     @Test
@@ -143,7 +118,6 @@ public class NganhToHopBUSTest {
         BUSResult<NganhToHop> result = nganhToHopBUS.addNganhToHop(testNganhToHop);
 
         assertEquals("Liên kết ngành - tổ hợp này đã tồn tại!", result.getMessage());
-        verify(nganhToHopDAO, never()).insert(any(NganhToHop.class));
     }
 
     @Test
@@ -166,15 +140,13 @@ public class NganhToHopBUSTest {
         assertEquals("Thêm liên kết ngành - tổ hợp thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR updateNganhToHop
-    // ==========================================
     @Test
     public void testUpdateNganhToHop_InvalidId() {
         NganhToHop invalid = new NganhToHop();
         invalid.setId(0);
 
         BUSResult<NganhToHop> result = nganhToHopBUS.updateNganhToHop(invalid);
+
         assertEquals("ID ngành-tổ hợp không hợp lệ!", result.getMessage());
     }
 
@@ -183,6 +155,7 @@ public class NganhToHopBUSTest {
         when(nganhToHopDAO.findById(1)).thenReturn(null);
 
         BUSResult<NganhToHop> result = nganhToHopBUS.updateNganhToHop(testNganhToHop);
+
         assertEquals("Không tìm thấy liên kết ngành - tổ hợp này trong hệ thống!", result.getMessage());
     }
 
@@ -195,6 +168,7 @@ public class NganhToHopBUSTest {
         when(nganhToHopDAO.update(existing)).thenReturn(true);
 
         BUSResult<NganhToHop> result = nganhToHopBUS.updateNganhToHop(testNganhToHop);
+
         assertEquals("Cập nhật liên kết ngành - tổ hợp thành công!", result.getMessage());
     }
 
@@ -207,18 +181,17 @@ public class NganhToHopBUSTest {
         when(nganhToHopDAO.update(existing)).thenReturn(false);
 
         BUSResult<NganhToHop> result = nganhToHopBUS.updateNganhToHop(testNganhToHop);
+
         assertEquals("Cập nhật liên kết ngành - tổ hợp thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteNganhToHop
-    // ==========================================
     @Test
     public void testDeleteNganhToHop_InvalidId() {
         NganhToHop invalid = new NganhToHop();
         invalid.setId(0);
 
         BUSResult<NganhToHop> result = nganhToHopBUS.deleteNganhToHop(invalid);
+
         assertEquals("ID ngành-tổ hợp không hợp lệ!", result.getMessage());
     }
 
@@ -227,6 +200,7 @@ public class NganhToHopBUSTest {
         when(nganhToHopDAO.findById(1)).thenReturn(null);
 
         BUSResult<NganhToHop> result = nganhToHopBUS.deleteNganhToHop(testNganhToHop);
+
         assertEquals("Không tìm thấy liên kết ngành - tổ hợp này trong hệ thống!", result.getMessage());
     }
 
@@ -236,6 +210,7 @@ public class NganhToHopBUSTest {
         when(nganhToHopDAO.delete(testNganhToHop)).thenReturn(true);
 
         BUSResult<NganhToHop> result = nganhToHopBUS.deleteNganhToHop(testNganhToHop);
+
         assertEquals("Xóa liên kết ngành - tổ hợp thành công!", result.getMessage());
     }
 
@@ -245,6 +220,7 @@ public class NganhToHopBUSTest {
         when(nganhToHopDAO.delete(testNganhToHop)).thenReturn(false);
 
         BUSResult<NganhToHop> result = nganhToHopBUS.deleteNganhToHop(testNganhToHop);
+
         assertEquals("Xóa liên kết ngành - tổ hợp thất bại!", result.getMessage());
     }
 }

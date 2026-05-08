@@ -5,10 +5,7 @@
 package com.sgu.admissor.dao;
 
 import com.sgu.admissor.entity.NguyenVong;
-import com.sgu.admissor.util.HibernateUtil;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 
 /**
  *
@@ -22,30 +19,18 @@ public class NguyenVongDAO extends GenericDAO<NguyenVong>{
     
     
     public List<NguyenVong> findByCccd(String cccd){
-        try (Session session = HibernateUtil.getSessionFactory().openSession()){
-            String hql = "FROM NguyenVong WHERE cccd = :cccdParam";
-            
-            Query<NguyenVong> query = session.createQuery(hql, NguyenVong.class);
-            query.setParameter("cccdParam", cccd);
-            
-            return query.list();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM NguyenVong nv WHERE nv.thiSinh.cccd = :cccd";
+        return emProvider.get().createQuery(hql, NguyenVong.class)
+                .setParameter("cccd", cccd)
+                .getResultList();
     }
     
     public NguyenVong findByNvKey(String nvKey) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()){
-            String hql = "FROM NguyenVong WHERE nv_key = :keyParam";
-            
-            Query<NguyenVong> query = session.createQuery(hql, NguyenVong.class);
-            query.setParameter("keyParam", nvKey);
-            
-            return query.uniqueResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM NguyenVong nv WHERE nv.nvKey = :nvKey";
+        return emProvider.get().createQuery(hql, NguyenVong.class)
+                .setParameter("nvKey", nvKey)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
     }
 }

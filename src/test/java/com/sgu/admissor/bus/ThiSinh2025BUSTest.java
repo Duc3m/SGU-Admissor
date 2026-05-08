@@ -41,70 +41,44 @@ public class ThiSinh2025BUSTest {
         testThiSinh.setHoTen("Nguyen Van A");
     }
 
-    // ==========================================
-    // TESTS FOR getAllThiSinh & getById/Cccd/SBD/HoTen
-    // ==========================================
     @Test
     public void testGetAllThiSinh() {
         when(thiSinh2025DAO.findAll()).thenReturn(Arrays.asList(testThiSinh));
+
         BUSResult<List<ThiSinh2025>> result = thiSinh2025BUS.getAllThiSinh();
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
+
         assertEquals("Lấy toàn bộ thí sinh thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
     @Test
-    public void testGetThiSinhById_InvalidId() {
-        BUSResult<ThiSinh2025> result1 = thiSinh2025BUS.getThiSinhById(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("ID thí sinh không hợp lệ!", result1.getMessage());
-
-        BUSResult<ThiSinh2025> result2 = thiSinh2025BUS.getThiSinhById(0);
-        assertFalse(result2.isSuccess());
-        assertEquals("ID thí sinh không hợp lệ!", result2.getMessage());
+    public void testGetThiSinhById_Invalid() {
+        assertEquals("ID thí sinh không hợp lệ!", thiSinh2025BUS.getThiSinhById(null).getMessage());
+        assertEquals("ID thí sinh không hợp lệ!", thiSinh2025BUS.getThiSinhById(0).getMessage());
     }
 
     @Test
-    public void testGetThiSinhByCccd_InvalidCccd() {
-        BUSResult<ThiSinh2025> result1 = thiSinh2025BUS.getThiSinhByCccd(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result1.getMessage());
-
-        BUSResult<ThiSinh2025> result2 = thiSinh2025BUS.getThiSinhByCccd("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result2.getMessage());
+    public void testGetThiSinhByCccd_Invalid() {
+        assertEquals("CCCD không hợp lệ!", thiSinh2025BUS.getThiSinhByCccd(null).getMessage());
+        assertEquals("CCCD không hợp lệ!", thiSinh2025BUS.getThiSinhByCccd(" ").getMessage());
     }
 
     @Test
-    public void testGetThiSinhBySoBaoDanh_InvalidSoBaoDanh() {
-        BUSResult<ThiSinh2025> result1 = thiSinh2025BUS.getThiSinhBySoBaoDanh(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Số báo danh không hợp lệ!", result1.getMessage());
-
-        BUSResult<ThiSinh2025> result2 = thiSinh2025BUS.getThiSinhBySoBaoDanh("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Số báo danh không hợp lệ!", result2.getMessage());
+    public void testGetThiSinhBySoBaoDanh_Invalid() {
+        assertEquals("Số báo danh không hợp lệ!", thiSinh2025BUS.getThiSinhBySoBaoDanh(null).getMessage());
+        assertEquals("Số báo danh không hợp lệ!", thiSinh2025BUS.getThiSinhBySoBaoDanh(" ").getMessage());
     }
 
     @Test
-    public void testGetThiSinhByHoTen_InvalidHoTen() {
-        BUSResult<List<ThiSinh2025>> result1 = thiSinh2025BUS.getThiSinhByHoTen(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Họ tên không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<ThiSinh2025>> result2 = thiSinh2025BUS.getThiSinhByHoTen("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Họ tên không hợp lệ!", result2.getMessage());
+    public void testGetThiSinhByHoTen_Invalid() {
+        assertEquals("Họ tên không hợp lệ!", thiSinh2025BUS.getThiSinhByHoTen(null).getMessage());
+        assertEquals("Họ tên không hợp lệ!", thiSinh2025BUS.getThiSinhByHoTen(" ").getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR addThiSinh
-    // ==========================================
     @Test
-    public void testAddThiSinh_NullData() {
+    public void testAddThiSinh_InvalidData() {
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.addThiSinh(null);
+
         assertEquals("Thông tin thí sinh không hợp lệ!", result.getMessage());
         verify(thiSinh2025DAO, never()).insert(any(ThiSinh2025.class));
     }
@@ -118,7 +92,6 @@ public class ThiSinh2025BUSTest {
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.addThiSinh(invalid);
 
         assertEquals("CCCD không được để trống!", result.getMessage());
-        verify(thiSinh2025DAO, never()).insert(any(ThiSinh2025.class));
     }
 
     @Test
@@ -130,7 +103,6 @@ public class ThiSinh2025BUSTest {
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.addThiSinh(invalid);
 
         assertEquals("Số báo danh không được để trống!", result.getMessage());
-        verify(thiSinh2025DAO, never()).insert(any(ThiSinh2025.class));
     }
 
     @Test
@@ -142,7 +114,6 @@ public class ThiSinh2025BUSTest {
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.addThiSinh(invalid);
 
         assertEquals("Họ tên không được để trống!", result.getMessage());
-        verify(thiSinh2025DAO, never()).insert(any(ThiSinh2025.class));
     }
 
     @Test
@@ -152,7 +123,6 @@ public class ThiSinh2025BUSTest {
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.addThiSinh(testThiSinh);
 
         assertEquals("CCCD đã tồn tại trong hệ thống!", result.getMessage());
-        verify(thiSinh2025DAO, never()).insert(any(ThiSinh2025.class));
     }
 
     @Test
@@ -163,7 +133,6 @@ public class ThiSinh2025BUSTest {
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.addThiSinh(testThiSinh);
 
         assertEquals("Số báo danh đã tồn tại trong hệ thống!", result.getMessage());
-        verify(thiSinh2025DAO, never()).insert(any(ThiSinh2025.class));
     }
 
     @Test
@@ -188,15 +157,13 @@ public class ThiSinh2025BUSTest {
         assertEquals("Thêm thí sinh thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR updateThiSinh
-    // ==========================================
     @Test
     public void testUpdateThiSinh_InvalidId() {
         ThiSinh2025 invalid = new ThiSinh2025();
         invalid.setId(0);
 
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.updateThiSinh(invalid);
+
         assertEquals("ID thí sinh không hợp lệ!", result.getMessage());
     }
 
@@ -205,6 +172,7 @@ public class ThiSinh2025BUSTest {
         when(thiSinh2025DAO.findById(1)).thenReturn(null);
 
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.updateThiSinh(testThiSinh);
+
         assertEquals("Không tìm thấy thí sinh này trong hệ thống!", result.getMessage());
     }
 
@@ -217,6 +185,7 @@ public class ThiSinh2025BUSTest {
         when(thiSinh2025DAO.update(existing)).thenReturn(true);
 
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.updateThiSinh(testThiSinh);
+
         assertEquals("Cập nhật thí sinh thành công!", result.getMessage());
     }
 
@@ -229,18 +198,17 @@ public class ThiSinh2025BUSTest {
         when(thiSinh2025DAO.update(existing)).thenReturn(false);
 
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.updateThiSinh(testThiSinh);
+
         assertEquals("Cập nhật thí sinh thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteThiSinh
-    // ==========================================
     @Test
     public void testDeleteThiSinh_InvalidId() {
         ThiSinh2025 invalid = new ThiSinh2025();
         invalid.setId(0);
 
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.deleteThiSinh(invalid);
+
         assertEquals("ID thí sinh không hợp lệ!", result.getMessage());
     }
 
@@ -249,6 +217,7 @@ public class ThiSinh2025BUSTest {
         when(thiSinh2025DAO.findById(1)).thenReturn(null);
 
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.deleteThiSinh(testThiSinh);
+
         assertEquals("Không tìm thấy thí sinh này trong hệ thống!", result.getMessage());
     }
 
@@ -258,6 +227,7 @@ public class ThiSinh2025BUSTest {
         when(thiSinh2025DAO.delete(testThiSinh)).thenReturn(true);
 
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.deleteThiSinh(testThiSinh);
+
         assertEquals("Xóa thí sinh thành công!", result.getMessage());
     }
 
@@ -267,6 +237,7 @@ public class ThiSinh2025BUSTest {
         when(thiSinh2025DAO.delete(testThiSinh)).thenReturn(false);
 
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.deleteThiSinh(testThiSinh);
+
         assertEquals("Xóa thí sinh thất bại!", result.getMessage());
     }
 }

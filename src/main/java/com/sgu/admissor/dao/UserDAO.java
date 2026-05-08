@@ -5,10 +5,7 @@
 package com.sgu.admissor.dao;
 
 import com.sgu.admissor.entity.User;
-import com.sgu.admissor.util.HibernateUtil;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 
 /**
  *
@@ -21,30 +18,18 @@ public class UserDAO extends GenericDAO<User>{
     }
     
     public User findByUsername(String userName){
-        try (Session session = HibernateUtil.getSessionFactory().openSession()){
-            String hql = "FROM User WHERE username = :usernameParam";
-            
-            Query<User> query = session.createQuery(hql, User.class);
-            query.setParameter("usernameParam", userName);
-            
-            return query.uniqueResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM User u WHERE u.username = :username";
+        return emProvider.get().createQuery(hql, User.class)
+                .setParameter("username", userName)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
     }
     
     public List<User> findByRoleId(Integer roleId){
-        try (Session session = HibernateUtil.getSessionFactory().openSession()){
-            String hql = "FROM User WHERE roleId = :roldIdParam";
-            
-            Query<User> query = session.createQuery(hql, User.class);
-            query.setParameter("roldIdParam", roleId);
-            
-            return query.list();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM User u WHERE u.role.id = :roleId";
+        return emProvider.get().createQuery(hql, User.class)
+                .setParameter("roleId", roleId)
+                .getResultList();
     }
 }

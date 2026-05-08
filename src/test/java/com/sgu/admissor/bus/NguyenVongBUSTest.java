@@ -19,7 +19,6 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,7 +38,6 @@ public class NguyenVongBUSTest {
 
     @BeforeEach
     public void setUp() {
-        // Khởi tạo các object lồng nhau để tránh lỗi NullPointerException
         testThiSinh = new ThiSinh2025();
         testThiSinh.setCccd("0123456789");
 
@@ -54,52 +52,35 @@ public class NguyenVongBUSTest {
         testNv.setNvKey("0123456789_7480201_100");
     }
 
-    // ==========================================
-    // TESTS FOR getAllNguyenVong & getById/Cccd
-    // ==========================================
     @Test
     public void testGetAllNguyenVong() {
         when(nguyenVongDAO.findAll()).thenReturn(Arrays.asList(testNv));
+
         BUSResult<List<NguyenVong>> result = nguyenVongBUS.getAllNguyenVong();
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
+
         assertEquals("Lấy toàn bộ nguyện vọng thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
     @Test
-    public void testGetNguyenVongById_InvalidId() {
-        BUSResult<NguyenVong> result1 = nguyenVongBUS.getNguyenVongById(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("ID Nguyên vọng không hợp lệ!", result1.getMessage());
-
-        BUSResult<NguyenVong> result2 = nguyenVongBUS.getNguyenVongById(0);
-        assertFalse(result2.isSuccess());
-        assertEquals("ID Nguyên vọng không hợp lệ!", result2.getMessage());
+    public void testGetNguyenVongById_Invalid() {
+        assertEquals("ID Nguyên vọng không hợp lệ!", nguyenVongBUS.getNguyenVongById(null).getMessage());
+        assertEquals("ID Nguyên vọng không hợp lệ!", nguyenVongBUS.getNguyenVongById(0).getMessage());
     }
 
     @Test
-    public void testGetNguyenVongsByCccd_InvalidCccd() {
-        BUSResult<List<NguyenVong>> result1 = nguyenVongBUS.getNguyenVongsByCccd(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<NguyenVong>> result2 = nguyenVongBUS.getNguyenVongsByCccd("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result2.getMessage());
+    public void testGetNguyenVongsByCccd_Invalid() {
+        assertEquals("CCCD không hợp lệ!", nguyenVongBUS.getNguyenVongsByCccd(null).getMessage());
+        assertEquals("CCCD không hợp lệ!", nguyenVongBUS.getNguyenVongsByCccd(" ").getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR addNguyenVong
-    // ==========================================
     @Test
     public void testAddNguyenVong_InvalidData() {
-        NguyenVong invalidNv = new NguyenVong();
-        invalidNv.setThiSinh(new ThiSinh2025()); // CCCD null
-        invalidNv.setNganh(new Nganh());
+        NguyenVong invalid = new NguyenVong();
+        invalid.setThiSinh(new ThiSinh2025());
+        invalid.setNganh(new Nganh());
 
-        BUSResult<NguyenVong> result = nguyenVongBUS.addNguyenVong(invalidNv);
+        BUSResult<NguyenVong> result = nguyenVongBUS.addNguyenVong(invalid);
 
         assertEquals("CCCD không hợp lệ!", result.getMessage());
         verify(nguyenVongDAO, never()).insert(any(NguyenVong.class));
@@ -107,7 +88,6 @@ public class NguyenVongBUSTest {
 
     @Test
     public void testAddNguyenVong_DuplicateKey() {
-        // Giả lập DB đã tồn tại nvKey này
         when(nguyenVongDAO.findByNvKey("0123456789_7480201_100")).thenReturn(testNv);
 
         BUSResult<NguyenVong> result = nguyenVongBUS.addNguyenVong(testNv);
@@ -126,35 +106,45 @@ public class NguyenVongBUSTest {
         assertEquals("Thêm nguyên vọng mới thành công!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR updateNguyenVong
-    // ==========================================
+    @Test
+    public void testAddNguyenVong_Fail() {
+        when(nguyenVongDAO.findByNvKey(any(String.class))).thenReturn(null);
+        when(nguyenVongDAO.insert(testNv)).thenReturn(false);
+
+        BUSResult<NguyenVong> result = nguyenVongBUS.addNguyenVong(testNv);
+
+        assertEquals("Thêm nguyên vọng thất bại!", result.getMessage());
+    }
+
     @Test
     public void testUpdateNguyenVong_InvalidId() {
-        NguyenVong invalidNv = new NguyenVong();
-        invalidNv.setId(0);
+        NguyenVong invalid = new NguyenVong();
+        invalid.setId(0);
 
-        BUSResult<NguyenVong> result = nguyenVongBUS.updateNguyenVong(invalidNv);
+        BUSResult<NguyenVong> result = nguyenVongBUS.updateNguyenVong(invalid);
+
         assertEquals("ID nguyện vọng không hợp lê!", result.getMessage());
     }
 
     @Test
     public void testUpdateNguyenVong_NotFound() {
         when(nguyenVongDAO.findById(1)).thenReturn(null);
+
         BUSResult<NguyenVong> result = nguyenVongBUS.updateNguyenVong(testNv);
+
         assertEquals("Không tìm thấy nguyện vọng này trong hệ thống!", result.getMessage());
     }
 
     @Test
     public void testUpdateNguyenVong_DuplicateKeyDifferentId() {
-        NguyenVong existingNv = new NguyenVong();
-        existingNv.setId(1);
+        NguyenVong existing = new NguyenVong();
+        existing.setId(1);
 
-        NguyenVong duplicateNv = new NguyenVong();
-        duplicateNv.setId(2); // Một nguyện vọng khác trong DB đang chiếm giữ Key này
+        NguyenVong duplicate = new NguyenVong();
+        duplicate.setId(2);
 
-        when(nguyenVongDAO.findById(1)).thenReturn(existingNv);
-        when(nguyenVongDAO.findByNvKey("0123456789_7480201_100")).thenReturn(duplicateNv);
+        when(nguyenVongDAO.findById(1)).thenReturn(existing);
+        when(nguyenVongDAO.findByNvKey("0123456789_7480201_100")).thenReturn(duplicate);
 
         BUSResult<NguyenVong> result = nguyenVongBUS.updateNguyenVong(testNv);
 
@@ -164,22 +154,51 @@ public class NguyenVongBUSTest {
 
     @Test
     public void testUpdateNguyenVong_Success() {
-        NguyenVong existingNv = new NguyenVong();
-        existingNv.setId(1);
+        NguyenVong existing = new NguyenVong();
+        existing.setId(1);
 
-        when(nguyenVongDAO.findById(1)).thenReturn(existingNv);
-        // Trả về null nghĩa là Key mới không bị ai chiếm
-        when(nguyenVongDAO.findByNvKey(any(String.class))).thenReturn(null); 
-        when(nguyenVongDAO.update(existingNv)).thenReturn(true);
+        when(nguyenVongDAO.findById(1)).thenReturn(existing);
+        when(nguyenVongDAO.findByNvKey(any(String.class))).thenReturn(null);
+        when(nguyenVongDAO.update(existing)).thenReturn(true);
 
         BUSResult<NguyenVong> result = nguyenVongBUS.updateNguyenVong(testNv);
 
         assertEquals("Cập nhật nguyện vọng thành công!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteNguyenVong
-    // ==========================================
+    @Test
+    public void testUpdateNguyenVong_Fail() {
+        NguyenVong existing = new NguyenVong();
+        existing.setId(1);
+
+        when(nguyenVongDAO.findById(1)).thenReturn(existing);
+        when(nguyenVongDAO.findByNvKey(any(String.class))).thenReturn(null);
+        when(nguyenVongDAO.update(existing)).thenReturn(false);
+
+        BUSResult<NguyenVong> result = nguyenVongBUS.updateNguyenVong(testNv);
+
+        assertEquals("Cập nhật nguyện vọng thất bại!", result.getMessage());
+    }
+
+    @Test
+    public void testDeleteNguyenVong_InvalidId() {
+        NguyenVong invalid = new NguyenVong();
+        invalid.setId(0);
+
+        BUSResult result = nguyenVongBUS.deleteNguyenVong(invalid);
+
+        assertEquals("ID nguyện vọng không hợp lê!", result.getMessage());
+    }
+
+    @Test
+    public void testDeleteNguyenVong_NotFound() {
+        when(nguyenVongDAO.findById(1)).thenReturn(null);
+
+        BUSResult result = nguyenVongBUS.deleteNguyenVong(testNv);
+
+        assertEquals("Không tìm thấy nguyện vọng này trong hệ thống!", result.getMessage());
+    }
+
     @Test
     public void testDeleteNguyenVong_Success() {
         when(nguyenVongDAO.findById(1)).thenReturn(testNv);
@@ -188,5 +207,15 @@ public class NguyenVongBUSTest {
         BUSResult result = nguyenVongBUS.deleteNguyenVong(testNv);
 
         assertEquals("Xóa nguyện vọng thành công!", result.getMessage());
+    }
+
+    @Test
+    public void testDeleteNguyenVong_Fail() {
+        when(nguyenVongDAO.findById(1)).thenReturn(testNv);
+        when(nguyenVongDAO.delete(testNv)).thenReturn(false);
+
+        BUSResult result = nguyenVongBUS.deleteNguyenVong(testNv);
+
+        assertEquals("Xóa nguyện vọng thất bại!", result.getMessage());
     }
 }

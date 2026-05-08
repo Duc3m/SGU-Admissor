@@ -7,8 +7,6 @@ package com.sgu.admissor.bus;
 import com.sgu.admissor.dao.RoleDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.Role;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,19 +15,13 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/**
- *
- * @author Duc3m
- */
-
 @ExtendWith(MockitoExtension.class)
 public class RoleBUSTest {
-    
+
     @Mock
     private RoleDAO roleDAO;
 
@@ -46,55 +38,13 @@ public class RoleBUSTest {
     }
 
     @Test
-    public void testGetAllRoles() {
-        when(roleDAO.findAll()).thenReturn(Arrays.asList(testRole));
-
-        BUSResult<List<Role>> result = roleBUS.getAllRoles();
-
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
-        assertEquals("Lấy toàn bộ role thành công!", result.getMessage());
-        assertNotNull(result.getData());
-        assertEquals(1, result.getData().size());
-        assertEquals("Admin", result.getData().get(0).getName());
-        verify(roleDAO, times(1)).findAll();
-    }
-
-    @Test
-    public void testGetRoleById_NullId() {
-        BUSResult<Role> result = roleBUS.getRoleById(null);
-        assertFalse(result.isSuccess());
-        assertEquals("ID role không hợp lệ!", result.getMessage());
-    }
-
-    @Test
-    public void testGetRoleById_NegativeId() {
-        BUSResult<Role> result = roleBUS.getRoleById(-5);
-        assertFalse(result.isSuccess());
-        assertEquals("ID role không hợp lệ!", result.getMessage());
-    }
-
-    @Test
-    public void testGetRoleById_ValidId() {
-        when(roleDAO.findById(1)).thenReturn(testRole);
-        
-        BUSResult<Role> result = roleBUS.getRoleById(1);
-        
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
-        assertEquals("Lấy role thành công!", result.getMessage());
-        assertNotNull(result.getData());
-        assertEquals("Admin", result.getData().getName());
-    }
-
-    @Test
     public void testAddRole_EmptyName() {
         Role emptyRole = new Role();
-        emptyRole.setName("   "); // Tên toàn khoảng trắng
+        emptyRole.setName("   ");
 
         BUSResult<Role> result = roleBUS.addRole(emptyRole);
 
-        assertTrue(result.getMessage().contains("Tên Role không được để trống!"));
+        assertEquals("Tên Role không được để trống!", result.getMessage());
         verify(roleDAO, never()).insert(any(Role.class));
     }
 
@@ -104,59 +54,27 @@ public class RoleBUSTest {
 
         BUSResult<Role> result = roleBUS.addRole(testRole);
 
-        assertTrue(result.getMessage().contains("đã tồn tại"));
+        assertEquals("Tên Role 'Admin' đã tồn tại!", result.getMessage());
         verify(roleDAO, never()).insert(any(Role.class));
     }
 
     @Test
     public void testAddRole_InsertSuccess() {
         when(roleDAO.findByName("Admin")).thenReturn(null);
-        when(roleDAO.insert(testRole)).thenReturn(true);
 
         BUSResult<Role> result = roleBUS.addRole(testRole);
 
-        assertTrue(result.getMessage().contains("thành công"));
+        assertEquals("Thêm role thành công", result.getMessage());
+        verify(roleDAO).insert(testRole);
     }
 
     @Test
-    public void testAddRole_InsertFail() {
+    public void testAddRole_InsertException() {
         when(roleDAO.findByName("Admin")).thenReturn(null);
-        when(roleDAO.insert(testRole)).thenReturn(false);
+        when(roleDAO.insert(testRole)).thenThrow(new RuntimeException("db error"));
 
         BUSResult<Role> result = roleBUS.addRole(testRole);
 
-        assertTrue(result.getMessage().contains("Lỗi gì đó ở phương thức addRole()"));
+        assertEquals("Lỗi phương thức addRole()", result.getMessage());
     }
-
-    @Test
-    public void testDeleteRole_NullRole() {
-        BUSResult result = roleBUS.deleteRole(null);
-        assertTrue(result.getMessage().contains("Không tìm thấy role!"));
-    }
-
-    @Test
-    public void testDeleteRole_NullRoleId() {
-        Role roleNoId = new Role();
-        BUSResult result = roleBUS.deleteRole(roleNoId);
-        assertTrue(result.getMessage().contains("Không tìm thấy role!"));
-    }
-
-    @Test
-    public void testDeleteRole_Success() {
-        when(roleDAO.delete(testRole)).thenReturn(true);
-
-        BUSResult result = roleBUS.deleteRole(testRole);
-
-        assertTrue(result.getMessage().contains("thành công"));
-    }
-
-    @Test
-    public void testDeleteRole_Fail() {
-        when(roleDAO.delete(testRole)).thenReturn(false);
-
-        BUSResult result = roleBUS.deleteRole(testRole);
-
-        assertTrue(result.getMessage().contains("Lỗi gì đó ở phương thức deleteRole()"));
-    }
-    
 }

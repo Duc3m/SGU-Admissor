@@ -5,10 +5,7 @@
 package com.sgu.admissor.dao;
 
 import com.sgu.admissor.entity.NganhToHop;
-import com.sgu.admissor.util.HibernateUtil;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 
 /**
  *
@@ -21,39 +18,26 @@ public class NganhToHopDAO extends GenericDAO<NganhToHop> {
     }
 
     public List<NganhToHop> findByMaNganh(String maNganh) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String hql = "FROM NganhToHop WHERE nganh.maNganh = :maNganhParam";
-            Query<NganhToHop> query = session.createQuery(hql, NganhToHop.class);
-            query.setParameter("maNganhParam", maNganh);
-            return query.list();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM NganhToHop nt WHERE nt.nganh.maNganh = :maNganh";
+        return emProvider.get().createQuery(hql, NganhToHop.class)
+                .setParameter("maNganh", maNganh)
+                .getResultList();
     }
 
     public List<NganhToHop> findByMaToHop(String maToHop) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String hql = "FROM NganhToHop WHERE toHop.maToHop = :maToHopParam";
-            Query<NganhToHop> query = session.createQuery(hql, NganhToHop.class);
-            query.setParameter("maToHopParam", maToHop);
-            return query.list();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM NganhToHop nt WHERE nt.toHop.maToHop = :maToHop";
+        return emProvider.get().createQuery(hql, NganhToHop.class)
+                .setParameter("maToHop", maToHop)
+                .getResultList();
     }
 
     public NganhToHop findByMaNganhAndMaToHop(String maNganh, String maToHop) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String hql = "FROM NganhToHop WHERE nganh.maNganh = :maNganhParam AND toHop.maToHop = :maToHopParam";
-            Query<NganhToHop> query = session.createQuery(hql, NganhToHop.class);
-            query.setParameter("maNganhParam", maNganh);
-            query.setParameter("maToHopParam", maToHop);
-            return query.uniqueResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM NganhToHop nt WHERE nt.nganh.maNganh = :maNganh AND nt.toHop.maToHop = :maToHop";
+        return emProvider.get().createQuery(hql, NganhToHop.class)
+                .setParameter("maNganh", maNganh)
+                .setParameter("maToHop", maToHop)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
     }
 }

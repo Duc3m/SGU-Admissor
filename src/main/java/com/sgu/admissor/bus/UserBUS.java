@@ -5,6 +5,7 @@
 package com.sgu.admissor.bus;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.UserDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.User;
@@ -15,90 +16,81 @@ import java.util.List;
  * @author Admin
  */
 public class UserBUS {
+
     private final UserDAO userDAO;
-    
+
     @Inject
     public UserBUS(UserDAO userDAO) {
         this.userDAO = userDAO;
     }
-    
-    public BUSResult<List<User>> getAllUser(){
+
+    public BUSResult<List<User>> getAllUser() {
         return BUSResult.successWithData("Lấy toàn bộ user thành công!", userDAO.findAll());
     }
-    
-    public BUSResult<User> getUserById(Integer id){
-        if (id == null || id <= 0){
+
+    public BUSResult<User> getUserById(Integer id) {
+        if (id == null || id <= 0) {
             return BUSResult.error("User ID không hợp lê!");
         }
-        
         return BUSResult.successWithData("Lấy user thành công!", userDAO.findById(id));
     }
-    
-    public BUSResult<List<User>> getUsersByRoleId(Integer roleId){
+
+    public BUSResult<List<User>> getUsersByRoleId(Integer roleId) {
         if (roleId == null || roleId <= 0) {
             return BUSResult.error("Role ID không hợp lê!");
         }
-        
         return BUSResult.successWithData("Lấy user thành công!", userDAO.findByRoleId(roleId));
     }
-    
-    public BUSResult<User> addUser(User newUser){
-        if (newUser.getUsername() == null || newUser.getUsername().trim().isEmpty()){
+
+    @Transactional
+    public BUSResult<User> addUser(User user) {
+        if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             return BUSResult.error("Username không hơp lệ!");
         }
-        
-        if (userDAO.findByUsername(newUser.getUsername()) != null){
+        if (userDAO.findByUsername(user.getUsername()) != null) {
             return BUSResult.error("Username đã tồn tại!");
         }
-        
-        if (newUser.getPassword() == null || newUser.getPassword().trim().isEmpty()){
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
             return BUSResult.error("Password không được để trống!");
         }
-        
-        boolean isInserted = userDAO.insert(newUser);
-        
-        if(isInserted){
+        if (userDAO.insert(user)) {
             return BUSResult.success("Thêm user mới thành công!");
-        } else {
-            return BUSResult.error("Thêm user thất bại!");
         }
+        return BUSResult.error("Thêm user thất bại!");
     }
-    
-    public BUSResult<User> updateUser(User user){
-        if (user == null || user.getId() <= 0){
+
+    @Transactional
+    public BUSResult<User> updateUser(User user) {
+        if (user == null || user.getId() <= 0) {
             return BUSResult.error("ID user không hợp lê!");
         }
-        
-        User existingUser = userDAO.findById(user.getId());
-        if(existingUser == null){
+        User existing = userDAO.findById(user.getId());
+        if (existing == null) {
             return BUSResult.error("Không tìm thấy user này trong hệ thống!");
         }
-        
-        existingUser.setRole(user.getRole());
-        
-        boolean isUpdated = userDAO.update(existingUser);
-        if(isUpdated){
+        existing.setUsername(user.getUsername());
+        existing.setPassword(user.getPassword());
+        existing.setRole(user.getRole());
+        existing.setIsActive(user.getIsActive());
+
+        if (userDAO.update(existing)) {
             return BUSResult.success("Cập nhật user thành công!");
-        } else {
-            return BUSResult.error("Cập nhật user thất bại!");
         }
+        return BUSResult.error("Cập nhật user thất bại!");
     }
-    
-    public BUSResult deleteUser(User user){
-        if (user == null || user.getId() <= 0){
+
+    @Transactional
+    public BUSResult deleteUser(User user) {
+        if (user == null || user.getId() <= 0) {
             return BUSResult.error("ID user không hợp lê!");
         }
-        
-        User userToDelete = userDAO.findById(user.getId());
-        if(userToDelete == null){
+        User existing = userDAO.findById(user.getId());
+        if (existing == null) {
             return BUSResult.error("Không tìm thấy user này trong hệ thống!");
         }
-        
-        boolean isDeleted = userDAO.delete(userToDelete);
-        if(isDeleted){
+        if (userDAO.delete(existing)) {
             return BUSResult.success("Xóa user thành công!");
-        } else {
-            return BUSResult.error("Xóa user thất bại!");
         }
+        return BUSResult.error("Xóa user thất bại!");
     }
 }

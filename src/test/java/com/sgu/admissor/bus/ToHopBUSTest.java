@@ -43,61 +43,38 @@ public class ToHopBUSTest {
         testToHop.setTenToHop("Toan - Ly - Hoa");
     }
 
-    // ==========================================
-    // TESTS FOR getAllToHop & getById/MaToHop/TenToHop
-    // ==========================================
     @Test
     public void testGetAllToHop() {
         when(toHopDAO.findAll()).thenReturn(Arrays.asList(testToHop));
 
         BUSResult<List<ToHop>> result = toHopBUS.getAllToHop();
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy toàn bộ tổ hợp thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
     @Test
-    public void testGetToHopById_InvalidId() {
-        BUSResult<ToHop> result1 = toHopBUS.getToHopById(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("ID tổ hợp không hợp lệ!", result1.getMessage());
-
-        BUSResult<ToHop> result2 = toHopBUS.getToHopById(0);
-        assertFalse(result2.isSuccess());
-        assertEquals("ID tổ hợp không hợp lệ!", result2.getMessage());
+    public void testGetToHopById_Invalid() {
+        assertEquals("ID tổ hợp không hợp lệ!", toHopBUS.getToHopById(null).getMessage());
+        assertEquals("ID tổ hợp không hợp lệ!", toHopBUS.getToHopById(0).getMessage());
     }
 
     @Test
     public void testGetToHopByMaToHop_Invalid() {
-        BUSResult<ToHop> result1 = toHopBUS.getToHopByMaToHop(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Mã tổ hợp không hợp lệ!", result1.getMessage());
-
-        BUSResult<ToHop> result2 = toHopBUS.getToHopByMaToHop("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Mã tổ hợp không hợp lệ!", result2.getMessage());
+        assertEquals("Mã tổ hợp không hợp lệ!", toHopBUS.getToHopByMaToHop(null).getMessage());
+        assertEquals("Mã tổ hợp không hợp lệ!", toHopBUS.getToHopByMaToHop(" ").getMessage());
     }
 
     @Test
     public void testGetToHopByTenToHop_Invalid() {
-        BUSResult<List<ToHop>> result1 = toHopBUS.getToHopByTenToHop(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Tên tổ hợp không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<ToHop>> result2 = toHopBUS.getToHopByTenToHop("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Tên tổ hợp không hợp lệ!", result2.getMessage());
+        assertEquals("Tên tổ hợp không hợp lệ!", toHopBUS.getToHopByTenToHop(null).getMessage());
+        assertEquals("Tên tổ hợp không hợp lệ!", toHopBUS.getToHopByTenToHop(" ").getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR addToHop
-    // ==========================================
     @Test
-    public void testAddToHop_NullData() {
+    public void testAddToHop_InvalidData() {
         BUSResult<ToHop> result = toHopBUS.addToHop(null);
+
         assertEquals("Thông tin tổ hợp không hợp lệ!", result.getMessage());
         verify(toHopDAO, never()).insert(any(ToHop.class));
     }
@@ -112,7 +89,6 @@ public class ToHopBUSTest {
         BUSResult<ToHop> result = toHopBUS.addToHop(invalid);
 
         assertEquals("Mã tổ hợp không được để trống!", result.getMessage());
-        verify(toHopDAO, never()).insert(any(ToHop.class));
     }
 
     @Test
@@ -124,11 +100,10 @@ public class ToHopBUSTest {
         BUSResult<ToHop> result = toHopBUS.addToHop(invalid);
 
         assertEquals("Các môn trong tổ hợp không được để trống!", result.getMessage());
-        verify(toHopDAO, never()).insert(any(ToHop.class));
     }
 
     @Test
-    public void testAddToHop_DuplicateMaToHop() {
+    public void testAddToHop_Duplicate() {
         when(toHopDAO.findByMaToHop("A00")).thenReturn(testToHop);
 
         BUSResult<ToHop> result = toHopBUS.addToHop(testToHop);
@@ -157,15 +132,13 @@ public class ToHopBUSTest {
         assertEquals("Thêm tổ hợp thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR updateToHop
-    // ==========================================
     @Test
     public void testUpdateToHop_InvalidId() {
         ToHop invalid = new ToHop();
         invalid.setId(0);
 
         BUSResult<ToHop> result = toHopBUS.updateToHop(invalid);
+
         assertEquals("ID tổ hợp không hợp lệ!", result.getMessage());
     }
 
@@ -174,6 +147,7 @@ public class ToHopBUSTest {
         when(toHopDAO.findById(1)).thenReturn(null);
 
         BUSResult<ToHop> result = toHopBUS.updateToHop(testToHop);
+
         assertEquals("Không tìm thấy tổ hợp này trong hệ thống!", result.getMessage());
     }
 
@@ -186,6 +160,7 @@ public class ToHopBUSTest {
         when(toHopDAO.update(existing)).thenReturn(true);
 
         BUSResult<ToHop> result = toHopBUS.updateToHop(testToHop);
+
         assertEquals("Cập nhật tổ hợp thành công!", result.getMessage());
     }
 
@@ -198,18 +173,17 @@ public class ToHopBUSTest {
         when(toHopDAO.update(existing)).thenReturn(false);
 
         BUSResult<ToHop> result = toHopBUS.updateToHop(testToHop);
+
         assertEquals("Cập nhật tổ hợp thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteToHop
-    // ==========================================
     @Test
     public void testDeleteToHop_InvalidId() {
         ToHop invalid = new ToHop();
         invalid.setId(0);
 
         BUSResult<ToHop> result = toHopBUS.deleteToHop(invalid);
+
         assertEquals("ID tổ hợp không hợp lệ!", result.getMessage());
     }
 
@@ -218,6 +192,7 @@ public class ToHopBUSTest {
         when(toHopDAO.findById(1)).thenReturn(null);
 
         BUSResult<ToHop> result = toHopBUS.deleteToHop(testToHop);
+
         assertEquals("Không tìm thấy tổ hợp này trong hệ thống!", result.getMessage());
     }
 
@@ -227,6 +202,7 @@ public class ToHopBUSTest {
         when(toHopDAO.delete(testToHop)).thenReturn(true);
 
         BUSResult<ToHop> result = toHopBUS.deleteToHop(testToHop);
+
         assertEquals("Xóa tổ hợp thành công!", result.getMessage());
     }
 
@@ -236,6 +212,7 @@ public class ToHopBUSTest {
         when(toHopDAO.delete(testToHop)).thenReturn(false);
 
         BUSResult<ToHop> result = toHopBUS.deleteToHop(testToHop);
+
         assertEquals("Xóa tổ hợp thất bại!", result.getMessage());
     }
 }

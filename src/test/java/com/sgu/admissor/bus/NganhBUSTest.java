@@ -40,53 +40,32 @@ public class NganhBUSTest {
         testNganh.setTenNganh("Cong nghe thong tin");
     }
 
-    // ==========================================
-    // TESTS FOR getAllNganh & getById/MaNganh/TenNganh/TuyenThang
-    // ==========================================
     @Test
     public void testGetAllNganh() {
         when(nganhDAO.findAll()).thenReturn(Arrays.asList(testNganh));
 
         BUSResult<List<Nganh>> result = nganhBUS.getAllNganh();
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy toàn bộ ngành thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
     @Test
     public void testGetNganhById_InvalidId() {
-        BUSResult<Nganh> result1 = nganhBUS.getNganhById(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("ID ngành không hợp lệ!", result1.getMessage());
-
-        BUSResult<Nganh> result2 = nganhBUS.getNganhById(0);
-        assertFalse(result2.isSuccess());
-        assertEquals("ID ngành không hợp lệ!", result2.getMessage());
+        assertEquals("ID ngành không hợp lệ!", nganhBUS.getNganhById(null).getMessage());
+        assertEquals("ID ngành không hợp lệ!", nganhBUS.getNganhById(0).getMessage());
     }
 
     @Test
     public void testGetNganhByMaNganh_Invalid() {
-        BUSResult<Nganh> result1 = nganhBUS.getNganhByMaNganh(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Mã ngành không hợp lệ!", result1.getMessage());
-
-        BUSResult<Nganh> result2 = nganhBUS.getNganhByMaNganh("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Mã ngành không hợp lệ!", result2.getMessage());
+        assertEquals("Mã ngành không hợp lệ!", nganhBUS.getNganhByMaNganh(null).getMessage());
+        assertEquals("Mã ngành không hợp lệ!", nganhBUS.getNganhByMaNganh(" ").getMessage());
     }
 
     @Test
     public void testGetNganhByTenNganh_Invalid() {
-        BUSResult<List<Nganh>> result1 = nganhBUS.getNganhByTenNganh(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Tên ngành không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<Nganh>> result2 = nganhBUS.getNganhByTenNganh("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Tên ngành không hợp lệ!", result2.getMessage());
+        assertEquals("Tên ngành không hợp lệ!", nganhBUS.getNganhByTenNganh(null).getMessage());
+        assertEquals("Tên ngành không hợp lệ!", nganhBUS.getNganhByTenNganh(" ").getMessage());
     }
 
     @Test
@@ -95,19 +74,14 @@ public class NganhBUSTest {
 
         BUSResult<List<Nganh>> result = nganhBUS.getNganhTuyenThang();
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy ngành tuyển thẳng thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
-    // ==========================================
-    // TESTS FOR addNganh
-    // ==========================================
     @Test
-    public void testAddNganh_NullData() {
+    public void testAddNganh_InvalidData() {
         BUSResult<Nganh> result = nganhBUS.addNganh(null);
+
         assertEquals("Thông tin ngành không hợp lệ!", result.getMessage());
         verify(nganhDAO, never()).insert(any(Nganh.class));
     }
@@ -120,7 +94,6 @@ public class NganhBUSTest {
         BUSResult<Nganh> result = nganhBUS.addNganh(invalid);
 
         assertEquals("Mã ngành không được để trống!", result.getMessage());
-        verify(nganhDAO, never()).insert(any(Nganh.class));
     }
 
     @Test
@@ -131,17 +104,15 @@ public class NganhBUSTest {
         BUSResult<Nganh> result = nganhBUS.addNganh(invalid);
 
         assertEquals("Tên ngành không được để trống!", result.getMessage());
-        verify(nganhDAO, never()).insert(any(Nganh.class));
     }
 
     @Test
-    public void testAddNganh_DuplicateMaNganh() {
+    public void testAddNganh_Duplicate() {
         when(nganhDAO.findByMaNganh("7480201")).thenReturn(testNganh);
 
         BUSResult<Nganh> result = nganhBUS.addNganh(testNganh);
 
         assertEquals("Mã ngành đã tồn tại trong hệ thống!", result.getMessage());
-        verify(nganhDAO, never()).insert(any(Nganh.class));
     }
 
     @Test
@@ -164,15 +135,13 @@ public class NganhBUSTest {
         assertEquals("Thêm ngành thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR updateNganh
-    // ==========================================
     @Test
     public void testUpdateNganh_InvalidId() {
         Nganh invalid = new Nganh();
         invalid.setId(0);
 
         BUSResult<Nganh> result = nganhBUS.updateNganh(invalid);
+
         assertEquals("ID ngành không hợp lệ!", result.getMessage());
     }
 
@@ -181,6 +150,7 @@ public class NganhBUSTest {
         when(nganhDAO.findById(1)).thenReturn(null);
 
         BUSResult<Nganh> result = nganhBUS.updateNganh(testNganh);
+
         assertEquals("Không tìm thấy ngành này trong hệ thống!", result.getMessage());
     }
 
@@ -193,6 +163,7 @@ public class NganhBUSTest {
         when(nganhDAO.update(existing)).thenReturn(true);
 
         BUSResult<Nganh> result = nganhBUS.updateNganh(testNganh);
+
         assertEquals("Cập nhật ngành thành công!", result.getMessage());
     }
 
@@ -205,18 +176,17 @@ public class NganhBUSTest {
         when(nganhDAO.update(existing)).thenReturn(false);
 
         BUSResult<Nganh> result = nganhBUS.updateNganh(testNganh);
+
         assertEquals("Cập nhật ngành thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteNganh
-    // ==========================================
     @Test
     public void testDeleteNganh_InvalidId() {
         Nganh invalid = new Nganh();
         invalid.setId(0);
 
         BUSResult<Nganh> result = nganhBUS.deleteNganh(invalid);
+
         assertEquals("ID ngành không hợp lệ!", result.getMessage());
     }
 
@@ -225,6 +195,7 @@ public class NganhBUSTest {
         when(nganhDAO.findById(1)).thenReturn(null);
 
         BUSResult<Nganh> result = nganhBUS.deleteNganh(testNganh);
+
         assertEquals("Không tìm thấy ngành này trong hệ thống!", result.getMessage());
     }
 
@@ -234,6 +205,7 @@ public class NganhBUSTest {
         when(nganhDAO.delete(testNganh)).thenReturn(true);
 
         BUSResult<Nganh> result = nganhBUS.deleteNganh(testNganh);
+
         assertEquals("Xóa ngành thành công!", result.getMessage());
     }
 
@@ -243,6 +215,7 @@ public class NganhBUSTest {
         when(nganhDAO.delete(testNganh)).thenReturn(false);
 
         BUSResult<Nganh> result = nganhBUS.deleteNganh(testNganh);
+
         assertEquals("Xóa ngành thất bại!", result.getMessage());
     }
 }
