@@ -22,40 +22,36 @@ public class ThiSinh2025BUS {
         this.thiSinh2025DAO = thiSinh2025DAO;
     }
 
-    public List<ThiSinh2025> getAllThiSinh() {
-        return thiSinh2025DAO.findAll();
+    public BUSResult<List<ThiSinh2025>> getAllThiSinh() {
+        return BUSResult.successWithData("Lấy toàn bộ thí sinh thành công!", thiSinh2025DAO.findAll());
     }
 
-    public ThiSinh2025 getThiSinhById(Integer id) {
+    public BUSResult<ThiSinh2025> getThiSinhById(Integer id) {
         if (id == null || id <= 0) {
-            System.out.println("ID thí sinh không hợp lệ!");
-            return null;
+            return BUSResult.error("ID thí sinh không hợp lệ!");
         }
-        return thiSinh2025DAO.findById(id);
+        return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findById(id));
     }
 
-    public ThiSinh2025 getThiSinhByCccd(String cccd) {
+    public BUSResult<ThiSinh2025> getThiSinhByCccd(String cccd) {
         if (cccd == null || cccd.trim().isEmpty()) {
-            System.out.println("CCCD không hợp lệ!");
-            return null;
+            return BUSResult.error("CCCD không hợp lệ!");
         }
-        return thiSinh2025DAO.findByCccd(cccd);
+        return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findByCccd(cccd));
     }
 
-    public ThiSinh2025 getThiSinhBySoBaoDanh(String soBaoDanh) {
+    public BUSResult<ThiSinh2025> getThiSinhBySoBaoDanh(String soBaoDanh) {
         if (soBaoDanh == null || soBaoDanh.trim().isEmpty()) {
-            System.out.println("Số báo danh không hợp lệ!");
-            return null;
+            return BUSResult.error("Số báo danh không hợp lệ!");
         }
-        return thiSinh2025DAO.findBySoBaoDanh(soBaoDanh);
+        return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findBySoBaoDanh(soBaoDanh));
     }
 
-    public List<ThiSinh2025> getThiSinhByHoTen(String hoTen) {
+    public BUSResult<List<ThiSinh2025>> getThiSinhByHoTen(String hoTen) {
         if (hoTen == null || hoTen.trim().isEmpty()) {
-            System.out.println("Họ tên không hợp lệ!");
-            return null;
+            return BUSResult.error("Họ tên không hợp lệ!");
         }
-        return thiSinh2025DAO.findByHoTen(hoTen);
+        return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findByHoTen(hoTen));
     }
 
     public BUSResult<ThiSinh2025> addThiSinh(ThiSinh2025 newThiSinh) {

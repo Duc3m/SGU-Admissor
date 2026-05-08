@@ -51,12 +51,14 @@ public class SysFunctionBUSTest {
     public void testGetAllSysFunction() {
         when(sysFunctionDAO.findAll()).thenReturn(Arrays.asList(testFunction));
 
-        // Lưu ý: Gọi đúng tên hàm getALlSysFunction theo source code của bạn
-        List<SysFunction> result = sysFunctionBUS.getAllSysFunction();
+        BUSResult<List<SysFunction>> result = sysFunctionBUS.getAllSysFunction();
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("ManageUsers", result.get(0).getName());
+        assertTrue(result.isSuccess());
+        assertEquals("Lấy toàn bộ function thành công!", result.getMessage());
+        assertNotNull(result.getData());
+        assertEquals(1, result.getData().size());
+        assertEquals("ManageUsers", result.getData().get(0).getName());
         verify(sysFunctionDAO, times(1)).findAll();
     }
 
@@ -65,27 +67,33 @@ public class SysFunctionBUSTest {
     // ==========================================
     @Test
     public void testGetSysFunctionByID_NullId() {
-        SysFunction result = sysFunctionBUS.getSysFunctionByID(null);
-        assertNull(result, "Truyền ID null thì phải trả về null");
+        BUSResult<SysFunction> result = sysFunctionBUS.getSysFunctionByID(null);
+        assertFalse(result.isSuccess());
+        assertEquals("Function ID không hợp lê!", result.getMessage());
     }
 
     @Test
     public void testGetSysFunctionByID_NegativeOrZeroId() {
-        SysFunction result1 = sysFunctionBUS.getSysFunctionByID(0);
-        assertNull(result1, "Truyền ID = 0 thì phải trả về null");
+        BUSResult<SysFunction> result1 = sysFunctionBUS.getSysFunctionByID(0);
+        assertFalse(result1.isSuccess());
+        assertEquals("Function ID không hợp lê!", result1.getMessage());
 
-        SysFunction result2 = sysFunctionBUS.getSysFunctionByID(-5);
-        assertNull(result2, "Truyền ID âm thì phải trả về null");
+        BUSResult<SysFunction> result2 = sysFunctionBUS.getSysFunctionByID(-5);
+        assertFalse(result2.isSuccess());
+        assertEquals("Function ID không hợp lê!", result2.getMessage());
     }
 
     @Test
     public void testGetSysFunctionByID_ValidId() {
         when(sysFunctionDAO.findById(1)).thenReturn(testFunction);
 
-        SysFunction result = sysFunctionBUS.getSysFunctionByID(1);
+        BUSResult<SysFunction> result = sysFunctionBUS.getSysFunctionByID(1);
 
         assertNotNull(result);
-        assertEquals("ManageUsers", result.getName());
+        assertTrue(result.isSuccess());
+        assertEquals("Lấy function thành công!", result.getMessage());
+        assertNotNull(result.getData());
+        assertEquals("ManageUsers", result.getData().getName());
     }
 
     // ==========================================

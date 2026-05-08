@@ -22,44 +22,41 @@ public class DiemThiBUS {
         this.diemThiDAO = diemThiDAO;
     }
 
-    public List<DiemThi> getAllDiemThi() {
-        return diemThiDAO.findAll();
+    public BUSResult<List<DiemThi>> getAllDiemThi() {
+        return BUSResult.successWithData("Lấy toàn bộ điểm thi thành công!", diemThiDAO.findAll());
     }
 
-    public DiemThi getDiemThiById(Integer id) {
+    public BUSResult<DiemThi> getDiemThiById(Integer id) {
         if (id == null || id <= 0) {
-            System.out.println("ID điểm thi không hợp lệ!");
-            return null;
+            return BUSResult.error("ID điểm thi không hợp lệ!");
         }
-        return diemThiDAO.findById(id);
+        return BUSResult.successWithData("Lấy điểm thi thành công!", diemThiDAO.findById(id));
     }
 
-    public List<DiemThi> getDiemThiByCccd(String cccd) {
+    public BUSResult<List<DiemThi>> getDiemThiByCccd(String cccd) {
         if (cccd == null || cccd.trim().isEmpty()) {
-            System.out.println("CCCD không hợp lệ!");
-            return null;
+            return BUSResult.error("CCCD không hợp lệ!");
         }
-        return diemThiDAO.findByCccd(cccd);
+        return BUSResult.successWithData("Lấy điểm thi thành công!", diemThiDAO.findByCccd(cccd));
     }
 
-    public List<DiemThi> getDiemThiByPhuongThuc(String phuongThuc) {
+    public BUSResult<List<DiemThi>> getDiemThiByPhuongThuc(String phuongThuc) {
         if (phuongThuc == null || phuongThuc.trim().isEmpty()) {
-            System.out.println("Phương thức không hợp lệ!");
-            return null;
+            return BUSResult.error("Phương thức không hợp lệ!");
         }
-        return diemThiDAO.findByPhuongThuc(phuongThuc);
+        return BUSResult.successWithData("Lấy điểm thi thành công!", diemThiDAO.findByPhuongThuc(phuongThuc));
     }
 
-    public DiemThi getDiemThiByCccdAndPhuongThuc(String cccd, String phuongThuc) {
+    public BUSResult<DiemThi> getDiemThiByCccdAndPhuongThuc(String cccd, String phuongThuc) {
         if (cccd == null || cccd.trim().isEmpty()) {
-            System.out.println("CCCD không hợp lệ!");
-            return null;
+            return BUSResult.error("CCCD không hợp lệ!");
         }
         if (phuongThuc == null || phuongThuc.trim().isEmpty()) {
-            System.out.println("Phương thức không hợp lệ!");
-            return null;
+            return BUSResult.error("Phương thức không hợp lệ!");
         }
-        return diemThiDAO.findByCccdAndPhuongThuc(cccd, phuongThuc);
+        return BUSResult.successWithData(
+                "Lấy điểm thi thành công!",
+                diemThiDAO.findByCccdAndPhuongThuc(cccd, phuongThuc));
     }
 
     public BUSResult<DiemThi> addDiemThi(DiemThi newDiemThi) {

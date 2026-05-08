@@ -59,11 +59,14 @@ public class UserBUSTest {
     public void testGetAllUser() {
         when(userDAO.findAll()).thenReturn(Arrays.asList(testUser));
 
-        List<User> result = userBUS.getAllUser();
+        BUSResult<List<User>> result = userBUS.getAllUser();
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("duc3m", result.get(0).getUsername());
+        assertTrue(result.isSuccess());
+        assertEquals("Lấy toàn bộ user thành công!", result.getMessage());
+        assertNotNull(result.getData());
+        assertEquals(1, result.getData().size());
+        assertEquals("duc3m", result.getData().get(0).getUsername());
         verify(userDAO, times(1)).findAll();
     }
 
@@ -72,24 +75,29 @@ public class UserBUSTest {
     // ==========================================
     @Test
     public void testGetUserById_NullId() {
-        User result = userBUS.getUserById(null);
-        assertNull(result, "Truyền ID null thì phải trả về null");
+        BUSResult<User> result = userBUS.getUserById(null);
+        assertFalse(result.isSuccess());
+        assertEquals("User ID không hợp lê!", result.getMessage());
     }
 
     @Test
     public void testGetUserById_NegativeOrZeroId() {
-        User result = userBUS.getUserById(0);
-        assertNull(result, "Truyền ID <= 0 thì phải trả về null");
+        BUSResult<User> result = userBUS.getUserById(0);
+        assertFalse(result.isSuccess());
+        assertEquals("User ID không hợp lê!", result.getMessage());
     }
 
     @Test
     public void testGetUserById_ValidId() {
         when(userDAO.findById(1)).thenReturn(testUser);
 
-        User result = userBUS.getUserById(1);
+        BUSResult<User> result = userBUS.getUserById(1);
 
         assertNotNull(result);
-        assertEquals("duc3m", result.getUsername());
+        assertTrue(result.isSuccess());
+        assertEquals("Lấy user thành công!", result.getMessage());
+        assertNotNull(result.getData());
+        assertEquals("duc3m", result.getData().getUsername());
     }
 
     // ==========================================
@@ -97,24 +105,29 @@ public class UserBUSTest {
     // ==========================================
     @Test
     public void testGetUsersByRoleId_NullId() {
-        List<User> result = userBUS.getUsersByRoleId(null);
-        assertNull(result);
+        BUSResult<List<User>> result = userBUS.getUsersByRoleId(null);
+        assertFalse(result.isSuccess());
+        assertEquals("Role ID không hợp lê!", result.getMessage());
     }
 
     @Test
     public void testGetUsersByRoleId_NegativeOrZeroId() {
-        List<User> result = userBUS.getUsersByRoleId(-1);
-        assertNull(result);
+        BUSResult<List<User>> result = userBUS.getUsersByRoleId(-1);
+        assertFalse(result.isSuccess());
+        assertEquals("Role ID không hợp lê!", result.getMessage());
     }
 
     @Test
     public void testGetUsersByRoleId_ValidId() {
         when(userDAO.findByRoleId(1)).thenReturn(Arrays.asList(testUser));
 
-        List<User> result = userBUS.getUsersByRoleId(1);
+        BUSResult<List<User>> result = userBUS.getUsersByRoleId(1);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertTrue(result.isSuccess());
+        assertEquals("Lấy user thành công!", result.getMessage());
+        assertNotNull(result.getData());
+        assertEquals(1, result.getData().size());
     }
 
     // ==========================================

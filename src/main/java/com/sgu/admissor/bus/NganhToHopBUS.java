@@ -22,32 +22,29 @@ public class NganhToHopBUS {
         this.nganhToHopDAO = nganhToHopDAO;
     }
 
-    public List<NganhToHop> getAllNganhToHop() {
-        return nganhToHopDAO.findAll();
+    public BUSResult<List<NganhToHop>> getAllNganhToHop() {
+        return BUSResult.successWithData("Lấy toàn bộ ngành - tổ hợp thành công!", nganhToHopDAO.findAll());
     }
 
-    public NganhToHop getNganhToHopById(Integer id) {
+    public BUSResult<NganhToHop> getNganhToHopById(Integer id) {
         if (id == null || id <= 0) {
-            System.out.println("ID ngành-tổ hợp không hợp lệ!");
-            return null;
+            return BUSResult.error("ID ngành-tổ hợp không hợp lệ!");
         }
-        return nganhToHopDAO.findById(id);
+        return BUSResult.successWithData("Lấy ngành - tổ hợp thành công!", nganhToHopDAO.findById(id));
     }
 
-    public List<NganhToHop> getNganhToHopByMaNganh(String maNganh) {
+    public BUSResult<List<NganhToHop>> getNganhToHopByMaNganh(String maNganh) {
         if (maNganh == null || maNganh.trim().isEmpty()) {
-            System.out.println("Mã ngành không hợp lệ!");
-            return null;
+            return BUSResult.error("Mã ngành không hợp lệ!");
         }
-        return nganhToHopDAO.findByMaNganh(maNganh);
+        return BUSResult.successWithData("Lấy ngành - tổ hợp thành công!", nganhToHopDAO.findByMaNganh(maNganh));
     }
 
-    public List<NganhToHop> getNganhToHopByMaToHop(String maToHop) {
+    public BUSResult<List<NganhToHop>> getNganhToHopByMaToHop(String maToHop) {
         if (maToHop == null || maToHop.trim().isEmpty()) {
-            System.out.println("Mã tổ hợp không hợp lệ!");
-            return null;
+            return BUSResult.error("Mã tổ hợp không hợp lệ!");
         }
-        return nganhToHopDAO.findByMaToHop(maToHop);
+        return BUSResult.successWithData("Lấy ngành - tổ hợp thành công!", nganhToHopDAO.findByMaToHop(maToHop));
     }
 
     public BUSResult<NganhToHop> addNganhToHop(NganhToHop newNganhToHop) {

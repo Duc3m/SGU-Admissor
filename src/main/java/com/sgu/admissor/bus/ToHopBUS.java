@@ -22,32 +22,29 @@ public class ToHopBUS {
         this.toHopDAO = toHopDAO;
     }
 
-    public List<ToHop> getAllToHop() {
-        return toHopDAO.findAll();
+    public BUSResult<List<ToHop>> getAllToHop() {
+        return BUSResult.successWithData("Lấy toàn bộ tổ hợp thành công!", toHopDAO.findAll());
     }
 
-    public ToHop getToHopById(Integer id) {
+    public BUSResult<ToHop> getToHopById(Integer id) {
         if (id == null || id <= 0) {
-            System.out.println("ID tổ hợp không hợp lệ!");
-            return null;
+            return BUSResult.error("ID tổ hợp không hợp lệ!");
         }
-        return toHopDAO.findById(id);
+        return BUSResult.successWithData("Lấy tổ hợp thành công!", toHopDAO.findById(id));
     }
 
-    public ToHop getToHopByMaToHop(String maToHop) {
+    public BUSResult<ToHop> getToHopByMaToHop(String maToHop) {
         if (maToHop == null || maToHop.trim().isEmpty()) {
-            System.out.println("Mã tổ hợp không hợp lệ!");
-            return null;
+            return BUSResult.error("Mã tổ hợp không hợp lệ!");
         }
-        return toHopDAO.findByMaToHop(maToHop);
+        return BUSResult.successWithData("Lấy tổ hợp thành công!", toHopDAO.findByMaToHop(maToHop));
     }
 
-    public List<ToHop> getToHopByTenToHop(String tenToHop) {
+    public BUSResult<List<ToHop>> getToHopByTenToHop(String tenToHop) {
         if (tenToHop == null || tenToHop.trim().isEmpty()) {
-            System.out.println("Tên tổ hợp không hợp lệ!");
-            return null;
+            return BUSResult.error("Tên tổ hợp không hợp lệ!");
         }
-        return toHopDAO.findByTenToHop(tenToHop);
+        return BUSResult.successWithData("Lấy tổ hợp thành công!", toHopDAO.findByTenToHop(tenToHop));
     }
 
     public BUSResult<ToHop> addToHop(ToHop newToHop) {

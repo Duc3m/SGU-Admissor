@@ -22,40 +22,36 @@ public class DiemCongBUS {
         this.diemCongDAO = diemCongDAO;
     }
 
-    public List<DiemCong> getAllDiemCong() {
-        return diemCongDAO.findAll();
+    public BUSResult<List<DiemCong>> getAllDiemCong() {
+        return BUSResult.successWithData("Lấy toàn bộ điểm cộng thành công!", diemCongDAO.findAll());
     }
 
-    public DiemCong getDiemCongById(Integer id) {
+    public BUSResult<DiemCong> getDiemCongById(Integer id) {
         if (id == null || id <= 0) {
-            System.out.println("ID điểm cộng không hợp lệ!");
-            return null;
+            return BUSResult.error("ID điểm cộng không hợp lệ!");
         }
-        return diemCongDAO.findById(id);
+        return BUSResult.successWithData("Lấy điểm cộng thành công!", diemCongDAO.findById(id));
     }
 
-    public List<DiemCong> getDiemCongByCccd(String cccd) {
+    public BUSResult<List<DiemCong>> getDiemCongByCccd(String cccd) {
         if (cccd == null || cccd.trim().isEmpty()) {
-            System.out.println("CCCD không hợp lệ!");
-            return null;
+            return BUSResult.error("CCCD không hợp lệ!");
         }
-        return diemCongDAO.findByCccd(cccd);
+        return BUSResult.successWithData("Lấy điểm cộng thành công!", diemCongDAO.findByCccd(cccd));
     }
 
-    public DiemCong getDiemCongByDcKey(String dcKey) {
+    public BUSResult<DiemCong> getDiemCongByDcKey(String dcKey) {
         if (dcKey == null || dcKey.trim().isEmpty()) {
-            System.out.println("DC key không hợp lệ!");
-            return null;
+            return BUSResult.error("DC key không hợp lệ!");
         }
-        return diemCongDAO.findByDcKey(dcKey);
+        return BUSResult.successWithData("Lấy điểm cộng thành công!", diemCongDAO.findByDcKey(dcKey));
     }
 
-    public List<DiemCong> getDiemCongByMaNganh(String maNganh) {
+    public BUSResult<List<DiemCong>> getDiemCongByMaNganh(String maNganh) {
         if (maNganh == null || maNganh.trim().isEmpty()) {
-            System.out.println("Mã ngành không hợp lệ!");
-            return null;
+            return BUSResult.error("Mã ngành không hợp lệ!");
         }
-        return diemCongDAO.findByMaNganh(maNganh);
+        return BUSResult.successWithData("Lấy điểm cộng thành công!", diemCongDAO.findByMaNganh(maNganh));
     }
 
     public BUSResult<DiemCong> addDiemCong(DiemCong newDiemCong) {

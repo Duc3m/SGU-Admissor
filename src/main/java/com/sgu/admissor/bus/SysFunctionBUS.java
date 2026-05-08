@@ -25,17 +25,16 @@ public class SysFunctionBUS {
         this.sysFunctionDAO = sysFunctionDAO;
     }
     
-    public List<SysFunction> getAllSysFunction(){
-        return sysFunctionDAO.findAll();
+    public BUSResult<List<SysFunction>> getAllSysFunction(){
+        return BUSResult.successWithData("Lấy toàn bộ function thành công!", sysFunctionDAO.findAll());
     }
     
-    public SysFunction getSysFunctionByID(Integer id){
+    public BUSResult<SysFunction> getSysFunctionByID(Integer id){
         if (id == null || id <= 0){
-            System.out.println("Function ID không hợp lê!");
-            return null;
+            return BUSResult.error("Function ID không hợp lê!");
         }
         
-        return sysFunctionDAO.findById(id);
+        return BUSResult.successWithData("Lấy function thành công!", sysFunctionDAO.findById(id));
     }
     
     public BUSResult<SysFunction> addSysFunction(SysFunction sysFunction) {

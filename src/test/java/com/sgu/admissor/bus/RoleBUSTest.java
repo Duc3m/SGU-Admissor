@@ -49,34 +49,42 @@ public class RoleBUSTest {
     public void testGetAllRoles() {
         when(roleDAO.findAll()).thenReturn(Arrays.asList(testRole));
 
-        List<Role> result = roleBUS.getAllRoles();
+        BUSResult<List<Role>> result = roleBUS.getAllRoles();
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("Admin", result.get(0).getName());
+        assertTrue(result.isSuccess());
+        assertEquals("Lấy toàn bộ role thành công!", result.getMessage());
+        assertNotNull(result.getData());
+        assertEquals(1, result.getData().size());
+        assertEquals("Admin", result.getData().get(0).getName());
         verify(roleDAO, times(1)).findAll();
     }
 
     @Test
     public void testGetRoleById_NullId() {
-        Role result = roleBUS.getRoleById(null);
-        assertNull(result, "Truyền ID null thì phải trả về null");
+        BUSResult<Role> result = roleBUS.getRoleById(null);
+        assertFalse(result.isSuccess());
+        assertEquals("ID role không hợp lệ!", result.getMessage());
     }
 
     @Test
     public void testGetRoleById_NegativeId() {
-        Role result = roleBUS.getRoleById(-5);
-        assertNull(result, "Truyền ID âm thì phải trả về null");
+        BUSResult<Role> result = roleBUS.getRoleById(-5);
+        assertFalse(result.isSuccess());
+        assertEquals("ID role không hợp lệ!", result.getMessage());
     }
 
     @Test
     public void testGetRoleById_ValidId() {
         when(roleDAO.findById(1)).thenReturn(testRole);
         
-        Role result = roleBUS.getRoleById(1);
+        BUSResult<Role> result = roleBUS.getRoleById(1);
         
         assertNotNull(result);
-        assertEquals("Admin", result.getName());
+        assertTrue(result.isSuccess());
+        assertEquals("Lấy role thành công!", result.getMessage());
+        assertNotNull(result.getData());
+        assertEquals("Admin", result.getData().getName());
     }
 
     @Test

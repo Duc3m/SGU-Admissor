@@ -22,36 +22,33 @@ public class NganhBUS {
         this.nganhDAO = nganhDAO;
     }
 
-    public List<Nganh> getAllNganh() {
-        return nganhDAO.findAll();
+    public BUSResult<List<Nganh>> getAllNganh() {
+        return BUSResult.successWithData("Lấy toàn bộ ngành thành công!", nganhDAO.findAll());
     }
 
-    public Nganh getNganhById(Integer id) {
+    public BUSResult<Nganh> getNganhById(Integer id) {
         if (id == null || id <= 0) {
-            System.out.println("ID ngành không hợp lệ!");
-            return null;
+            return BUSResult.error("ID ngành không hợp lệ!");
         }
-        return nganhDAO.findById(id);
+        return BUSResult.successWithData("Lấy ngành thành công!", nganhDAO.findById(id));
     }
 
-    public Nganh getNganhByMaNganh(String maNganh) {
+    public BUSResult<Nganh> getNganhByMaNganh(String maNganh) {
         if (maNganh == null || maNganh.trim().isEmpty()) {
-            System.out.println("Mã ngành không hợp lệ!");
-            return null;
+            return BUSResult.error("Mã ngành không hợp lệ!");
         }
-        return nganhDAO.findByMaNganh(maNganh);
+        return BUSResult.successWithData("Lấy ngành thành công!", nganhDAO.findByMaNganh(maNganh));
     }
 
-    public List<Nganh> getNganhByTenNganh(String tenNganh) {
+    public BUSResult<List<Nganh>> getNganhByTenNganh(String tenNganh) {
         if (tenNganh == null || tenNganh.trim().isEmpty()) {
-            System.out.println("Tên ngành không hợp lệ!");
-            return null;
+            return BUSResult.error("Tên ngành không hợp lệ!");
         }
-        return nganhDAO.findByTenNganh(tenNganh);
+        return BUSResult.successWithData("Lấy ngành thành công!", nganhDAO.findByTenNganh(tenNganh));
     }
 
-    public List<Nganh> getNganhTuyenThang() {
-        return nganhDAO.findByTuyenThang(true);
+    public BUSResult<List<Nganh>> getNganhTuyenThang() {
+        return BUSResult.successWithData("Lấy ngành tuyển thẳng thành công!", nganhDAO.findByTuyenThang(true));
     }
 
     public BUSResult<Nganh> addNganh(Nganh newNganh) {

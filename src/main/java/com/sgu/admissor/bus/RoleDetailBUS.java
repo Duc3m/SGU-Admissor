@@ -23,32 +23,29 @@ public class RoleDetailBUS {
         this.roleDetailDAO = roleDetailDAO;
     }
 
-    public List<RoleDetail> getAllRoleDetail() {
-        return roleDetailDAO.findAll();
+    public BUSResult<List<RoleDetail>> getAllRoleDetail() {
+        return BUSResult.successWithData("Lấy toàn bộ chi tiết vai trò thành công!", roleDetailDAO.findAll());
     }
 
-    public RoleDetail getRoleDetailById(RoleDetailId id) {
+    public BUSResult<RoleDetail> getRoleDetailById(RoleDetailId id) {
         if (id == null) {
-            System.out.println("ID chi tiết vai trò không hợp lệ!");
-            return null;
+            return BUSResult.error("ID chi tiết vai trò không hợp lệ!");
         }
-        return roleDetailDAO.findById(id);
+        return BUSResult.successWithData("Lấy chi tiết vai trò thành công!", roleDetailDAO.findById(id));
     }
 
-    public List<RoleDetail> getRoleDetailsByRoleId(Integer roleId) {
+    public BUSResult<List<RoleDetail>> getRoleDetailsByRoleId(Integer roleId) {
         if (roleId == null || roleId <= 0) {
-            System.out.println("Role ID không hợp lệ!");
-            return null;
+            return BUSResult.error("Role ID không hợp lệ!");
         }
-        return roleDetailDAO.findByRoleId(roleId);
+        return BUSResult.successWithData("Lấy chi tiết vai trò thành công!", roleDetailDAO.findByRoleId(roleId));
     }
 
-    public List<RoleDetail> getRoleDetailsByFunctionId(Integer functionId) {
+    public BUSResult<List<RoleDetail>> getRoleDetailsByFunctionId(Integer functionId) {
         if (functionId == null || functionId <= 0) {
-            System.out.println("Function ID không hợp lệ!");
-            return null;
+            return BUSResult.error("Function ID không hợp lệ!");
         }
-        return roleDetailDAO.findByFunctionId(functionId);
+        return BUSResult.successWithData("Lấy chi tiết vai trò thành công!", roleDetailDAO.findByFunctionId(functionId));
     }
 
     public BUSResult<RoleDetail> addRoleDetail(RoleDetail newRoleDetail) {
