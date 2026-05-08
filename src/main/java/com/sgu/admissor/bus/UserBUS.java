@@ -22,26 +22,24 @@ public class UserBUS {
         this.userDAO = userDAO;
     }
     
-    public List<User> getAllUser(){
-        return userDAO.findAll();
+    public BUSResult<List<User>> getAllUser(){
+        return BUSResult.successWithData("Lấy toàn bộ user thành công!", userDAO.findAll());
     }
     
-    public User getUserById(Integer id){
+    public BUSResult<User> getUserById(Integer id){
         if (id == null || id <= 0){
-            System.out.println("User ID không hợp lê!");
-            return null;
+            return BUSResult.error("User ID không hợp lê!");
         }
         
-        return userDAO.findById(id);
+        return BUSResult.successWithData("Lấy user thành công!", userDAO.findById(id));
     }
     
-    public List<User> getUsersByRoleId(Integer roleId){
+    public BUSResult<List<User>> getUsersByRoleId(Integer roleId){
         if (roleId == null || roleId <= 0) {
-            System.out.println("Role ID không hợp lê!");
-            return null;
+            return BUSResult.error("Role ID không hợp lê!");
         }
         
-        return userDAO.findByRoleId(roleId);
+        return BUSResult.successWithData("Lấy user thành công!", userDAO.findByRoleId(roleId));
     }
     
     public BUSResult<User> addUser(User newUser){
@@ -96,8 +94,8 @@ public class UserBUS {
             return BUSResult.error("Không tìm thấy user này trong hệ thống!");
         }
         
-        boolean isUpdated = userDAO.delete(userToDelete);
-        if(isUpdated){
+        boolean isDeleted = userDAO.delete(userToDelete);
+        if(isDeleted){
             return BUSResult.success("Xóa user thành công!");
         } else {
             return BUSResult.error("Xóa user thất bại!");

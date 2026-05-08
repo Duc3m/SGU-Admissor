@@ -24,15 +24,15 @@ public class RoleBUS {
         this.roleDAO = roleDAO;
     }
 
-    public List<Role> getAllRoles() {
-        return roleDAO.findAll();
+    public BUSResult<List<Role>> getAllRoles() {
+        return BUSResult.successWithData("Lấy toàn bộ role thành công!", roleDAO.findAll());
     }
 
-    public Role getRoleById(Integer id) {
+    public BUSResult<Role> getRoleById(Integer id) {
         if (id == null || id <= 0) {
-            return null;
+            return BUSResult.error("ID role không hợp lệ!");
         }
-        return roleDAO.findById(id);
+        return BUSResult.successWithData("Lấy role thành công!", roleDAO.findById(id));
     }
 
     public BUSResult<Role> addRole(Role role) {

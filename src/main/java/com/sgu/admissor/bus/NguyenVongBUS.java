@@ -22,26 +22,24 @@ public class NguyenVongBUS {
         this.nguyenVongDAO = nguyenVongDAO;
     }
     
-    public List<NguyenVong> getAllNguyenVong(){
-        return nguyenVongDAO.findAll();
+    public BUSResult<List<NguyenVong>> getAllNguyenVong(){
+        return BUSResult.successWithData("Lấy toàn bộ nguyện vọng thành công!", nguyenVongDAO.findAll());
     }
     
-    public NguyenVong getNguyenVongById(Integer id){
+    public BUSResult<NguyenVong> getNguyenVongById(Integer id){
         if(id == null || id <= 0){
-            System.out.println("ID Nguyên vọng không hợp lệ!");
-            return null;
+            return BUSResult.error("ID Nguyên vọng không hợp lệ!");
         }
         
-        return nguyenVongDAO.findById(id);
+        return BUSResult.successWithData("Lấy nguyện vọng thành công!", nguyenVongDAO.findById(id));
     }
     
-    public List<NguyenVong> getNguyenVongsByCccd(String cccd){
+    public BUSResult<List<NguyenVong>> getNguyenVongsByCccd(String cccd){
         if(cccd == null || cccd.trim().isEmpty()){
-            System.out.println("CCCD không hợp lệ!");
-            return null;
+            return BUSResult.error("CCCD không hợp lệ!");
         }
         
-        return nguyenVongDAO.findByCccd(cccd);
+        return BUSResult.successWithData("Lấy nguyện vọng thành công!", nguyenVongDAO.findByCccd(cccd));
     }
     
     public BUSResult<NguyenVong> addNguyenVong(NguyenVong newNv) {

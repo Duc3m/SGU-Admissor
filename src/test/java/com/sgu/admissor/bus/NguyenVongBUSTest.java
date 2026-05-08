@@ -60,21 +60,34 @@ public class NguyenVongBUSTest {
     @Test
     public void testGetAllNguyenVong() {
         when(nguyenVongDAO.findAll()).thenReturn(Arrays.asList(testNv));
-        List<NguyenVong> result = nguyenVongBUS.getAllNguyenVong();
+        BUSResult<List<NguyenVong>> result = nguyenVongBUS.getAllNguyenVong();
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertTrue(result.isSuccess());
+        assertEquals("Lấy toàn bộ nguyện vọng thành công!", result.getMessage());
+        assertNotNull(result.getData());
+        assertEquals(1, result.getData().size());
     }
 
     @Test
     public void testGetNguyenVongById_InvalidId() {
-        assertNull(nguyenVongBUS.getNguyenVongById(null));
-        assertNull(nguyenVongBUS.getNguyenVongById(0));
+        BUSResult<NguyenVong> result1 = nguyenVongBUS.getNguyenVongById(null);
+        assertFalse(result1.isSuccess());
+        assertEquals("ID Nguyên vọng không hợp lệ!", result1.getMessage());
+
+        BUSResult<NguyenVong> result2 = nguyenVongBUS.getNguyenVongById(0);
+        assertFalse(result2.isSuccess());
+        assertEquals("ID Nguyên vọng không hợp lệ!", result2.getMessage());
     }
 
     @Test
     public void testGetNguyenVongsByCccd_InvalidCccd() {
-        assertNull(nguyenVongBUS.getNguyenVongsByCccd(null));
-        assertNull(nguyenVongBUS.getNguyenVongsByCccd("   "));
+        BUSResult<List<NguyenVong>> result1 = nguyenVongBUS.getNguyenVongsByCccd(null);
+        assertFalse(result1.isSuccess());
+        assertEquals("CCCD không hợp lệ!", result1.getMessage());
+
+        BUSResult<List<NguyenVong>> result2 = nguyenVongBUS.getNguyenVongsByCccd("   ");
+        assertFalse(result2.isSuccess());
+        assertEquals("CCCD không hợp lệ!", result2.getMessage());
     }
 
     // ==========================================
