@@ -5,9 +5,6 @@
 package com.sgu.admissor.dao;
 
 import com.sgu.admissor.entity.Role;
-import com.sgu.admissor.util.HibernateUtil;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 
 /**
  *
@@ -20,18 +17,12 @@ public class RoleDAO extends GenericDAO<Role> {
     }
     
     public Role findByName(String roleName) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            
-            String hql = "FROM Role WHERE name = :nameParam";
-            
-            Query<Role> query = session.createQuery(hql, Role.class);
-            query.setParameter("nameParam", roleName);
-            
-            return query.uniqueResult();   
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM Role r WHERE r.name = :name";
+        return emProvider.get().createQuery(hql, Role.class)
+                .setParameter("name", roleName)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
     }
     
 }

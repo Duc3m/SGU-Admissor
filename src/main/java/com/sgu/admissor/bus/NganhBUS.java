@@ -5,6 +5,7 @@
 package com.sgu.admissor.bus;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.NganhDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.Nganh;
@@ -15,6 +16,7 @@ import java.util.List;
  * @author Admin
  */
 public class NganhBUS {
+
     private final NganhDAO nganhDAO;
 
     @Inject
@@ -51,77 +53,68 @@ public class NganhBUS {
         return BUSResult.successWithData("Lấy ngành tuyển thẳng thành công!", nganhDAO.findByTuyenThang(true));
     }
 
-    public BUSResult<Nganh> addNganh(Nganh newNganh) {
-        if (newNganh == null) {
+    @Transactional
+    public BUSResult<Nganh> addNganh(Nganh nganh) {
+        if (nganh == null) {
             return BUSResult.error("Thông tin ngành không hợp lệ!");
         }
-        if (newNganh.getMaNganh() == null || newNganh.getMaNganh().trim().isEmpty()) {
+        if (nganh.getMaNganh() == null || nganh.getMaNganh().trim().isEmpty()) {
             return BUSResult.error("Mã ngành không được để trống!");
         }
-        if (newNganh.getTenNganh() == null || newNganh.getTenNganh().trim().isEmpty()) {
+        if (nganh.getTenNganh() == null || nganh.getTenNganh().trim().isEmpty()) {
             return BUSResult.error("Tên ngành không được để trống!");
         }
-
-        if (nganhDAO.findByMaNganh(newNganh.getMaNganh()) != null) {
+        if (nganhDAO.findByMaNganh(nganh.getMaNganh()) != null) {
             return BUSResult.error("Mã ngành đã tồn tại trong hệ thống!");
         }
-
-        boolean isInserted = nganhDAO.insert(newNganh);
-        if (isInserted) {
+        if (nganhDAO.insert(nganh)) {
             return BUSResult.success("Thêm ngành mới thành công!");
-        } else {
-            return BUSResult.error("Thêm ngành thất bại!");
         }
+        return BUSResult.error("Thêm ngành thất bại!");
     }
 
+    @Transactional
     public BUSResult<Nganh> updateNganh(Nganh nganh) {
         if (nganh == null || nganh.getId() == null || nganh.getId() <= 0) {
             return BUSResult.error("ID ngành không hợp lệ!");
         }
-
         Nganh existing = nganhDAO.findById(nganh.getId());
         if (existing == null) {
             return BUSResult.error("Không tìm thấy ngành này trong hệ thống!");
         }
+        existing.setMaNganh(nganh.getMaNganh());
+        existing.setTenNganh(nganh.getTenNganh());
+        existing.setToHopGoc(nganh.getToHopGoc());
+        existing.setChiTieu(nganh.getChiTieu());
+        existing.setDiemSan(nganh.getDiemSan());
+        existing.setDiemTrungTuyen(nganh.getDiemTrungTuyen());
+        existing.setTuyenThang(nganh.getTuyenThang());
+        existing.setDgnl(nganh.getDgnl());
+        existing.setThpt(nganh.getThpt());
+        existing.setVsat(nganh.getVsat());
+        existing.setSlXtt(nganh.getSlXtt());
+        existing.setSlDgnl(nganh.getSlDgnl());
+        existing.setSlVsat(nganh.getSlVsat());
+        existing.setSlThpt(nganh.getSlThpt());
 
-        if (nganh.getTenNganh() != null && !nganh.getTenNganh().trim().isEmpty()) {
-            existing.setTenNganh(nganh.getTenNganh());
-        }
-        if (nganh.getChiTieu() != null) existing.setChiTieu(nganh.getChiTieu());
-        if (nganh.getDiemSan() != null) existing.setDiemSan(nganh.getDiemSan());
-        if (nganh.getDiemTrungTuyen() != null) existing.setDiemTrungTuyen(nganh.getDiemTrungTuyen());
-        if (nganh.getTuyenThang() != null) existing.setTuyenThang(nganh.getTuyenThang());
-        if (nganh.getDgnl() != null) existing.setDgnl(nganh.getDgnl());
-        if (nganh.getThpt() != null) existing.setThpt(nganh.getThpt());
-        if (nganh.getVsat() != null) existing.setVsat(nganh.getVsat());
-        if (nganh.getSlXtt() != null) existing.setSlXtt(nganh.getSlXtt());
-        if (nganh.getSlDgnl() != null) existing.setSlDgnl(nganh.getSlDgnl());
-        if (nganh.getSlVsat() != null) existing.setSlVsat(nganh.getSlVsat());
-        if (nganh.getSlThpt() != null) existing.setSlThpt(nganh.getSlThpt());
-
-        boolean isUpdated = nganhDAO.update(existing);
-        if (isUpdated) {
+        if (nganhDAO.update(existing)) {
             return BUSResult.success("Cập nhật ngành thành công!");
-        } else {
-            return BUSResult.error("Cập nhật ngành thất bại!");
         }
+        return BUSResult.error("Cập nhật ngành thất bại!");
     }
 
+    @Transactional
     public BUSResult<Nganh> deleteNganh(Nganh nganh) {
         if (nganh == null || nganh.getId() == null || nganh.getId() <= 0) {
             return BUSResult.error("ID ngành không hợp lệ!");
         }
-
-        Nganh toDelete = nganhDAO.findById(nganh.getId());
-        if (toDelete == null) {
+        Nganh existing = nganhDAO.findById(nganh.getId());
+        if (existing == null) {
             return BUSResult.error("Không tìm thấy ngành này trong hệ thống!");
         }
-
-        boolean isDeleted = nganhDAO.delete(toDelete);
-        if (isDeleted) {
+        if (nganhDAO.delete(existing)) {
             return BUSResult.success("Xóa ngành thành công!");
-        } else {
-            return BUSResult.error("Xóa ngành thất bại!");
         }
+        return BUSResult.error("Xóa ngành thất bại!");
     }
 }

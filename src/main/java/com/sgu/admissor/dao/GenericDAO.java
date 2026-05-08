@@ -4,10 +4,10 @@
  */
 package com.sgu.admissor.dao;
 
-import com.sgu.admissor.util.HibernateUtil;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.persistence.EntityManager;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 /**
  *
@@ -15,64 +15,51 @@ import org.hibernate.Transaction;
  */
 public class GenericDAO<T> {
     private final Class<T> entityClass;
-
+    
+    @Inject
+    protected Provider<EntityManager> emProvider;
+    
     public GenericDAO(Class<T> entityClass) {
         this.entityClass = entityClass;
     }
 
     public List<T> findAll() {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String hql = "FROM " + entityClass.getSimpleName();
-            return session.createQuery(hql, entityClass).list();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM " + entityClass.getSimpleName();
+        return emProvider.get().createQuery(hql, entityClass).getResultList();
     }
 
     public T findById(Integer id) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            return session.get(entityClass, id);
-        }
+        return emProvider.get().find(entityClass, id);
     }
 
     public boolean insert(T entity) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            session.persist(entity);
-            transaction.commit();
+        try {
+            emProvider.get().persist(entity);
+            emProvider.get().flush();
             return true;
         } catch (Exception e) {
-            if(transaction != null) transaction.rollback();
             e.printStackTrace();
             return false;
         }
     }
 
     public boolean update(T entity) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            session.merge(entity);
-            transaction.commit();
+        try {
+            emProvider.get().merge(entity);
+            emProvider.get().flush();
             return true;
         } catch (Exception e) {
-            if(transaction != null) transaction.rollback();
             e.printStackTrace();
             return false;
         }
     }
     
     public boolean delete(T entity) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            session.remove(session.contains(entity) ? entity : session.merge(entity));
-            transaction.commit();
+        try {
+            emProvider.get().remove(emProvider.get().merge(entity));
+            emProvider.get().flush();
             return true;
         } catch (Exception e) {
-            if(transaction != null) transaction.rollback();
             e.printStackTrace();
             return false;
         }

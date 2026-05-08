@@ -5,10 +5,7 @@
 package com.sgu.admissor.dao;
 
 import com.sgu.admissor.entity.Nganh;
-import com.sgu.admissor.util.HibernateUtil;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 
 /**
  *
@@ -21,38 +18,25 @@ public class NganhDAO extends GenericDAO<Nganh> {
     }
 
     public Nganh findByMaNganh(String maNganh) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String hql = "FROM Nganh WHERE maNganh = :maNganhParam";
-            Query<Nganh> query = session.createQuery(hql, Nganh.class);
-            query.setParameter("maNganhParam", maNganh);
-            return query.uniqueResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM Nganh n WHERE n.maNganh = :maNganh";
+        return emProvider.get().createQuery(hql, Nganh.class)
+                .setParameter("maNganh", maNganh)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
     }
 
     public List<Nganh> findByTenNganh(String tenNganh) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String hql = "FROM Nganh WHERE tenNganh LIKE :tenNganhParam";
-            Query<Nganh> query = session.createQuery(hql, Nganh.class);
-            query.setParameter("tenNganhParam", "%" + tenNganh + "%");
-            return query.list();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM Nganh n WHERE n.tenNganh LIKE :tenNganh";
+        return emProvider.get().createQuery(hql, Nganh.class)
+                .setParameter("tenNganh", "%" + tenNganh + "%")
+                .getResultList();
     }
 
     public List<Nganh> findByTuyenThang(boolean tuyenThang) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String hql = "FROM Nganh WHERE tuyenThang = :tuyenThangParam";
-            Query<Nganh> query = session.createQuery(hql, Nganh.class);
-            query.setParameter("tuyenThangParam", tuyenThang);
-            return query.list();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM Nganh n WHERE n.tuyenThang = :tuyenThang";
+        return emProvider.get().createQuery(hql, Nganh.class)
+                .setParameter("tuyenThang", tuyenThang)
+                .getResultList();
     }
 }

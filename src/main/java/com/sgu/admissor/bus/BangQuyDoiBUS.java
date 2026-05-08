@@ -5,6 +5,7 @@
 package com.sgu.admissor.bus;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.BangQuyDoiDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.BangQuyDoi;
@@ -15,53 +16,48 @@ import java.util.List;
  * @author Duc3m
  */
 public class BangQuyDoiBUS {
-    
+
     private final BangQuyDoiDAO bangQuyDoiDAO;
-    
+
     @Inject
     public BangQuyDoiBUS(BangQuyDoiDAO bangQuyDoiDAO) {
         this.bangQuyDoiDAO = bangQuyDoiDAO;
     }
-    
+
     public BUSResult<List<BangQuyDoi>> getAllBangQuyDoi() {
         return BUSResult.successWithData("Lấy toàn bộ BangQuyDoi thành công!", bangQuyDoiDAO.findAll());
     }
-    
-    public BUSResult<BangQuyDoi> getBangQuyDoiByID(Integer id){
+
+    public BUSResult<BangQuyDoi> getBangQuyDoiByID(Integer id) {
         if (id == null || id <= 0) {
             return BUSResult.error("ID BangQuyDoi không hợp lệ");
         }
-        
-        BangQuyDoi data = bangQuyDoiDAO.findById(id);
-        return BUSResult.successWithData("Lấy BangQuyDoi thành công", data);
+        return BUSResult.successWithData("Lấy BangQuyDoi thành công", bangQuyDoiDAO.findById(id));
     }
-    
+
+    @Transactional
     public BUSResult<BangQuyDoi> addBangQuyDoi(BangQuyDoi bangQuyDoi) {
-        if (bangQuyDoi.getPhuongThuc() ==null || bangQuyDoi.getPhuongThuc().trim().isEmpty()) {
+        if (bangQuyDoi == null || bangQuyDoi.getPhuongThuc() == null || bangQuyDoi.getPhuongThuc().trim().isEmpty()) {
             return BUSResult.error("Phương thức không được trống");
         }
-        
-        boolean isInserted = bangQuyDoiDAO.insert(bangQuyDoi);
-        
-        if(isInserted) {
+        if (bangQuyDoiDAO.insert(bangQuyDoi)) {
             return BUSResult.success("Thêm BangQuyDoi thành công!");
-        } else {
-            return BUSResult.error("Lỗi gì đó ở phương thức addBangQuyDoi()");
         }
+        return BUSResult.error("Lỗi gì đó ở phương thức addBangQuyDoi()");
     }
-    
+
+    @Transactional
     public BUSResult deleteBangQuyDoi(BangQuyDoi bangQuyDoi) {
-        if(bangQuyDoi == null || bangQuyDoiDAO.findById(bangQuyDoi.getId()) == null) {
+        if (bangQuyDoi == null || bangQuyDoi.getId() == null) {
             return BUSResult.error("Không tìm thấy BangQuyDoi");
         }
-        
-        boolean isDeleted = bangQuyDoiDAO.delete(bangQuyDoi);
-        
-        if(isDeleted) {
-            return BUSResult.success("Xoá BangQuyDoi thành công");
-        } else {
-            return BUSResult.error("Lỗi gì đó ở phương thức deleteBangQuyDoi()");
+        BangQuyDoi existing = bangQuyDoiDAO.findById(bangQuyDoi.getId());
+        if (existing == null) {
+            return BUSResult.error("Không tìm thấy BangQuyDoi");
         }
+        if (bangQuyDoiDAO.delete(existing)) {
+            return BUSResult.success("Xoá BangQuyDoi thành công");
+        }
+        return BUSResult.error("Lỗi gì đó ở phương thức deleteBangQuyDoi()");
     }
-    
 }

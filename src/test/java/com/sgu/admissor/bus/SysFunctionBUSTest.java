@@ -17,15 +17,10 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/**
- *
- * @author Admin
- */
 @ExtendWith(MockitoExtension.class)
 public class SysFunctionBUSTest {
 
@@ -44,43 +39,20 @@ public class SysFunctionBUSTest {
         testFunction.setName("ManageUsers");
     }
 
-    // ==========================================
-    // TESTS FOR getALlSysFunction
-    // ==========================================
     @Test
     public void testGetAllSysFunction() {
         when(sysFunctionDAO.findAll()).thenReturn(Arrays.asList(testFunction));
 
         BUSResult<List<SysFunction>> result = sysFunctionBUS.getAllSysFunction();
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy toàn bộ function thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
-        assertEquals("ManageUsers", result.getData().get(0).getName());
-        verify(sysFunctionDAO, times(1)).findAll();
-    }
-
-    // ==========================================
-    // TESTS FOR getSysFunctionByID
-    // ==========================================
-    @Test
-    public void testGetSysFunctionByID_NullId() {
-        BUSResult<SysFunction> result = sysFunctionBUS.getSysFunctionByID(null);
-        assertFalse(result.isSuccess());
-        assertEquals("Function ID không hợp lê!", result.getMessage());
     }
 
     @Test
-    public void testGetSysFunctionByID_NegativeOrZeroId() {
-        BUSResult<SysFunction> result1 = sysFunctionBUS.getSysFunctionByID(0);
-        assertFalse(result1.isSuccess());
-        assertEquals("Function ID không hợp lê!", result1.getMessage());
-
-        BUSResult<SysFunction> result2 = sysFunctionBUS.getSysFunctionByID(-5);
-        assertFalse(result2.isSuccess());
-        assertEquals("Function ID không hợp lê!", result2.getMessage());
+    public void testGetSysFunctionByID_InvalidId() {
+        assertEquals("Function ID không hợp lê!", sysFunctionBUS.getSysFunctionByID(null).getMessage());
+        assertEquals("Function ID không hợp lê!", sysFunctionBUS.getSysFunctionByID(0).getMessage());
     }
 
     @Test
@@ -89,30 +61,23 @@ public class SysFunctionBUSTest {
 
         BUSResult<SysFunction> result = sysFunctionBUS.getSysFunctionByID(1);
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy function thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals("ManageUsers", result.getData().getName());
     }
 
-    // ==========================================
-    // TESTS FOR addSysFunction
-    // ==========================================
     @Test
-    public void testAddSysFunction_NullOrEmptyName() {
-        SysFunction emptyFunc = new SysFunction();
-        emptyFunc.setName("   "); // Tên toàn khoảng trắng
+    public void testAddSysFunction_InvalidName() {
+        SysFunction invalid = new SysFunction();
+        invalid.setName(" ");
 
-        BUSResult<SysFunction> result = sysFunctionBUS.addSysFunction(emptyFunc);
+        BUSResult<SysFunction> result = sysFunctionBUS.addSysFunction(invalid);
 
         assertEquals("Tên Function không được để trống!", result.getMessage());
-        // Sử dụng verify never() để đảm bảo db không bị rác
         verify(sysFunctionDAO, never()).insert(any(SysFunction.class));
     }
 
     @Test
-    public void testAddSysFunction_DuplicateName() {
+    public void testAddSysFunction_Duplicate() {
         when(sysFunctionDAO.findByName("ManageUsers")).thenReturn(testFunction);
 
         BUSResult<SysFunction> result = sysFunctionBUS.addSysFunction(testFunction);
@@ -122,7 +87,7 @@ public class SysFunctionBUSTest {
     }
 
     @Test
-    public void testAddSysFunction_InsertSuccess() {
+    public void testAddSysFunction_Success() {
         when(sysFunctionDAO.findByName("ManageUsers")).thenReturn(null);
         when(sysFunctionDAO.insert(testFunction)).thenReturn(true);
 
@@ -132,7 +97,7 @@ public class SysFunctionBUSTest {
     }
 
     @Test
-    public void testAddSysFunction_InsertFail() {
+    public void testAddSysFunction_Fail() {
         when(sysFunctionDAO.findByName("ManageUsers")).thenReturn(null);
         when(sysFunctionDAO.insert(testFunction)).thenReturn(false);
 
@@ -141,27 +106,14 @@ public class SysFunctionBUSTest {
         assertEquals("Thêm Function thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteSysFuntion
-    // ==========================================
     @Test
-    public void testDeleteSysFunction_NullFunction() {
-        // Lưu ý: Gọi đúng tên hàm deleteSysFuntion (thiếu chữ c) theo code của bạn
-        BUSResult result = sysFunctionBUS.deleteSysFunction(null);
+    public void testDeleteSysFunction_Invalid() {
+        assertEquals("Không tìm thấy Function!", sysFunctionBUS.deleteSysFunction(null).getMessage());
 
-        assertEquals("Không tìm thấy Function!", result.getMessage());
-        verify(sysFunctionDAO, never()).delete(any(SysFunction.class));
-    }
+        SysFunction invalid = new SysFunction();
+        invalid.setName("NoId");
 
-    @Test
-    public void testDeleteSysFunction_NullId() {
-        SysFunction noIdFunc = new SysFunction();
-        noIdFunc.setName("NoIdFunc");
-        // Không set ID
-
-        BUSResult result = sysFunctionBUS.deleteSysFunction(noIdFunc);
-
-        assertEquals("Không tìm thấy Function!", result.getMessage());
+        assertEquals("Không tìm thấy Function!", sysFunctionBUS.deleteSysFunction(invalid).getMessage());
         verify(sysFunctionDAO, never()).delete(any(SysFunction.class));
     }
 

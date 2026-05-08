@@ -5,6 +5,7 @@
 package com.sgu.admissor.bus;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.ThiSinh2025DAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.ThiSinh2025;
@@ -15,6 +16,7 @@ import java.util.List;
  * @author Admin
  */
 public class ThiSinh2025BUS {
+
     private final ThiSinh2025DAO thiSinh2025DAO;
 
     @Inject
@@ -54,79 +56,72 @@ public class ThiSinh2025BUS {
         return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findByHoTen(hoTen));
     }
 
-    public BUSResult<ThiSinh2025> addThiSinh(ThiSinh2025 newThiSinh) {
-        if (newThiSinh == null) {
+    @Transactional
+    public BUSResult<ThiSinh2025> addThiSinh(ThiSinh2025 thiSinh) {
+        if (thiSinh == null) {
             return BUSResult.error("Thông tin thí sinh không hợp lệ!");
         }
-        if (newThiSinh.getCccd() == null || newThiSinh.getCccd().trim().isEmpty()) {
+        if (thiSinh.getCccd() == null || thiSinh.getCccd().trim().isEmpty()) {
             return BUSResult.error("CCCD không được để trống!");
         }
-        if (newThiSinh.getSoBaoDanh() == null || newThiSinh.getSoBaoDanh().trim().isEmpty()) {
+        if (thiSinh.getSoBaoDanh() == null || thiSinh.getSoBaoDanh().trim().isEmpty()) {
             return BUSResult.error("Số báo danh không được để trống!");
         }
-        if (newThiSinh.getHoTen() == null || newThiSinh.getHoTen().trim().isEmpty()) {
+        if (thiSinh.getHoTen() == null || thiSinh.getHoTen().trim().isEmpty()) {
             return BUSResult.error("Họ tên không được để trống!");
         }
-
-        if (thiSinh2025DAO.findByCccd(newThiSinh.getCccd()) != null) {
+        if (thiSinh2025DAO.findByCccd(thiSinh.getCccd()) != null) {
             return BUSResult.error("CCCD đã tồn tại trong hệ thống!");
         }
-        if (thiSinh2025DAO.findBySoBaoDanh(newThiSinh.getSoBaoDanh()) != null) {
+        if (thiSinh2025DAO.findBySoBaoDanh(thiSinh.getSoBaoDanh()) != null) {
             return BUSResult.error("Số báo danh đã tồn tại trong hệ thống!");
         }
-
-        boolean isInserted = thiSinh2025DAO.insert(newThiSinh);
-        if (isInserted) {
+        if (thiSinh2025DAO.insert(thiSinh)) {
             return BUSResult.success("Thêm thí sinh mới thành công!");
-        } else {
-            return BUSResult.error("Thêm thí sinh thất bại!");
         }
+        return BUSResult.error("Thêm thí sinh thất bại!");
     }
 
+    @Transactional
     public BUSResult<ThiSinh2025> updateThiSinh(ThiSinh2025 thiSinh) {
         if (thiSinh == null || thiSinh.getId() == null || thiSinh.getId() <= 0) {
             return BUSResult.error("ID thí sinh không hợp lệ!");
         }
-
         ThiSinh2025 existing = thiSinh2025DAO.findById(thiSinh.getId());
         if (existing == null) {
             return BUSResult.error("Không tìm thấy thí sinh này trong hệ thống!");
         }
+        existing.setCccd(thiSinh.getCccd());
+        existing.setSoBaoDanh(thiSinh.getSoBaoDanh());
+        existing.setHoTen(thiSinh.getHoTen());
+        existing.setNgaySinh(thiSinh.getNgaySinh());
+        existing.setDienThoai(thiSinh.getDienThoai());
+        existing.setPassword(thiSinh.getPassword());
+        existing.setGioiTinh(thiSinh.getGioiTinh());
+        existing.setEmail(thiSinh.getEmail());
+        existing.setNoiSinh(thiSinh.getNoiSinh());
+        existing.setUpdatedAt(thiSinh.getUpdatedAt());
+        existing.setDoiTuong(thiSinh.getDoiTuong());
+        existing.setKhuVuc(thiSinh.getKhuVuc());
 
-        if (thiSinh.getHoTen() != null && !thiSinh.getHoTen().trim().isEmpty()) {
-            existing.setHoTen(thiSinh.getHoTen());
-        }
-        if (thiSinh.getDienThoai() != null) existing.setDienThoai(thiSinh.getDienThoai());
-        if (thiSinh.getEmail() != null) existing.setEmail(thiSinh.getEmail());
-        if (thiSinh.getGioiTinh() != null) existing.setGioiTinh(thiSinh.getGioiTinh());
-        if (thiSinh.getNoiSinh() != null) existing.setNoiSinh(thiSinh.getNoiSinh());
-        if (thiSinh.getNgaySinh() != null) existing.setNgaySinh(thiSinh.getNgaySinh());
-        if (thiSinh.getDoiTuong() != null) existing.setDoiTuong(thiSinh.getDoiTuong());
-        if (thiSinh.getKhuVuc() != null) existing.setKhuVuc(thiSinh.getKhuVuc());
-
-        boolean isUpdated = thiSinh2025DAO.update(existing);
-        if (isUpdated) {
+        if (thiSinh2025DAO.update(existing)) {
             return BUSResult.success("Cập nhật thí sinh thành công!");
-        } else {
-            return BUSResult.error("Cập nhật thí sinh thất bại!");
         }
+        return BUSResult.error("Cập nhật thí sinh thất bại!");
     }
 
+    @Transactional
     public BUSResult<ThiSinh2025> deleteThiSinh(ThiSinh2025 thiSinh) {
         if (thiSinh == null || thiSinh.getId() == null || thiSinh.getId() <= 0) {
             return BUSResult.error("ID thí sinh không hợp lệ!");
         }
-
-        ThiSinh2025 toDelete = thiSinh2025DAO.findById(thiSinh.getId());
-        if (toDelete == null) {
+        ThiSinh2025 existing = thiSinh2025DAO.findById(thiSinh.getId());
+        if (existing == null) {
             return BUSResult.error("Không tìm thấy thí sinh này trong hệ thống!");
         }
-
-        boolean isDeleted = thiSinh2025DAO.delete(toDelete);
-        if (isDeleted) {
+        if (thiSinh2025DAO.delete(existing)) {
             return BUSResult.success("Xóa thí sinh thành công!");
-        } else {
-            return BUSResult.error("Xóa thí sinh thất bại!");
         }
+        return BUSResult.error("Xóa thí sinh thất bại!");
     }
 }

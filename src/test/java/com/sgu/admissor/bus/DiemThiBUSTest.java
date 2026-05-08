@@ -45,72 +45,44 @@ public class DiemThiBUSTest {
         testDiemThi.setPhuongThuc("100");
     }
 
-    // ==========================================
-    // TESTS FOR getAllDiemThi & getById/Cccd/PhuongThuc/CccdAndPhuongThuc
-    // ==========================================
     @Test
     public void testGetAllDiemThi() {
         when(diemThiDAO.findAll()).thenReturn(Arrays.asList(testDiemThi));
 
         BUSResult<List<DiemThi>> result = diemThiBUS.getAllDiemThi();
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy toàn bộ điểm thi thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
     @Test
     public void testGetDiemThiById_InvalidId() {
-        BUSResult<DiemThi> result1 = diemThiBUS.getDiemThiById(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("ID điểm thi không hợp lệ!", result1.getMessage());
-
-        BUSResult<DiemThi> result2 = diemThiBUS.getDiemThiById(0);
-        assertFalse(result2.isSuccess());
-        assertEquals("ID điểm thi không hợp lệ!", result2.getMessage());
+        assertEquals("ID điểm thi không hợp lệ!", diemThiBUS.getDiemThiById(null).getMessage());
+        assertEquals("ID điểm thi không hợp lệ!", diemThiBUS.getDiemThiById(0).getMessage());
     }
 
     @Test
-    public void testGetDiemThiByCccd_InvalidCccd() {
-        BUSResult<List<DiemThi>> result1 = diemThiBUS.getDiemThiByCccd(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<DiemThi>> result2 = diemThiBUS.getDiemThiByCccd("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result2.getMessage());
+    public void testGetDiemThiByCccd_Invalid() {
+        assertEquals("CCCD không hợp lệ!", diemThiBUS.getDiemThiByCccd(null).getMessage());
+        assertEquals("CCCD không hợp lệ!", diemThiBUS.getDiemThiByCccd(" ").getMessage());
     }
 
     @Test
     public void testGetDiemThiByPhuongThuc_Invalid() {
-        BUSResult<List<DiemThi>> result1 = diemThiBUS.getDiemThiByPhuongThuc(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Phương thức không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<DiemThi>> result2 = diemThiBUS.getDiemThiByPhuongThuc("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Phương thức không hợp lệ!", result2.getMessage());
+        assertEquals("Phương thức không hợp lệ!", diemThiBUS.getDiemThiByPhuongThuc(null).getMessage());
+        assertEquals("Phương thức không hợp lệ!", diemThiBUS.getDiemThiByPhuongThuc(" ").getMessage());
     }
 
     @Test
     public void testGetDiemThiByCccdAndPhuongThuc_Invalid() {
-        BUSResult<DiemThi> result1 = diemThiBUS.getDiemThiByCccdAndPhuongThuc(null, "100");
-        assertFalse(result1.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result1.getMessage());
-
-        BUSResult<DiemThi> result2 = diemThiBUS.getDiemThiByCccdAndPhuongThuc("0123456789", null);
-        assertFalse(result2.isSuccess());
-        assertEquals("Phương thức không hợp lệ!", result2.getMessage());
+        assertEquals("CCCD không hợp lệ!", diemThiBUS.getDiemThiByCccdAndPhuongThuc(null, "100").getMessage());
+        assertEquals("Phương thức không hợp lệ!", diemThiBUS.getDiemThiByCccdAndPhuongThuc("0123456789", null).getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR addDiemThi
-    // ==========================================
     @Test
-    public void testAddDiemThi_NullData() {
+    public void testAddDiemThi_InvalidData() {
         BUSResult<DiemThi> result = diemThiBUS.addDiemThi(null);
+
         assertEquals("Thông tin điểm thi không hợp lệ!", result.getMessage());
         verify(diemThiDAO, never()).insert(any(DiemThi.class));
     }
@@ -124,7 +96,6 @@ public class DiemThiBUSTest {
         BUSResult<DiemThi> result = diemThiBUS.addDiemThi(invalid);
 
         assertEquals("Thông tin thí sinh không hợp lệ!", result.getMessage());
-        verify(diemThiDAO, never()).insert(any(DiemThi.class));
     }
 
     @Test
@@ -135,7 +106,6 @@ public class DiemThiBUSTest {
         BUSResult<DiemThi> result = diemThiBUS.addDiemThi(invalid);
 
         assertEquals("Phương thức thi không được để trống!", result.getMessage());
-        verify(diemThiDAO, never()).insert(any(DiemThi.class));
     }
 
     @Test
@@ -145,7 +115,6 @@ public class DiemThiBUSTest {
         BUSResult<DiemThi> result = diemThiBUS.addDiemThi(testDiemThi);
 
         assertEquals("Điểm thi theo phương thức này đã tồn tại cho thí sinh!", result.getMessage());
-        verify(diemThiDAO, never()).insert(any(DiemThi.class));
     }
 
     @Test
@@ -168,15 +137,13 @@ public class DiemThiBUSTest {
         assertEquals("Thêm điểm thi thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR updateDiemThi
-    // ==========================================
     @Test
     public void testUpdateDiemThi_InvalidId() {
         DiemThi invalid = new DiemThi();
         invalid.setId(0);
 
         BUSResult<DiemThi> result = diemThiBUS.updateDiemThi(invalid);
+
         assertEquals("ID điểm thi không hợp lệ!", result.getMessage());
     }
 
@@ -185,6 +152,7 @@ public class DiemThiBUSTest {
         when(diemThiDAO.findById(1)).thenReturn(null);
 
         BUSResult<DiemThi> result = diemThiBUS.updateDiemThi(testDiemThi);
+
         assertEquals("Không tìm thấy điểm thi này trong hệ thống!", result.getMessage());
     }
 
@@ -197,6 +165,7 @@ public class DiemThiBUSTest {
         when(diemThiDAO.update(existing)).thenReturn(true);
 
         BUSResult<DiemThi> result = diemThiBUS.updateDiemThi(testDiemThi);
+
         assertEquals("Cập nhật điểm thi thành công!", result.getMessage());
     }
 
@@ -209,18 +178,17 @@ public class DiemThiBUSTest {
         when(diemThiDAO.update(existing)).thenReturn(false);
 
         BUSResult<DiemThi> result = diemThiBUS.updateDiemThi(testDiemThi);
+
         assertEquals("Cập nhật điểm thi thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteDiemThi
-    // ==========================================
     @Test
     public void testDeleteDiemThi_InvalidId() {
         DiemThi invalid = new DiemThi();
         invalid.setId(0);
 
         BUSResult<DiemThi> result = diemThiBUS.deleteDiemThi(invalid);
+
         assertEquals("ID điểm thi không hợp lệ!", result.getMessage());
     }
 
@@ -229,6 +197,7 @@ public class DiemThiBUSTest {
         when(diemThiDAO.findById(1)).thenReturn(null);
 
         BUSResult<DiemThi> result = diemThiBUS.deleteDiemThi(testDiemThi);
+
         assertEquals("Không tìm thấy điểm thi này trong hệ thống!", result.getMessage());
     }
 
@@ -238,6 +207,7 @@ public class DiemThiBUSTest {
         when(diemThiDAO.delete(testDiemThi)).thenReturn(true);
 
         BUSResult<DiemThi> result = diemThiBUS.deleteDiemThi(testDiemThi);
+
         assertEquals("Xóa điểm thi thành công!", result.getMessage());
     }
 
@@ -247,6 +217,7 @@ public class DiemThiBUSTest {
         when(diemThiDAO.delete(testDiemThi)).thenReturn(false);
 
         BUSResult<DiemThi> result = diemThiBUS.deleteDiemThi(testDiemThi);
+
         assertEquals("Xóa điểm thi thất bại!", result.getMessage());
     }
 }

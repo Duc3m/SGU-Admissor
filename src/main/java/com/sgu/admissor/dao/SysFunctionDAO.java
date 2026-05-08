@@ -5,9 +5,6 @@
 package com.sgu.admissor.dao;
 
 import com.sgu.admissor.entity.SysFunction;
-import com.sgu.admissor.util.HibernateUtil;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 
 /**
  *
@@ -20,16 +17,11 @@ public class SysFunctionDAO extends GenericDAO<SysFunction> {
     }
     
     public SysFunction findByName(String funcName) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String hql = "FROM SysFunction WHERE name = :nameParam";
-            
-            Query<SysFunction> query = session.createQuery(hql, SysFunction.class);
-            query.setParameter("nameParam", funcName);
-            
-            return query.uniqueResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String hql = "FROM SysFunction f WHERE f.name = :name";
+        return emProvider.get().createQuery(hql, SysFunction.class)
+                .setParameter("name", funcName)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
     }
 }

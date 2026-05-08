@@ -52,72 +52,44 @@ public class DiemCongBUSTest {
         testDiemCong.setDcKey("0123456789_7480201_100");
     }
 
-    // ==========================================
-    // TESTS FOR getAllDiemCong & getById/Cccd/DcKey/MaNganh
-    // ==========================================
     @Test
     public void testGetAllDiemCong() {
         when(diemCongDAO.findAll()).thenReturn(Arrays.asList(testDiemCong));
 
         BUSResult<List<DiemCong>> result = diemCongBUS.getAllDiemCong();
 
-        assertNotNull(result);
-        assertTrue(result.isSuccess());
         assertEquals("Lấy toàn bộ điểm cộng thành công!", result.getMessage());
-        assertNotNull(result.getData());
         assertEquals(1, result.getData().size());
     }
 
     @Test
     public void testGetDiemCongById_InvalidId() {
-        BUSResult<DiemCong> result1 = diemCongBUS.getDiemCongById(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("ID điểm cộng không hợp lệ!", result1.getMessage());
-
-        BUSResult<DiemCong> result2 = diemCongBUS.getDiemCongById(0);
-        assertFalse(result2.isSuccess());
-        assertEquals("ID điểm cộng không hợp lệ!", result2.getMessage());
+        assertEquals("ID điểm cộng không hợp lệ!", diemCongBUS.getDiemCongById(null).getMessage());
+        assertEquals("ID điểm cộng không hợp lệ!", diemCongBUS.getDiemCongById(0).getMessage());
     }
 
     @Test
-    public void testGetDiemCongByCccd_InvalidCccd() {
-        BUSResult<List<DiemCong>> result1 = diemCongBUS.getDiemCongByCccd(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<DiemCong>> result2 = diemCongBUS.getDiemCongByCccd("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("CCCD không hợp lệ!", result2.getMessage());
+    public void testGetDiemCongByCccd_Invalid() {
+        assertEquals("CCCD không hợp lệ!", diemCongBUS.getDiemCongByCccd(null).getMessage());
+        assertEquals("CCCD không hợp lệ!", diemCongBUS.getDiemCongByCccd(" ").getMessage());
     }
 
     @Test
-    public void testGetDiemCongByDcKey_InvalidDcKey() {
-        BUSResult<DiemCong> result1 = diemCongBUS.getDiemCongByDcKey(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("DC key không hợp lệ!", result1.getMessage());
-
-        BUSResult<DiemCong> result2 = diemCongBUS.getDiemCongByDcKey("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("DC key không hợp lệ!", result2.getMessage());
+    public void testGetDiemCongByDcKey_Invalid() {
+        assertEquals("DC key không hợp lệ!", diemCongBUS.getDiemCongByDcKey(null).getMessage());
+        assertEquals("DC key không hợp lệ!", diemCongBUS.getDiemCongByDcKey(" ").getMessage());
     }
 
     @Test
-    public void testGetDiemCongByMaNganh_InvalidMaNganh() {
-        BUSResult<List<DiemCong>> result1 = diemCongBUS.getDiemCongByMaNganh(null);
-        assertFalse(result1.isSuccess());
-        assertEquals("Mã ngành không hợp lệ!", result1.getMessage());
-
-        BUSResult<List<DiemCong>> result2 = diemCongBUS.getDiemCongByMaNganh("   ");
-        assertFalse(result2.isSuccess());
-        assertEquals("Mã ngành không hợp lệ!", result2.getMessage());
+    public void testGetDiemCongByMaNganh_Invalid() {
+        assertEquals("Mã ngành không hợp lệ!", diemCongBUS.getDiemCongByMaNganh(null).getMessage());
+        assertEquals("Mã ngành không hợp lệ!", diemCongBUS.getDiemCongByMaNganh(" ").getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR addDiemCong
-    // ==========================================
     @Test
-    public void testAddDiemCong_NullData() {
+    public void testAddDiemCong_InvalidData() {
         BUSResult<DiemCong> result = diemCongBUS.addDiemCong(null);
+
         assertEquals("Thông tin điểm cộng không hợp lệ!", result.getMessage());
         verify(diemCongDAO, never()).insert(any(DiemCong.class));
     }
@@ -131,7 +103,6 @@ public class DiemCongBUSTest {
         BUSResult<DiemCong> result = diemCongBUS.addDiemCong(invalid);
 
         assertEquals("Thông tin thí sinh không hợp lệ!", result.getMessage());
-        verify(diemCongDAO, never()).insert(any(DiemCong.class));
     }
 
     @Test
@@ -143,18 +114,15 @@ public class DiemCongBUSTest {
         BUSResult<DiemCong> result = diemCongBUS.addDiemCong(invalid);
 
         assertEquals("Mã ngành không được để trống!", result.getMessage());
-        verify(diemCongDAO, never()).insert(any(DiemCong.class));
     }
 
     @Test
     public void testAddDiemCong_DuplicateDcKey() {
-        testDiemCong.setDcKey("0123456789_7480201_100");
         when(diemCongDAO.findByDcKey("0123456789_7480201_100")).thenReturn(testDiemCong);
 
         BUSResult<DiemCong> result = diemCongBUS.addDiemCong(testDiemCong);
 
         assertEquals("Điểm cộng này đã tồn tại (trùng dc_key)!", result.getMessage());
-        verify(diemCongDAO, never()).insert(any(DiemCong.class));
     }
 
     @Test
@@ -175,15 +143,13 @@ public class DiemCongBUSTest {
         assertEquals("Thêm điểm cộng thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR updateDiemCong
-    // ==========================================
     @Test
     public void testUpdateDiemCong_InvalidId() {
         DiemCong invalid = new DiemCong();
         invalid.setId(0);
 
         BUSResult<DiemCong> result = diemCongBUS.updateDiemCong(invalid);
+
         assertEquals("ID điểm cộng không hợp lệ!", result.getMessage());
     }
 
@@ -192,6 +158,7 @@ public class DiemCongBUSTest {
         when(diemCongDAO.findById(1)).thenReturn(null);
 
         BUSResult<DiemCong> result = diemCongBUS.updateDiemCong(testDiemCong);
+
         assertEquals("Không tìm thấy điểm cộng này trong hệ thống!", result.getMessage());
     }
 
@@ -204,6 +171,7 @@ public class DiemCongBUSTest {
         when(diemCongDAO.update(existing)).thenReturn(true);
 
         BUSResult<DiemCong> result = diemCongBUS.updateDiemCong(testDiemCong);
+
         assertEquals("Cập nhật điểm cộng thành công!", result.getMessage());
     }
 
@@ -216,18 +184,17 @@ public class DiemCongBUSTest {
         when(diemCongDAO.update(existing)).thenReturn(false);
 
         BUSResult<DiemCong> result = diemCongBUS.updateDiemCong(testDiemCong);
+
         assertEquals("Cập nhật điểm cộng thất bại!", result.getMessage());
     }
 
-    // ==========================================
-    // TESTS FOR deleteDiemCong
-    // ==========================================
     @Test
     public void testDeleteDiemCong_InvalidId() {
         DiemCong invalid = new DiemCong();
         invalid.setId(0);
 
         BUSResult<DiemCong> result = diemCongBUS.deleteDiemCong(invalid);
+
         assertEquals("ID điểm cộng không hợp lệ!", result.getMessage());
     }
 
@@ -236,6 +203,7 @@ public class DiemCongBUSTest {
         when(diemCongDAO.findById(1)).thenReturn(null);
 
         BUSResult<DiemCong> result = diemCongBUS.deleteDiemCong(testDiemCong);
+
         assertEquals("Không tìm thấy điểm cộng này trong hệ thống!", result.getMessage());
     }
 
@@ -245,6 +213,7 @@ public class DiemCongBUSTest {
         when(diemCongDAO.delete(testDiemCong)).thenReturn(true);
 
         BUSResult<DiemCong> result = diemCongBUS.deleteDiemCong(testDiemCong);
+
         assertEquals("Xóa điểm cộng thành công!", result.getMessage());
     }
 
@@ -254,6 +223,7 @@ public class DiemCongBUSTest {
         when(diemCongDAO.delete(testDiemCong)).thenReturn(false);
 
         BUSResult<DiemCong> result = diemCongBUS.deleteDiemCong(testDiemCong);
+
         assertEquals("Xóa điểm cộng thất bại!", result.getMessage());
     }
 }

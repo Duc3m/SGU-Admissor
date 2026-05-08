@@ -5,6 +5,7 @@
 package com.sgu.admissor.bus;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.DiemCongDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.DiemCong;
@@ -15,6 +16,7 @@ import java.util.List;
  * @author Admin
  */
 public class DiemCongBUS {
+
     private final DiemCongDAO diemCongDAO;
 
     @Inject
@@ -54,70 +56,67 @@ public class DiemCongBUS {
         return BUSResult.successWithData("Lấy điểm cộng thành công!", diemCongDAO.findByMaNganh(maNganh));
     }
 
-    public BUSResult<DiemCong> addDiemCong(DiemCong newDiemCong) {
-        if (newDiemCong == null) {
+    @Transactional
+    public BUSResult<DiemCong> addDiemCong(DiemCong diemCong) {
+        if (diemCong == null) {
             return BUSResult.error("Thông tin điểm cộng không hợp lệ!");
         }
-        if (newDiemCong.getThiSinh() == null || newDiemCong.getThiSinh().getCccd() == null
-                || newDiemCong.getThiSinh().getCccd().trim().isEmpty()) {
+        if (diemCong.getThiSinh() == null || diemCong.getThiSinh().getCccd() == null
+                || diemCong.getThiSinh().getCccd().trim().isEmpty()) {
             return BUSResult.error("Thông tin thí sinh không hợp lệ!");
         }
-        if (newDiemCong.getNganh() == null || newDiemCong.getNganh().getMaNganh() == null
-                || newDiemCong.getNganh().getMaNganh().trim().isEmpty()) {
+        if (diemCong.getNganh() == null || diemCong.getNganh().getMaNganh() == null
+                || diemCong.getNganh().getMaNganh().trim().isEmpty()) {
             return BUSResult.error("Mã ngành không được để trống!");
         }
-        if (newDiemCong.getDcKey() != null && !newDiemCong.getDcKey().trim().isEmpty()
-                && diemCongDAO.findByDcKey(newDiemCong.getDcKey()) != null) {
-            return BUSResult.error("Điểm cộng này đã tồn tại (trùng dc_key)!");
+        if (diemCong.getDcKey() != null && !diemCong.getDcKey().trim().isEmpty()) {
+            if (diemCongDAO.findByDcKey(diemCong.getDcKey()) != null) {
+                return BUSResult.error("Điểm cộng này đã tồn tại (trùng dc_key)!");
+            }
         }
-
-        boolean isInserted = diemCongDAO.insert(newDiemCong);
-        if (isInserted) {
+        if (diemCongDAO.insert(diemCong)) {
             return BUSResult.success("Thêm điểm cộng thành công!");
-        } else {
-            return BUSResult.error("Thêm điểm cộng thất bại!");
         }
+        return BUSResult.error("Thêm điểm cộng thất bại!");
     }
 
+    @Transactional
     public BUSResult<DiemCong> updateDiemCong(DiemCong diemCong) {
         if (diemCong == null || diemCong.getId() == null || diemCong.getId() <= 0) {
             return BUSResult.error("ID điểm cộng không hợp lệ!");
         }
-
         DiemCong existing = diemCongDAO.findById(diemCong.getId());
         if (existing == null) {
             return BUSResult.error("Không tìm thấy điểm cộng này trong hệ thống!");
         }
+        existing.setThiSinh(diemCong.getThiSinh());
+        existing.setNganh(diemCong.getNganh());
+        existing.setToHop(diemCong.getToHop());
+        existing.setPhuongThuc(diemCong.getPhuongThuc());
+        existing.setDiemCc(diemCong.getDiemCc());
+        existing.setDiemUtxt(diemCong.getDiemUtxt());
+        existing.setDiemTong(diemCong.getDiemTong());
+        existing.setGhiChu(diemCong.getGhiChu());
+        existing.setDcKey(diemCong.getDcKey());
 
-        if (diemCong.getDiemCc() != null) existing.setDiemCc(diemCong.getDiemCc());
-        if (diemCong.getDiemUtxt() != null) existing.setDiemUtxt(diemCong.getDiemUtxt());
-        if (diemCong.getDiemTong() != null) existing.setDiemTong(diemCong.getDiemTong());
-        if (diemCong.getGhiChu() != null) existing.setGhiChu(diemCong.getGhiChu());
-        if (diemCong.getPhuongThuc() != null) existing.setPhuongThuc(diemCong.getPhuongThuc());
-
-        boolean isUpdated = diemCongDAO.update(existing);
-        if (isUpdated) {
+        if (diemCongDAO.update(existing)) {
             return BUSResult.success("Cập nhật điểm cộng thành công!");
-        } else {
-            return BUSResult.error("Cập nhật điểm cộng thất bại!");
         }
+        return BUSResult.error("Cập nhật điểm cộng thất bại!");
     }
 
+    @Transactional
     public BUSResult<DiemCong> deleteDiemCong(DiemCong diemCong) {
         if (diemCong == null || diemCong.getId() == null || diemCong.getId() <= 0) {
             return BUSResult.error("ID điểm cộng không hợp lệ!");
         }
-
-        DiemCong toDelete = diemCongDAO.findById(diemCong.getId());
-        if (toDelete == null) {
+        DiemCong existing = diemCongDAO.findById(diemCong.getId());
+        if (existing == null) {
             return BUSResult.error("Không tìm thấy điểm cộng này trong hệ thống!");
         }
-
-        boolean isDeleted = diemCongDAO.delete(toDelete);
-        if (isDeleted) {
+        if (diemCongDAO.delete(existing)) {
             return BUSResult.success("Xóa điểm cộng thành công!");
-        } else {
-            return BUSResult.error("Xóa điểm cộng thất bại!");
         }
+        return BUSResult.error("Xóa điểm cộng thất bại!");
     }
 }
