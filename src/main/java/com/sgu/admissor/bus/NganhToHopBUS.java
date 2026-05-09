@@ -72,6 +72,17 @@ public class NganhToHopBUS {
         }
         return BUSResult.error("Thêm liên kết ngành - tổ hợp thất bại!");
     }
+    
+    @Transactional
+    public BUSResult addListNganhToHop(List<NganhToHop> listNganhToHop) {
+        if (listNganhToHop == null || listNganhToHop.size() == 0) {
+            return BUSResult.error("Không có ngành - tổ hợp nào để add");
+        }
+        if (!nganhToHopDAO.insertBatch(listNganhToHop)) {
+            return BUSResult.error("Lỗi trong phương thức addNganhToHop");
+        }
+        return BUSResult.success("Thêm danh sách ngành - tổ hợp thành công!");
+    }
 
     @Transactional
     public BUSResult<NganhToHop> updateNganhToHop(NganhToHop nganhToHop) {

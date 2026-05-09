@@ -57,12 +57,12 @@ public class NganhToHop {
     @Column(name = "hs_mon3")
     private Integer hsMon3;
     
-    @Column(name = "tb_keys", length = 45)
+    @Column(name = "tb_key", length = 45)
     private String tbKey;
     
     @Column(name = "N1")
     private Boolean n1;
-    @Column(name = "TO")
+    @Column(name = "`TO`")
     private Boolean to;
     @Column(name = "LI")
     private Boolean li;

@@ -69,6 +69,17 @@ public class ToHopBUS {
         }
         return BUSResult.error("Thêm tổ hợp thất bại!");
     }
+    
+    @Transactional
+    public BUSResult addListToHop(List<ToHop> listToHop) {
+        if (listToHop == null || listToHop.size() == 0) {
+            return BUSResult.error("Không có tổ hợp nào để add");
+        }
+        if (!toHopDAO.insertBatch(listToHop)) {
+            return BUSResult.error("Lỗi trong phương thức addListToHop");
+        }
+        return BUSResult.success("Thêm danh sách tổ hợp thành công!");
+    }
 
     @Transactional
     public BUSResult<ToHop> updateToHop(ToHop toHop) {
