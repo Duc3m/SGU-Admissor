@@ -79,6 +79,17 @@ public class DiemThiBUS {
         }
         return BUSResult.error("Thêm điểm thi thất bại!");
     }
+    
+    @Transactional
+    public BUSResult addListDiemThi(List<DiemThi> listDiemThi) {
+        if (listDiemThi == null || listDiemThi.size() == 0) {
+            return BUSResult.error("Không có DiemThi nào để add");
+        }
+        if(!diemThiDAO.insertBatch(listDiemThi)) {
+            return BUSResult.error("Lỗi phương thức addListDiemThi");
+        }
+        return BUSResult.success("Thêm danh sách DiemThi thành công!");
+    }
 
     @Transactional
     public BUSResult<DiemThi> updateDiemThi(DiemThi diemThi) {

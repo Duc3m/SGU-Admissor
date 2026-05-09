@@ -77,6 +77,10 @@ CREATE TABLE IF NOT EXISTS `diemthi` (
   `NL1` decimal(8,2) DEFAULT NULL,
   `NK1` decimal(8,2) DEFAULT NULL,
   `NK2` decimal(8,2) DEFAULT NULL,
+  `NK3` decimal(8,2) DEFAULT NULL,
+  `NK4` decimal(8,2) DEFAULT NULL,
+  `NK5` decimal(8,2) DEFAULT NULL,
+  `NK6` decimal(8,2) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `cccd_UNIQUE` (`cccd`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -212,7 +216,7 @@ CREATE TABLE IF NOT EXISTS `thisinh2025` (
   `password` varchar(100) DEFAULT NULL,
   `gioi_tinh` varchar(10) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
-  `noi_sinh` varchar(45) DEFAULT NULL,
+  `noi_sinh` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `updated_at` date DEFAULT NULL,
   `doi_tuong` varchar(45) DEFAULT NULL,
   `khu_vuc` varchar(45) DEFAULT NULL,

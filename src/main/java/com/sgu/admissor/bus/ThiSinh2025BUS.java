@@ -81,6 +81,17 @@ public class ThiSinh2025BUS {
         }
         return BUSResult.error("Thêm thí sinh thất bại!");
     }
+    
+    @Transactional
+    public BUSResult addListThiSinh(List<ThiSinh2025> listThiSinh) {
+        if (listThiSinh == null || listThiSinh.size() == 0) {
+            return BUSResult.error("Không có thí sinh nào để add");
+        }
+        if (!thiSinh2025DAO.insertBatch(listThiSinh)) {
+            return BUSResult.error("Lỗi trong phương thức addListThiSinh");
+        }
+        return BUSResult.success("Thêm danh sách thí sinh thành công!");
+    }
 
     @Transactional
     public BUSResult<ThiSinh2025> updateThiSinh(ThiSinh2025 thiSinh) {
