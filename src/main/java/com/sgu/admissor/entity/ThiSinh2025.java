@@ -9,6 +9,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.Data;
@@ -54,11 +56,17 @@ public class ThiSinh2025 {
     @Column(name = "email", length = 100)
     private String email;
     
-    @Column(name = "noi_sinh", length = 45)
+    @Column(name = "noi_sinh", length = 255)
     private String noiSinh;
     
     @Column(name = "updated_at")
     private LocalDate updatedAt;
+    
+    @PrePersist
+    @PreUpdate
+    public void preSave() {
+        this.updatedAt = LocalDate.now(); 
+    }
     
     @Column(name = "doi_tuong", length = 45)
     private String doiTuong;

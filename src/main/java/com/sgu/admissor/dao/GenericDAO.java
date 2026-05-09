@@ -15,6 +15,7 @@ import java.util.List;
  */
 public class GenericDAO<T> {
     private final Class<T> entityClass;
+    private static final int BATCH_SIZE = 500;
     
     @Inject
     protected Provider<EntityManager> emProvider;
@@ -36,6 +37,30 @@ public class GenericDAO<T> {
         try {
             emProvider.get().persist(entity);
             emProvider.get().flush();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean insertBatch(List<T> entityList) {
+        if (entityList == null || entityList.isEmpty()) {
+            return false;
+        }
+        try {
+            var em = emProvider.get();
+            int i = 0;
+            for (T e : entityList) {
+                em.persist(e);
+                i++;
+                if (i % BATCH_SIZE == 0) {
+                    em.flush();
+                    em.clear();
+                }
+            }
+            em.flush();
+            em.clear();
             return true;
         } catch (Exception e) {
             e.printStackTrace();

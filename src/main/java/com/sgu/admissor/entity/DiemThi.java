@@ -43,7 +43,7 @@ public class DiemThi {
     @Column(name = "phuongthuc", length = 10)
     private String phuongThuc;
     
-    @Column(name = "TO", precision = 8, scale = 2)
+    @Column(name = "`TO`", precision = 8, scale = 2)
     private BigDecimal to;
     
     @Column(name = "LI", precision = 8, scale = 2)
@@ -90,5 +90,17 @@ public class DiemThi {
     
     @Column(name = "NK2", precision = 8, scale = 2)
     private BigDecimal nk2;
+    
+    @Column(name = "NK3", precision = 8, scale = 2)
+    private BigDecimal nk3;
+    
+    @Column(name = "NK4", precision = 8, scale = 2)
+    private BigDecimal nk4;
+    
+    @Column(name = "NK5", precision = 8, scale = 2)
+    private BigDecimal nk5;
+    
+    @Column(name = "NK6", precision = 8, scale = 2)
+    private BigDecimal nk6;
 
 }

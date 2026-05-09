@@ -40,7 +40,7 @@ public class Nganh {
     )
     private ToHop toHopGoc;
     
-    @Column(name = "manganh", length = 45)
+    @Column(name = "manganh", length = 45, unique = true)
     private String maNganh;
     
     @Column(name = "tennganh", length = 100)
