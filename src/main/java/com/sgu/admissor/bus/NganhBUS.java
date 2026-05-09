@@ -72,6 +72,17 @@ public class NganhBUS {
         }
         return BUSResult.error("Thêm ngành thất bại!");
     }
+    
+    @Transactional
+    public BUSResult addListNganh(List<Nganh> listNganh) {
+        if (listNganh == null || listNganh.size() == 0) {
+            return BUSResult.error("Không có ngành nào để add");
+        }
+        if (!nganhDAO.insertBatch(listNganh)) {
+            return BUSResult.error("Lỗi trong phương thức addListNganh");
+        }
+        return BUSResult.success("Thêm danh sách ngành thành công!");
+    }
 
     @Transactional
     public BUSResult<Nganh> updateNganh(Nganh nganh) {

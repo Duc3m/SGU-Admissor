@@ -35,16 +35,21 @@ public class SGUAdmissor {
 //        });
 
         ExcelImportBUS excelImportBUS = injector.getInstance(ExcelImportBUS.class);
-        String relativePath = "data/Ds_thi_sinh.xlsx";
-        File excelFile = new File(relativePath);
+        String filePath1 = "data/Chi_tieu_2025.xlsx";
+        String filePath2 = "data/Nguong_dau_vao_2025.xlsx";
+        String filePath3 = "data/tohopmon.xlsx";
         
-        if (!excelFile.exists()) {
-            System.err.println("File not found");
+        File file1 = new File(filePath1);
+        File file2 = new File(filePath2);
+        File file3 = new File(filePath3);
+        
+        if (!file1.exists() || !file2.exists() || !file3.exists()) {
+            System.err.println("Files not found");
             return;
         }
 
         long startTime = System.currentTimeMillis();        
-        excelImportBUS.importThiSinhVaDiem(excelFile);
+        excelImportBUS.importNganhVaToHop(file1, file2, file3);
         long endTime = System.currentTimeMillis();
         System.out.println("Imported in: " + (endTime - startTime) + " ms.");
         
