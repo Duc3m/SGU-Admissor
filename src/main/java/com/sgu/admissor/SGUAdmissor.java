@@ -35,21 +35,39 @@ public class SGUAdmissor {
 //        });
 
         ExcelImportBUS excelImportBUS = injector.getInstance(ExcelImportBUS.class);
-        String filePath1 = "data/Chi_tieu_2025.xlsx";
-        String filePath2 = "data/Nguong_dau_vao_2025.xlsx";
-        String filePath3 = "data/tohopmon.xlsx";
+//        String filePath1 = "data/Chi_tieu_2025.xlsx";
+//        String filePath2 = "data/Nguong_dau_vao_2025.xlsx";
+//        String filePath3 = "data/tohopmon.xlsx";
+//        
+//        File file1 = new File(filePath1);
+//        File file2 = new File(filePath2);
+//        File file3 = new File(filePath3);
+//        
+//        if (!file1.exists() || !file2.exists() || !file3.exists()) {
+//            System.err.println("Files not found");
+//            return;
+//        }
+//
+//        long startTime = System.currentTimeMillis();        
+//        excelImportBUS.importNganhVaToHop(file1, file2, file3);
+//        long endTime = System.currentTimeMillis();
+//        System.out.println("Imported in: " + (endTime - startTime) + " ms.");
+//        
+//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//            persistService.stop();
+//        }));
+
+        String nvExcelFilePath = "data/Nguyenvong.xlsx";
         
-        File file1 = new File(filePath1);
-        File file2 = new File(filePath2);
-        File file3 = new File(filePath3);
+        File file = new File(nvExcelFilePath);
         
-        if (!file1.exists() || !file2.exists() || !file3.exists()) {
-            System.err.println("Files not found");
+        if (!file.exists()){
+            System.err.println("File not found");
             return;
         }
-
+        
         long startTime = System.currentTimeMillis();        
-        excelImportBUS.importNganhVaToHop(file1, file2, file3);
+        excelImportBUS.importNguyenVong(file);
         long endTime = System.currentTimeMillis();
         System.out.println("Imported in: " + (endTime - startTime) + " ms.");
         
