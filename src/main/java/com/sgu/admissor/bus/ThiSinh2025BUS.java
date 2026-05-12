@@ -23,11 +23,40 @@ public class ThiSinh2025BUS {
     public ThiSinh2025BUS(ThiSinh2025DAO thiSinh2025DAO) {
         this.thiSinh2025DAO = thiSinh2025DAO;
     }
+    
+    @Transactional
+    public void refresh(ThiSinh2025 thiSinh) {
+        thiSinh2025DAO.refresh(thiSinh);
+    }
 
+    @Transactional
     public BUSResult<List<ThiSinh2025>> getAllThiSinh() {
         return BUSResult.successWithData("Lấy toàn bộ thí sinh thành công!", thiSinh2025DAO.findAll());
     }
+    
+    @Transactional
+    public BUSResult<Integer> getCount() {
+        int count = thiSinh2025DAO.countAll();
+        return BUSResult.successWithData("Lấy số lượng toàn bộ thí sinh thành công!", count);
+    }
 
+    @Transactional
+    public BUSResult<List<ThiSinh2025>> getThiSinhByPage(int page, int limit) {
+        return BUSResult.successWithData("Lấy thí sinh theo trang thành công!", thiSinh2025DAO.getByPage(page, limit));
+    }
+    
+    @Transactional
+    public int countAdvanced(String tieuChi, String giaTri, String doiTuong, String khuVuc) {
+        return thiSinh2025DAO.countAdvanced(tieuChi, giaTri, doiTuong, khuVuc);
+    }
+
+    @Transactional
+    public BUSResult<List<ThiSinh2025>> searchAdvanced(String tieuChi, String giaTri, String doiTuong, String khuVuc, int page, int limit) {
+        List<ThiSinh2025> data = thiSinh2025DAO.searchAdvanced(tieuChi, giaTri, doiTuong, khuVuc, page, limit);
+        return BUSResult.successWithData("Lọc thí sinh thành công!", data);
+    }
+    
+    @Transactional
     public BUSResult<ThiSinh2025> getThiSinhById(Integer id) {
         if (id == null || id <= 0) {
             return BUSResult.error("ID thí sinh không hợp lệ!");
@@ -35,25 +64,12 @@ public class ThiSinh2025BUS {
         return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findById(id));
     }
 
+    @Transactional
     public BUSResult<ThiSinh2025> getThiSinhByCccd(String cccd) {
         if (cccd == null || cccd.trim().isEmpty()) {
             return BUSResult.error("CCCD không hợp lệ!");
         }
         return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findByCccd(cccd));
-    }
-
-    public BUSResult<ThiSinh2025> getThiSinhBySoBaoDanh(String soBaoDanh) {
-        if (soBaoDanh == null || soBaoDanh.trim().isEmpty()) {
-            return BUSResult.error("Số báo danh không hợp lệ!");
-        }
-        return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findBySoBaoDanh(soBaoDanh));
-    }
-
-    public BUSResult<List<ThiSinh2025>> getThiSinhByHoTen(String hoTen) {
-        if (hoTen == null || hoTen.trim().isEmpty()) {
-            return BUSResult.error("Họ tên không hợp lệ!");
-        }
-        return BUSResult.successWithData("Lấy thí sinh thành công!", thiSinh2025DAO.findByHoTen(hoTen));
     }
 
     @Transactional
