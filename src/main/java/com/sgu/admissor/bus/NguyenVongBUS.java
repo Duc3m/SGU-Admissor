@@ -64,6 +64,23 @@ public class NguyenVongBUS {
         }
         return BUSResult.error("Thêm nguyên vọng thất bại!");
     }
+    
+    @Transactional
+    public BUSResult addListNguyenVong(List<NguyenVong> nvList){
+        if (nvList == null || nvList.size() == 0) {
+            return BUSResult.error("Không có nguyện vọng nào để add");
+        }
+        
+        for(NguyenVong nv : nvList){
+            String nvkey = nv.getThiSinh().getCccd() + "_" + nv.getNganh().getMaNganh() + "_" + nv.getPhuongThuc();
+            nv.setNvKey(nvkey);
+        }
+        
+        if (!nguyenVongDAO.insertBatch(nvList)) {
+            return BUSResult.error("Lỗi trong phương thức addNguyenVong");
+        }
+        return BUSResult.success("Thêm danh sách nguyện vọng thành công!");
+    }
 
     @Transactional
     public BUSResult<NguyenVong> updateNguyenVong(NguyenVong nv) {

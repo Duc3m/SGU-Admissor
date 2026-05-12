@@ -13,6 +13,7 @@ import com.sgu.admissor.entity.Nganh;
 import com.sgu.admissor.entity.NganhToHop;
 import com.sgu.admissor.entity.ThiSinh2025;
 import com.sgu.admissor.entity.ToHop;
+import com.sgu.admissor.entity.NguyenVong;
 import com.sgu.admissor.utils.PhanBoChiTieuUtil;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -40,22 +41,25 @@ public class ExcelImportBUS {
     private final Provider<NganhBUS> nganhBUSProvider;
     private final Provider<ToHopBUS> toHopBUSProvider;
     private final Provider<NganhToHopBUS> nganhToHopBUSProvider;
+    private final Provider<NguyenVongBUS> nguyenVongBUSProvider;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final int BATCH_SIZE = 500;
 
     @Inject
     public ExcelImportBUS(
-        Provider<ThiSinh2025BUS> thiSinhBUSProvider,
-        Provider<DiemThiBUS> diemThiBUSProvider,
-        Provider<NganhBUS> nganhBUSProvider,
-        Provider<ToHopBUS> toHopBUSProvider,
-        Provider<NganhToHopBUS> nganhToHopBUSProvider
-    ) {
+            Provider<ThiSinh2025BUS> thiSinhBUSProvider, 
+            Provider<DiemThiBUS> diemThiBUSProvider, 
+            Provider<NganhBUS> nganhBUSProvider, 
+            Provider<ToHopBUS> toHopBUSProvider, 
+            Provider<NganhToHopBUS> nganhToHopBUSProvider,
+            Provider<NguyenVongBUS> nguyenVongBUSProvider
+            ) {
         this.thiSinhBUSProvider = thiSinhBUSProvider;
         this.diemThiBUSProvider = diemThiBUSProvider;
         this.nganhBUSProvider = nganhBUSProvider;
         this.toHopBUSProvider = toHopBUSProvider;
         this.nganhToHopBUSProvider = nganhToHopBUSProvider;
+        this.nguyenVongBUSProvider = nguyenVongBUSProvider;
     }
     
     @Transactional
@@ -249,6 +253,119 @@ public class ExcelImportBUS {
         }
     }
     
+    @Transactional
+    public void importNguyenVong(File excelFilePath){
+        NguyenVongBUS nguyenVongBUS = nguyenVongBUSProvider.get();
+        DiemThiBUS diemThiBUS = diemThiBUSProvider.get();
+        ThiSinh2025BUS thiSinhBUS = thiSinhBUSProvider.get();
+        NganhBUS nganhBUS = nganhBUSProvider.get();
+        
+        // Prefetch để khỏi phải query DB, tiết kiệm time
+        // Prefetch THI SINH
+        Map<String, ThiSinh2025> thiSinhMap = new HashMap<>();
+        List<ThiSinh2025> allThiSinh = thiSinhBUS.getAllThiSinh().getData();
+        if (allThiSinh != null) {
+            for (ThiSinh2025 ts : allThiSinh) {
+                if (ts.getCccd() != null) thiSinhMap.put(ts.getCccd(), ts);
+            }
+        }
+
+        // Prefetch NGANH
+        Map<String, Nganh> nganhMap = new HashMap<>();
+        List<Nganh> allNganh = nganhBUS.getAllNganh().getData();
+        if (allNganh != null) {
+            for (Nganh ng : allNganh) {
+                if (ng.getMaNganh() != null) nganhMap.put(ng.getMaNganh(), ng);
+            }
+        }
+
+        // Prefetch DIEMTHI -> phuongthuc
+        Map<String, Set<String>> phuongThucMap = new HashMap<>();
+        List<DiemThi> allDiemThi = diemThiBUS.getAllDiemThi().getData();
+        if (allDiemThi != null) {
+            for (DiemThi dt : allDiemThi) {
+                String cccd = dt.getThiSinh() != null ? dt.getThiSinh().getCccd() : null;
+                String pt = dt.getPhuongThuc();
+                if (cccd == null || pt == null || pt.trim().isEmpty()) continue;
+
+                phuongThucMap.computeIfAbsent(cccd, k -> new HashSet<>()).add(pt);
+            }
+        }
+        
+        List<NguyenVong> nvBatch = new ArrayList();
+        
+        try (InputStream is = new FileInputStream(excelFilePath);
+                Workbook workbook = StreamingReader.builder()
+                .rowCacheSize(100)
+                .bufferSize(4096)
+                .open(is)){
+            int[] sheets = {1, 2}; // sheet 2 và 3
+            int startRow = 5; // dòng 6
+            
+            for(int sheetIndex : sheets) {
+                Sheet sheet = workbook.getSheetAt(sheetIndex);
+                if (sheet == null) continue;
+                
+                for (Row row : sheet){
+                    if (row.getRowNum() < startRow) continue;
+                    
+                    String cccd = getStringValue(row.getCell(1));
+                    int thuTuNV = getIntegerValue(row.getCell(2));
+                    String maNganh = getStringValue(row.getCell(5));
+                    
+                    // CCCD trống thì skip
+                    if (cccd == null || cccd.isEmpty()) continue;
+                    
+                    // Thiếu mã ngành hoặc thứ tự nguyện vọng thì dừng import
+                    if (maNganh == null || maNganh.isEmpty() || thuTuNV == 0){
+                        throw new RuntimeException("Dữ liệu thiếu ở dòng " + (row.getRowNum() + 1));
+                    }
+                    
+                    // Nếu ko có sẵn thí sinh này thì dừng import
+                    ThiSinh2025 ts = thiSinhMap.get(cccd);
+                    if (ts == null){
+                        throw new RuntimeException("Không tìm thấy thí sinh: " + cccd + " (dòng " + (row.getRowNum() + 1) + ")");
+                    }
+                    
+                    // Nếu ngành này chưa có thì dừng import
+                    Nganh ng = nganhMap.get(maNganh);
+                    if (ng == null) {
+                        throw new RuntimeException("Không tìm thấy ngành: " + maNganh + " (dòng " + (row.getRowNum() + 1) + ")");
+                    }
+                    
+                    // Lấy danh sách phương thức từ BUS
+                    Set<String> phuongThucList = phuongThucMap.getOrDefault(cccd, new HashSet<>());
+                    
+                    if (phuongThucList.isEmpty()) continue;
+                    
+                    for (String pt : phuongThucList){
+                        NguyenVong nv = new NguyenVong();
+                        nv.setThiSinh(ts);
+                        nv.setThuTu(thuTuNV);
+                        nv.setNganh(ng);
+                        nv.setPhuongThuc(pt);
+                        nv.setToHopMon(null);
+                        // nv_key tự set ở BUS
+                        nvBatch.add(nv);
+                    }
+                    
+                    if (nvBatch.size() >= BATCH_SIZE){
+                        saveBatchAndClear(nvBatch, nguyenVongBUS::addListNguyenVong);
+                    }
+                }
+            }
+            
+            if (!nvBatch.isEmpty()) {
+                saveBatchAndClear(nvBatch, nguyenVongBUS::addListNguyenVong);
+            }
+            
+            System.out.println("Import nguyện vọng từ file Excel thành công!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Lỗi import nguyện vọng: " + e.getMessage());
+            throw new RuntimeException(e); // để rollback
+        }
+    }
   
     /**
      * Hàm Generic Import bảng
