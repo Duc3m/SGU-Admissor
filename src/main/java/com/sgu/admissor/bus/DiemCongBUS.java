@@ -106,6 +106,28 @@ public class DiemCongBUS {
     }
 
     @Transactional
+    public BUSResult addListDiemCong(List<DiemCong> listDiemCong) {
+        if (listDiemCong == null || listDiemCong.isEmpty()) {
+            return BUSResult.error("Không có điểm cộng nào để add");
+        }
+        if (!diemCongDAO.insertBatch(listDiemCong)) {
+            return BUSResult.error("Lỗi phương thức addListDiemCong");
+        }
+        return BUSResult.success("Thêm danh sách điểm cộng thành công!");
+    }
+
+    @Transactional
+    public BUSResult updateBatchDiemCong(List<DiemCong> listDiemCong) {
+        if (listDiemCong == null || listDiemCong.isEmpty()) {
+            return BUSResult.error("Không có điểm cộng nào để update");
+        }
+        for (DiemCong dc : listDiemCong) {
+            diemCongDAO.update(dc);
+        }
+        return BUSResult.success("Cập nhật danh sách điểm cộng thành công!");
+    }
+
+    @Transactional
     public BUSResult<DiemCong> deleteDiemCong(DiemCong diemCong) {
         if (diemCong == null || diemCong.getId() == null || diemCong.getId() <= 0) {
             return BUSResult.error("ID điểm cộng không hợp lệ!");
