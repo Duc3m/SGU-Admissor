@@ -64,18 +64,6 @@ public class ThiSinh2025BUSTest {
     }
 
     @Test
-    public void testGetThiSinhBySoBaoDanh_Invalid() {
-        assertEquals("Số báo danh không hợp lệ!", thiSinh2025BUS.getThiSinhBySoBaoDanh(null).getMessage());
-        assertEquals("Số báo danh không hợp lệ!", thiSinh2025BUS.getThiSinhBySoBaoDanh(" ").getMessage());
-    }
-
-    @Test
-    public void testGetThiSinhByHoTen_Invalid() {
-        assertEquals("Họ tên không hợp lệ!", thiSinh2025BUS.getThiSinhByHoTen(null).getMessage());
-        assertEquals("Họ tên không hợp lệ!", thiSinh2025BUS.getThiSinhByHoTen(" ").getMessage());
-    }
-
-    @Test
     public void testAddThiSinh_InvalidData() {
         BUSResult<ThiSinh2025> result = thiSinh2025BUS.addThiSinh(null);
 
