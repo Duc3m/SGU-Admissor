@@ -28,6 +28,7 @@ public class NganhBUS {
         return BUSResult.successWithData("Lấy toàn bộ ngành thành công!", nganhDAO.findAll());
     }
 
+    @Transactional
     public BUSResult<Nganh> getNganhById(Integer id) {
         if (id == null || id <= 0) {
             return BUSResult.error("ID ngành không hợp lệ!");
@@ -127,5 +128,27 @@ public class NganhBUS {
             return BUSResult.success("Xóa ngành thành công!");
         }
         return BUSResult.error("Xóa ngành thất bại!");
+    }
+    
+    @Transactional
+    public int countAdvanced(String tieuChi, String giaTri, String maToHop) {
+        try {
+            return nganhDAO.countTotalAdvanced(tieuChi, giaTri, maToHop);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+    
+    @Transactional
+    public BUSResult<List<Object[]>> searchAdvanced(String tieuChi, String giaTri, String maToHop, int page, int limit) {
+        try {
+            int offset = (page - 1) * limit;
+            List<Object[]> list = nganhDAO.searchAdvancedWithCount(tieuChi, giaTri, maToHop, offset, limit);
+            return BUSResult.successWithData("Truy xuất dữ liệu thành công!", list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BUSResult.error("Lỗi khi truy xuất dữ liệu Ngành!");
+        }
     }
 }

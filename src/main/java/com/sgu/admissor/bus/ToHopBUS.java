@@ -23,7 +23,8 @@ public class ToHopBUS {
     public ToHopBUS(ToHopDAO toHopDAO) {
         this.toHopDAO = toHopDAO;
     }
-
+    
+    @Transactional
     public BUSResult<List<ToHop>> getAllToHop() {
         return BUSResult.successWithData("Lấy toàn bộ tổ hợp thành công!", toHopDAO.findAll());
     }

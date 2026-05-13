@@ -35,6 +35,7 @@ public class NganhToHopBUS {
         return BUSResult.successWithData("Lấy ngành-tổ hợp thành công!", nganhToHopDAO.findById(id));
     }
 
+    @Transactional
     public BUSResult<List<NganhToHop>> getNganhToHopByMaNganh(String maNganh) {
         if (maNganh == null || maNganh.trim().isEmpty()) {
             return BUSResult.error("Mã ngành không hợp lệ!");
