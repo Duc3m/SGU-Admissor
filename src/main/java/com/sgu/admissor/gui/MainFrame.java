@@ -20,10 +20,12 @@ public class MainFrame extends JFrame {
     private JTabbedPane tabbedPane;
 
     private final Provider<ThiSinhPanel> thiSinhPanelProvider;
+    private final Provider<NganhPanel> nganhPanelProvider;
     
     @Inject
-    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider) {
+    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider, Provider<NganhPanel> nganhPanelProvider) {
         this.thiSinhPanelProvider = thiSinhPanelProvider;
+        this.nganhPanelProvider = nganhPanelProvider;
         
         setTitle("SGU Admissor - Dashboard");
         setSize(1280, 720);
@@ -71,7 +73,7 @@ public class MainFrame extends JFrame {
                 newIcon = new FlatSVGIcon("icons/score.svg");
                 break;
             case "Ngành":
-                newForm = new NganhPanel();
+                newForm = nganhPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/major.svg");
                 break;
             case "Nguyện vọng":

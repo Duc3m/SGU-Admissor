@@ -26,6 +26,7 @@ public class PaginatedTablePanel extends JPanel {
     
     private final int ROWS_PER_PAGE = 20;
     private final Consumer<Integer> onPageLoad;
+    private int currentPage = 1;
 
     public PaginatedTablePanel(String[] columnNames, Consumer<Integer> onPageLoad) {
         this.onPageLoad = onPageLoad;
@@ -116,10 +117,18 @@ public class PaginatedTablePanel extends JPanel {
     public int getRowsPerPage() { return ROWS_PER_PAGE; }
     
     public int getSelectedRow() { return table.getSelectedRow(); }
+    
+    public int getCurrentPage() { return this.currentPage; }
 
     public void syncPagination(int currentPage, int totalRecords) {
+        this.currentPage = currentPage;
+        
         int totalPages = (int) Math.ceil((double) totalRecords / ROWS_PER_PAGE);
         paginationFooter.updatePagination(currentPage, totalPages, totalRecords);
+    }
+      
+    public JTable getTable() {
+        return this.table;
     }
     
 }
