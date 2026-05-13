@@ -27,7 +27,7 @@ public class RoundStatisticButton extends JButton {
         setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         try {
-            FlatSVGIcon icon = new FlatSVGIcon(iconPath, 32, 32);
+            FlatSVGIcon icon = new FlatSVGIcon(iconPath, 40, 40);
 
             icon.setColorFilter(new FlatSVGIcon.ColorFilter(color -> themeColor));
             setIcon(icon);
@@ -47,11 +47,19 @@ public class RoundStatisticButton extends JButton {
 
         int w = getWidth();
         int h = getHeight();
-        int inset = 2;
+        int inset = 4; 
 
-        Ellipse2D circle = new Ellipse2D.Double(inset, inset, w - inset * 2, h - inset * 2);
+        Ellipse2D circle = new Ellipse2D.Double(inset, inset, w - inset * 2 - 2, h - inset * 2 - 2);
 
+        // Vẽ Shadow
+        g2.translate(3, 4);
+        g2.setColor(new Color(0, 0, 0, 15));
+        g2.fill(circle);
+        g2.translate(-3, -4);
+
+        // Vẽ nền
         if (getModel().isRollover()) {
+            // Khi Hover: Đổ nền màu đậm, icon trắng
             g2.setColor(themeColor);
             g2.fill(circle);
             setForeground(Color.WHITE);
@@ -59,14 +67,20 @@ public class RoundStatisticButton extends JButton {
                 ((FlatSVGIcon) getIcon()).setColorFilter(new FlatSVGIcon.ColorFilter(color -> Color.WHITE));
             }
         } else {
-            g2.setColor(Color.WHITE);
+            // Trạng thái bình thường: Màu nền Pastel
+            // Ép thêm Alpha = 20 (Độ đục khoảng 8%) vào màu chủ đạo
+            Color pastelBackground = new Color(themeColor.getRed(), themeColor.getGreen(), themeColor.getBlue(), 20);
+            
+            g2.setColor(pastelBackground);
             g2.fill(circle);
+            
             setForeground(themeColor);
             if (getIcon() instanceof FlatSVGIcon) {
                 ((FlatSVGIcon) getIcon()).setColorFilter(new FlatSVGIcon.ColorFilter(color -> themeColor));
             }
         }
 
+        // Vẽ viền
         g2.setColor(themeColor);
         g2.setStroke(new BasicStroke(2.5f));
         g2.draw(circle);
