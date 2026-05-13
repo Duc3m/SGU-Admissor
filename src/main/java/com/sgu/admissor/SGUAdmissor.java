@@ -33,7 +33,15 @@ public class SGUAdmissor {
         );
         
         if (!isDatabaseReady(injector)) {
-            System.exit(0);
+            // Hiện thông báo lỗi giao diện (rất quan trọng với app Desktop)
+            JOptionPane.showMessageDialog(null, 
+                "LỖI KẾT NỐI DATABASE:\n" +
+                "- Hãy đảm bảo MySQL Server đã được bật.\n" +
+                "- Kiểm tra tên Database và Password trong persistence.xml.\n\n",
+                "SGU Admissor - Lỗi hệ thống", 
+                JOptionPane.ERROR_MESSAGE);
+            
+            System.exit(1); // Tắt app ngay lập tức
         }
         
         SwingUtilities.invokeLater(() -> {
@@ -46,33 +54,13 @@ public class SGUAdmissor {
         });
     }
     
-    private static boolean isDatabaseReady(Injector injector) {
-
-        PersistService persistService = injector.getInstance(PersistService.class);
-        
+    public static boolean isDatabaseReady(Injector injector) {
         try {
+            PersistService persistService = injector.getInstance(PersistService.class);
             persistService.start();
-            UnitOfWork unitOfWork = injector.getInstance(UnitOfWork.class);
-            unitOfWork.begin();
-            try {
-                EntityManager em = injector.getInstance(EntityManager.class);
-                em.createNativeQuery("SELECT 1").getSingleResult();
-            } finally {
-                unitOfWork.end();
-            }
-            
-            System.out.println("Kết nối Database thành công!");
             return true;
-
+            
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, 
-                "LỖI KẾT NỐI DATABASE:\n" +
-                "- Hãy đảm bảo MySQL Server đã được bật.\n" +
-                "- Kiểm tra tên Database và Password trong persistence.xml.\n\n" +
-                "Chi tiết lỗi: " + e.getMessage(),
-                "SGU Admissor - Lỗi hệ thống", 
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
             return false;
         }
     }

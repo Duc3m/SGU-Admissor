@@ -8,6 +8,8 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.sgu.admissor.gui.panel.*;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import java.awt.Dimension;
+import java.awt.Image;
 
 import javax.swing.*;
 import java.util.function.BiConsumer;
@@ -27,8 +29,12 @@ public class MainFrame extends JFrame {
         this.thiSinhPanelProvider = thiSinhPanelProvider;
         this.nganhPanelProvider = nganhPanelProvider;
         
-        setTitle("SGU Admissor - Dashboard");
+        ImageIcon logo = new ImageIcon(getClass().getResource("/images/logo.png"));
+        Image scaledImage = logo.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+        setIconImage(scaledImage);
+        setTitle("SGU Admissor");
         setSize(1280, 720);
+        setMinimumSize(new Dimension(950, 700));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 

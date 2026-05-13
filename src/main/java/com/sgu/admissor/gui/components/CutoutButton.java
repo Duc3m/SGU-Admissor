@@ -53,8 +53,15 @@ public class CutoutButton extends JButton {
         Area cutCircle = new Area(new Ellipse2D.Double(cx - cutRadius, cy - cutRadius, cutRadius * 2, cutRadius * 2));
         buttonArea.subtract(cutCircle);
 
-        // Hover
+        // Vẽ Shadow
+        g2.translate(3, 4); // Dịch bóng xéo xuống góc phải dưới (x=3, y=4)
+        g2.setColor(new Color(0, 0, 0, 15)); // Màu đen với độ đục Alpha = 15 (rất mờ)
+        g2.fill(buttonArea);
+        g2.translate(-3, -4); // Trả trục tọa độ về lại vị trí ban đầu để vẽ nút chính
+
+        // Vẽ nền nút lúc Hover và bình thường
         if (getModel().isRollover()) {
+            // Khi di chuột vào: Nền đậm, Chữ/Icon trắng
             g2.setColor(borderColor);
             g2.fill(buttonArea);
             
@@ -65,7 +72,11 @@ public class CutoutButton extends JButton {
                     .setColorFilter(new com.formdev.flatlaf.extras.FlatSVGIcon.ColorFilter(color -> Color.WHITE));
             }
         } else {
-            g2.setColor(Color.WHITE);
+            // Trạng thái bình thường: Màu nền Pastel nhẹ
+            // Lấy màu viền, ép thêm thông số Alpha = 20 (Độ đục khoảng 8%)
+            Color pastelBackground = new Color(borderColor.getRed(), borderColor.getGreen(), borderColor.getBlue(), 20);
+            
+            g2.setColor(pastelBackground);
             g2.fill(buttonArea);
             
             setForeground(borderColor);
@@ -76,7 +87,7 @@ public class CutoutButton extends JButton {
             }
         }
 
-        // Vẽ viền nút
+        // Vẽ Border
         g2.setColor(borderColor);
         g2.setStroke(new BasicStroke(2.5f));
         g2.draw(buttonArea);
