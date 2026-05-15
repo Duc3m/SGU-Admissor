@@ -154,6 +154,30 @@ public class GenericDAO<T> {
         }
     }
     
+    public boolean updateBatch(List<T> entityList) {
+        if (entityList == null || entityList.isEmpty()) {
+            return false;
+        }
+        try {
+            var em = emProvider.get();
+            int i = 0;
+            for (T e : entityList) {
+                em.merge(e);
+                i++;
+                if (i % BATCH_SIZE == 0) {
+                    em.flush();
+                    em.clear();
+                }
+            }
+            em.flush();
+            em.clear();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean delete(T entity) {
         try {
             emProvider.get().remove(emProvider.get().merge(entity));
