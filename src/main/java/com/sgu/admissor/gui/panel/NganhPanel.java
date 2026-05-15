@@ -177,17 +177,9 @@ public class NganhPanel extends JPanel {
         itemToHop.addActionListener(e -> {
             int selectedRow = tablePanel.getSelectedRow();
             if (selectedRow != -1) {
-                // Lấy ID ở cột 0
-                Integer id = Integer.parseInt(tablePanel.getTableModel().getValueAt(selectedRow, 0).toString());
                 String maNganh = tablePanel.getTableModel().getValueAt(selectedRow, 1).toString();
                 String tenNganh = tablePanel.getTableModel().getValueAt(selectedRow, 2).toString();
-
-                // Lấy tổ hợp gốc 
-                Nganh nganh = nganhBUS.getNganhById(id).getData();
-                String toHopGoc = (nganh != null && nganh.getToHopGoc() != null) ? nganh.getToHopGoc().getMaToHop() : "Không xác định";
-
-                // Truyền thêm toHopGoc vào hàm show dialog
-                showToHopDialog(maNganh, tenNganh, toHopGoc);
+                showToHopDialog(maNganh, tenNganh);
             }
         });
         
@@ -255,12 +247,13 @@ public class NganhPanel extends JPanel {
         tablePanel.syncPagination(page, totalRecords);
     }
 
-    private void showToHopDialog(String maNganh, String tenNganh, String toHopGoc) {
+    private void showToHopDialog(String maNganh, String tenNganh) {
         JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Tổ hợp môn - " + maNganh + " - " + tenNganh, Dialog.ModalityType.APPLICATION_MODAL);
         JPanel panel = new JPanel(new MigLayout("fill, insets 15", "[grow]", "[][grow]"));
         
-        JLabel lblToHopGoc = new JLabel("<html><span style='font-size:11px; color:#666666;'>Tổ hợp gốc:</span> <b style='color:#eab308; font-size:14px;'>" + toHopGoc + "</b></html>");
-        panel.add(lblToHopGoc, "wrap, gapbottom 10");
+//        JLabel lblHeader = new JLabel("Các tổ hợp xét tuyển của ngành " + tenNganh);
+//        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 14));
+//        panel.add(lblHeader, "wrap, gapbottom 10");
 
         String[] cols = {"Mã Tổ Hợp", "Môn 1", "Môn 2", "Môn 3", "Độ lệch"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
