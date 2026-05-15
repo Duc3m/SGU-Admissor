@@ -17,7 +17,6 @@ public class NguyenVongDAO extends GenericDAO<NguyenVong>{
         super(NguyenVong.class);
     }
     
-    
     public List<NguyenVong> findByCccd(String cccd){
         String hql = "FROM NguyenVong nv WHERE nv.thiSinh.cccd = :cccd";
         return emProvider.get().createQuery(hql, NguyenVong.class)
@@ -32,5 +31,117 @@ public class NguyenVongDAO extends GenericDAO<NguyenVong>{
                 .getResultStream()
                 .findFirst()
                 .orElse(null);
+    }
+    
+    // 1. Hàm tìm kiếm dữ liệu phân trang
+    public List<NguyenVong> searchAdvanced(String tieuChi, String giaTri, String phuongThuc, String toHop, String ketQua, int offset, int limit) {
+        StringBuilder hql = new StringBuilder(
+            "SELECT nv FROM NguyenVong nv " +
+            "LEFT JOIN nv.nganh n " +
+            "LEFT JOIN nv.thiSinh ts " +
+            "WHERE 1=1 "
+        );
+
+        if (giaTri != null && !giaTri.trim().isEmpty()) {
+            if ("CCCD".equals(tieuChi)) {
+                hql.append("AND ts.cccd LIKE :giaTri ");
+            } else if ("Mã ngành".equals(tieuChi)) {
+                hql.append("AND n.maNganh LIKE :giaTri ");
+            } else if ("Tên ngành".equals(tieuChi)) {
+                hql.append("AND n.tenNganh LIKE :giaTri ");
+            }
+        }
+
+        if (phuongThuc != null && !phuongThuc.equals("Tất cả")) {
+            hql.append("AND nv.phuongThuc = :phuongThuc ");
+        }
+
+        if (toHop != null && !toHop.equals("Tất cả")) {
+            hql.append("AND nv.toHopMon = :toHop ");
+        }
+
+        if (ketQua != null && !ketQua.equals("Tất cả")) {
+            if ("Chưa xét".equals(ketQua)) {
+                hql.append("AND (nv.ketQua IS NULL OR nv.ketQua = '') ");
+            } else {
+                hql.append("AND nv.ketQua = :ketQua ");
+            }
+        }
+
+        // Sắp xếp ID giảm dần để nguyện vọng mới nhất lên đầu
+        hql.append("ORDER BY nv.id DESC");
+
+        var query = emProvider.get().createQuery(hql.toString(), NguyenVong.class);
+        
+        if (giaTri != null && !giaTri.trim().isEmpty()) {
+            query.setParameter("giaTri", "%" + giaTri.trim() + "%");
+        }
+        if (phuongThuc != null && !phuongThuc.equals("Tất cả")) {
+            query.setParameter("phuongThuc", phuongThuc);
+        }
+        if (toHop != null && !toHop.equals("Tất cả")) {
+            query.setParameter("toHop", toHop);
+        }
+        if (ketQua != null && !ketQua.equals("Tất cả") && !ketQua.equals("Chưa xét")) {
+            query.setParameter("ketQua", ketQua);
+        }
+
+        query.setFirstResult(offset);
+        query.setMaxResults(limit);
+
+        return query.getResultList();
+    }
+
+    // 2. Hàm đếm tổng số bản ghi
+    public int countAdvanced(String tieuChi, String giaTri, String phuongThuc, String toHop, String ketQua) {
+        StringBuilder hql = new StringBuilder(
+            "SELECT COUNT(nv.id) FROM NguyenVong nv " +
+            "LEFT JOIN nv.nganh n " +
+            "LEFT JOIN nv.thiSinh ts " +
+            "WHERE 1=1 "
+        );
+
+        if (giaTri != null && !giaTri.trim().isEmpty()) {
+            if ("CCCD".equals(tieuChi)) {
+                hql.append("AND ts.cccd LIKE :giaTri ");
+            } else if ("Mã ngành".equals(tieuChi)) {
+                hql.append("AND n.maNganh LIKE :giaTri ");
+            } else if ("Tên ngành".equals(tieuChi)) {
+                hql.append("AND n.tenNganh LIKE :giaTri ");
+            }
+        }
+
+        if (phuongThuc != null && !phuongThuc.equals("Tất cả")) {
+            hql.append("AND nv.phuongThuc = :phuongThuc ");
+        }
+
+        if (toHop != null && !toHop.equals("Tất cả")) {
+            hql.append("AND nv.toHopMon = :toHop ");
+        }
+
+        if (ketQua != null && !ketQua.equals("Tất cả")) {
+            if ("Chưa xét".equals(ketQua)) {
+                hql.append("AND (nv.ketQua IS NULL OR nv.ketQua = '') ");
+            } else {
+                hql.append("AND nv.ketQua = :ketQua ");
+            }
+        }
+
+        var query = emProvider.get().createQuery(hql.toString(), Long.class);
+        
+        if (giaTri != null && !giaTri.trim().isEmpty()) {
+            query.setParameter("giaTri", "%" + giaTri.trim() + "%");
+        }
+        if (phuongThuc != null && !phuongThuc.equals("Tất cả")) {
+            query.setParameter("phuongThuc", phuongThuc);
+        }
+        if (toHop != null && !toHop.equals("Tất cả")) {
+            query.setParameter("toHop", toHop);
+        }
+        if (ketQua != null && !ketQua.equals("Tất cả") && !ketQua.equals("Chưa xét")) {
+            query.setParameter("ketQua", ketQua);
+        }
+
+        return ((Long) query.getSingleResult()).intValue();
     }
 }
