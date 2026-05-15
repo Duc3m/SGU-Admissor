@@ -75,6 +75,7 @@ public class NguyenVongBUS {
         return BUSResult.successWithData("Lấy toàn bộ nguyện vọng thành công!", nguyenVongDAO.findAll());
     }
 
+    @Transactional
     public BUSResult<NguyenVong> getNguyenVongById(Integer id) {
         if (id == null || id <= 0) {
             return BUSResult.error("ID Nguyên vọng không hợp lệ!");
@@ -87,6 +88,28 @@ public class NguyenVongBUS {
             return BUSResult.error("CCCD không hợp lệ!");
         }
         return BUSResult.successWithData("Lấy nguyện vọng thành công!", nguyenVongDAO.findByCccd(cccd));
+    }
+    
+    @Transactional
+    public int countAdvanced(String tieuChi, String giaTri, String phuongThuc, String toHop, String ketQua) {
+        try {
+            return nguyenVongDAO.countAdvanced(tieuChi, giaTri, phuongThuc, toHop, ketQua);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    @Transactional
+    public BUSResult<List<NguyenVong>> searchAdvanced(String tieuChi, String giaTri, String phuongThuc, String toHop, String ketQua, int page, int limit) {
+        try {
+            int offset = (page - 1) * limit;
+            List<NguyenVong> list = nguyenVongDAO.searchAdvanced(tieuChi, giaTri, phuongThuc, toHop, ketQua, offset, limit);
+            return BUSResult.successWithData("Truy xuất nguyện vọng thành công!", list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BUSResult.error("Lỗi khi lấy danh sách nguyện vọng!");
+        }
     }
 
     @Transactional
