@@ -23,11 +23,13 @@ public class MainFrame extends JFrame {
 
     private final Provider<ThiSinhPanel> thiSinhPanelProvider;
     private final Provider<NganhPanel> nganhPanelProvider;
+    private final Provider<NguyenVongPanel> nguyenVongPanelProvider;
     
     @Inject
-    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider, Provider<NganhPanel> nganhPanelProvider) {
+    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider, Provider<NganhPanel> nganhPanelProvider, Provider<NguyenVongPanel> nguyenVongPanelProvider) {
         this.thiSinhPanelProvider = thiSinhPanelProvider;
         this.nganhPanelProvider = nganhPanelProvider;
+        this.nguyenVongPanelProvider = nguyenVongPanelProvider;
         
         ImageIcon logo = new ImageIcon(getClass().getResource("/images/logo.png"));
         Image scaledImage = logo.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
@@ -83,7 +85,7 @@ public class MainFrame extends JFrame {
                 newIcon = new FlatSVGIcon("icons/major.svg");
                 break;
             case "Nguyện vọng":
-                newForm = new NguyenVongPanel();
+                newForm = nguyenVongPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/aspiration.svg");
                 break;
             default:
