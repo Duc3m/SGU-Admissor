@@ -6,6 +6,7 @@ package com.sgu.admissor.gui;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.sgu.admissor.auth.AuthSession;
+import com.sgu.admissor.gui.dialog.*;
 import com.sgu.admissor.gui.frame.LoginFrame;
 import com.sgu.admissor.gui.panel.*;
 import jakarta.inject.Inject;
@@ -26,22 +27,31 @@ public class MainFrame extends JFrame {
     private final Provider<ThiSinhPanel> thiSinhPanelProvider;
     private final Provider<NganhPanel> nganhPanelProvider;
     private final Provider<NguyenVongPanel> nguyenVongPanelProvider;
+    private final Provider<BangDiemPanel> bangDiemPanelProvider;
+    private final Provider<ThongKePanel> thongKePanelProvider;
     private final DashboardPanel dashboardPanel;
     private final Provider<LoginFrame> loginFrameProvider;
+    private final Provider<ChangePasswordDialog> changePassDialogProvider;
     private final AuthSession authSession;
     
     @Inject
     public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider,
             Provider<NganhPanel> nganhPanelProvider,
             Provider<NguyenVongPanel> nguyenVongPanelProvider,
+            Provider<BangDiemPanel> bangDiemPanelProvider,
+            Provider<ThongKePanel> thongKePanelProvider,
             DashboardPanel dashboardPanel,
             Provider<LoginFrame> loginFrameProvider,
+            Provider<ChangePasswordDialog> changePassDialogProvider,
             AuthSession authSession) {
         this.thiSinhPanelProvider = thiSinhPanelProvider;
         this.nganhPanelProvider = nganhPanelProvider;
         this.nguyenVongPanelProvider = nguyenVongPanelProvider;
+        this.bangDiemPanelProvider = bangDiemPanelProvider;
+        this.thongKePanelProvider = thongKePanelProvider;
         this.dashboardPanel = dashboardPanel;
         this.loginFrameProvider = loginFrameProvider;
+        this.changePassDialogProvider = changePassDialogProvider;
         this.authSession = authSession;
         this.dashboardPanel.setHeaderActions(this::handleChangePassword, this::handleLogout);
         
@@ -72,7 +82,9 @@ public class MainFrame extends JFrame {
         // Không cho phép đóng tab index 0 (Home)
         tabbedPane.putClientProperty("JTabbedPane.tabCloseCallback",
             (BiConsumer<JTabbedPane, Integer>) (pane, index) -> {
-                if (index > 0) pane.removeTabAt(index);
+                if (index > 0) {
+                    pane.removeTabAt(index);
+                }
             });
     }
 
@@ -93,7 +105,7 @@ public class MainFrame extends JFrame {
                 newIcon = new FlatSVGIcon("icons/candidate.svg");
                 break;
             case "Bảng điểm":
-                newForm = new BangDiemPanel();
+                newForm = bangDiemPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/score.svg");
                 break;
             case "Ngành":
@@ -103,6 +115,10 @@ public class MainFrame extends JFrame {
             case "Nguyện vọng":
                 newForm = nguyenVongPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/aspiration.svg");
+                break;
+            case "Thống kê":
+                newForm = thongKePanelProvider.get();
+                newIcon = new FlatSVGIcon("icons/statistic.svg");
                 break;
             default:
                 throw new AssertionError();
@@ -128,7 +144,16 @@ public class MainFrame extends JFrame {
 
 
     private void handleChangePassword() {
-        JOptionPane.showMessageDialog(this, "Form đổi mật khẩu sẽ hiện ở đây!");
+        ChangePasswordDialog dialog = changePassDialogProvider.get();
+        
+        boolean isChanged = dialog.showDialog(this);
+        
+        if (isChanged) {
+            JOptionPane.showMessageDialog(this, "Vì lý do bảo mật, vui lòng đăng nhập lại bằng mật khẩu mới.");
+            authSession.logout();
+            this.dispose();
+            loginFrameProvider.get().setVisible(true);
+        }
     }
 
 }

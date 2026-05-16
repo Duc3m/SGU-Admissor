@@ -96,4 +96,5 @@ public class HeaderPanel extends JPanel {
         add(lblTitle, "gapleft 8");
         add(btnUser, "h 44!");
     }
+
 }

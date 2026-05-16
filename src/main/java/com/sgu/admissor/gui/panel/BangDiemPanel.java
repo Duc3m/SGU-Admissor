@@ -11,5 +11,4 @@ import javax.swing.JPanel;
  * @author Duc3m
  */
 public class BangDiemPanel extends JPanel {
-    
 }

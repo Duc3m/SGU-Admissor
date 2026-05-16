@@ -111,5 +111,5 @@ public class DashboardPanel extends JPanel {
         btn.addActionListener(e -> onFunctionOpen.accept(title));
         return btn;
     }
-    
+
 }

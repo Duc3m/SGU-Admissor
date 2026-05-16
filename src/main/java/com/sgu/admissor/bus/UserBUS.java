@@ -4,7 +4,7 @@
  */
 package com.sgu.admissor.bus;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.UserDAO;
 import com.sgu.admissor.dto.BUSResult;
@@ -102,6 +102,32 @@ public class UserBUS {
         }
 
         return BUSResult.successWithData("Đăng nhập thành công!", user);
+    }
+    
+    @Transactional
+    public BUSResult changePassword(int userId, String oldPassword, String newPassword) {
+        try {
+            User user = userDAO.findById(userId);
+            if (user == null) {
+                return BUSResult.error("Tài khoản không tồn tại hoặc đã bị xóa!");
+            }
+
+            boolean isMatch = PasswordUtil.checkPassword(oldPassword, user.getPassword());
+            if (!isMatch) {
+                return BUSResult.error("Mật khẩu cũ không chính xác!");
+            }
+
+            String hashedNewPassword = PasswordUtil.hashPassword(newPassword);
+
+            user.setPassword(hashedNewPassword);
+            userDAO.update(user);
+
+            return BUSResult.success("Đổi mật khẩu thành công!");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BUSResult.error("Lỗi hệ thống khi đổi mật khẩu: " + e.getMessage());
+        }
     }
 
     @Transactional

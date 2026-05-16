@@ -21,13 +21,15 @@ import net.miginfocom.swing.MigLayout;
  *
  * @author Duc3m
  */
-public class ThiSinhPanel extends JPanel{
+public class ThiSinhPanel extends JPanel {
     private PaginatedTablePanel tablePanel;
     
     private final int PAGE_LIMIT = 20;
     private final ThiSinh2025BUS thiSinhBUS;
     private final ExcelImportBUS excelImportBUS;
     private List<ThiSinh2025> currentList = new ArrayList<>();
+    private SwingWorker<Void, Void> importWorker;
+    private JDialog loadingDialog;
     
     private JComboBox<String> cbTieuChi;
     private JTextField txtSearch;
@@ -233,7 +235,7 @@ public class ThiSinhPanel extends JPanel{
                 File selectedFile = fileChooser.getSelectedFile();
 
                 // Hiển thị Dialog thông báo đang xử lý
-                JDialog loadingDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Đang xử lý...", Dialog.ModalityType.APPLICATION_MODAL);
+                loadingDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Đang xử lý...", Dialog.ModalityType.APPLICATION_MODAL);
                 JPanel loadingPanel = new JPanel(new MigLayout("insets 20", "[center]"));
                 loadingPanel.add(new JLabel("Hệ thống đang nạp dữ liệu từ Excel, vui lòng không tắt ứng dụng!"), "wrap");
                 JProgressBar progressBar = new JProgressBar();
@@ -244,7 +246,7 @@ public class ThiSinhPanel extends JPanel{
                 loadingDialog.setLocationRelativeTo(this);
 
                 // Sử dụng SwingWorker để chạy ngầm tiến trình Import
-                SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                importWorker = new SwingWorker<>() {
                     @Override
                     protected Void doInBackground() throws Exception {
                         excelImportBUS.importThiSinhVaDiem(selectedFile);
@@ -256,19 +258,23 @@ public class ThiSinhPanel extends JPanel{
                         try {
                             get(); // Bắt các lỗi văng ra từ doInBackground nếu có
                             loadingDialog.dispose(); // Đóng thông báo
+                            loadingDialog = null;
+                            importWorker = null;
                             JOptionPane.showMessageDialog(ThiSinhPanel.this, "Nhập dữ liệu thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
                             
                             // Nạp lại bảng dữ liệu từ trang 1
                             loadData(1); 
                         } catch (Exception ex) {
                             loadingDialog.dispose();
+                            loadingDialog = null;
+                            importWorker = null;
                             ex.printStackTrace();
                             JOptionPane.showMessageDialog(ThiSinhPanel.this, "Có lỗi xảy ra: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 };
 
-                worker.execute(); // Bắt đầu chạy ngầm
+                importWorker.execute(); // Bắt đầu chạy ngầm
                 loadingDialog.setVisible(true); // Hiển thị khung loading chặn màn hình
             }
     }

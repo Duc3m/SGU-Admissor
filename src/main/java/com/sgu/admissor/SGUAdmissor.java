@@ -32,7 +32,6 @@ public class SGUAdmissor {
         );
         
         if (!isDatabaseReady(injector)) {
-            // Hiện thông báo lỗi giao diện (rất quan trọng với app Desktop)
             JOptionPane.showMessageDialog(null, 
                 "LỖI KẾT NỐI DATABASE:\n" +
                 "- Hãy đảm bảo MySQL Server đã được bật.\n" +
@@ -40,7 +39,7 @@ public class SGUAdmissor {
                 "SGU Admissor - Lỗi hệ thống", 
                 JOptionPane.ERROR_MESSAGE);
             
-            System.exit(1); // Tắt app ngay lập tức
+            System.exit(1);
         }
         SwingUtilities.invokeLater(() -> {
             try {

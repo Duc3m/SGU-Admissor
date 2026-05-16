@@ -4,7 +4,7 @@
  */
 package com.sgu.admissor.bus;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.NganhDAO;
 import com.sgu.admissor.dto.BUSResult;

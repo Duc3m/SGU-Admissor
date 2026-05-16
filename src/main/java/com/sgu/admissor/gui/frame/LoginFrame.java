@@ -24,17 +24,19 @@ import java.awt.*;
 public class LoginFrame extends JFrame {
     private final UserBUS userBUS;
     private final Provider<MainFrame> mainFrameProvider;
-    @Inject
-    private AuthSession authSession;
+    private final AuthSession authSession;
     
     private JTextField txtUser;
     private JPasswordField txtPass;
     private JButton btnLogin;
     
     @Inject
-    public LoginFrame(UserBUS userBUS, Provider<MainFrame> mainFrameProvider) {
+    public LoginFrame(UserBUS userBUS,
+            Provider<MainFrame> mainFrameProvider,
+            AuthSession authSession) {
         this.userBUS = userBUS;
         this.mainFrameProvider = mainFrameProvider;
+        this.authSession = authSession;
         
         ImageIcon logo = new ImageIcon(getClass().getResource("/images/logo.png"));
         Image scaledImage = logo.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
