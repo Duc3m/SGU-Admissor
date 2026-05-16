@@ -9,10 +9,8 @@ import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.persist.PersistService;
-import com.google.inject.persist.UnitOfWork;
 import com.google.inject.persist.jpa.JpaPersistModule;
-import com.sgu.admissor.gui.MainFrame;
-import jakarta.persistence.EntityManager;
+import com.sgu.admissor.gui.frame.*;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -29,11 +27,11 @@ public class SGUAdmissor {
         UIManager.put("Button.arc", 15);
         
         Injector injector = Guice.createInjector(
-            new JpaPersistModule("sgu_pu") 
+            new JpaPersistModule("sgu_pu"),
+            new SGUAdmissorModule()
         );
         
         if (!isDatabaseReady(injector)) {
-            // Hiện thông báo lỗi giao diện (rất quan trọng với app Desktop)
             JOptionPane.showMessageDialog(null, 
                 "LỖI KẾT NỐI DATABASE:\n" +
                 "- Hãy đảm bảo MySQL Server đã được bật.\n" +
@@ -41,13 +39,12 @@ public class SGUAdmissor {
                 "SGU Admissor - Lỗi hệ thống", 
                 JOptionPane.ERROR_MESSAGE);
             
-            System.exit(1); // Tắt app ngay lập tức
+            System.exit(1);
         }
-        
         SwingUtilities.invokeLater(() -> {
             try {
-                MainFrame mainFrame = injector.getInstance(MainFrame.class);
-                mainFrame.setVisible(true);
+                LoginFrame loginFrame = injector.getInstance(LoginFrame.class);
+                loginFrame.setVisible(true);
             } catch (Exception e) {
                 e.printStackTrace();
             }
