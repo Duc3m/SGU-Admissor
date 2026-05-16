@@ -55,6 +55,28 @@ public class DiemCongBUS {
         }
         return BUSResult.successWithData("Lấy điểm cộng thành công!", diemCongDAO.findByMaNganh(maNganh));
     }
+    
+    @Transactional
+    public int countAdvanced(String cccd, String maToHop, String phuongThuc) {
+        try {
+            return diemCongDAO.countAdvanced(cccd, maToHop, phuongThuc);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    @Transactional
+    public BUSResult<List<Object[]>> searchAdvanced(String cccd, String maToHop, String phuongThuc, int page, int limit) {
+        try {
+            int offset = (page - 1) * limit;
+            List<Object[]> list = diemCongDAO.searchAdvanced(cccd, maToHop, phuongThuc, offset, limit);
+            return BUSResult.successWithData("Truy xuất điểm cộng thành công!", list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BUSResult.error("Lỗi khi lấy danh sách điểm cộng!");
+        }
+    }
 
     @Transactional
     public BUSResult<DiemCong> addDiemCong(DiemCong diemCong) {

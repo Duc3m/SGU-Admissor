@@ -24,12 +24,18 @@ public class MainFrame extends JFrame {
     private final Provider<ThiSinhPanel> thiSinhPanelProvider;
     private final Provider<NganhPanel> nganhPanelProvider;
     private final Provider<NguyenVongPanel> nguyenVongPanelProvider;
+    private final Provider<BangDiemPanel> bangDiemPanelProvider;
     
     @Inject
-    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider, Provider<NganhPanel> nganhPanelProvider, Provider<NguyenVongPanel> nguyenVongPanelProvider) {
+    public MainFrame(
+            Provider<ThiSinhPanel> thiSinhPanelProvider, 
+            Provider<NganhPanel> nganhPanelProvider, 
+            Provider<NguyenVongPanel> nguyenVongPanelProvider,
+            Provider<BangDiemPanel> bangDiemPanelProvider) {
         this.thiSinhPanelProvider = thiSinhPanelProvider;
         this.nganhPanelProvider = nganhPanelProvider;
         this.nguyenVongPanelProvider = nguyenVongPanelProvider;
+        this.bangDiemPanelProvider = bangDiemPanelProvider;
         
         ImageIcon logo = new ImageIcon(getClass().getResource("/images/logo.png"));
         Image scaledImage = logo.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
@@ -77,7 +83,7 @@ public class MainFrame extends JFrame {
                 newIcon = new FlatSVGIcon("icons/candidate.svg");
                 break;
             case "Bảng điểm":
-                newForm = new BangDiemPanel();
+                newForm = bangDiemPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/score.svg");
                 break;
             case "Ngành":
