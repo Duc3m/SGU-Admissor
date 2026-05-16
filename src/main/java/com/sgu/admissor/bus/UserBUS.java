@@ -9,6 +9,7 @@ import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.UserDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.User;
+import com.sgu.admissor.util.PasswordUtil;
 import java.util.List;
 
 /**
@@ -57,6 +58,50 @@ public class UserBUS {
             return BUSResult.success("Thêm user mới thành công!");
         }
         return BUSResult.error("Thêm user thất bại!");
+    }
+    
+    @Transactional
+    public BUSResult<User> register(User user) {
+        if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
+            return BUSResult.error("Tên đăng nhập không hợp lệ!");
+        }
+        if (user.getPassword() == null || !PasswordUtil.isValid(user.getPassword())) {
+            return BUSResult.error("Mật khẩu phải có ít nhất 6 ký tự và không được chứa khoảng trắng!");
+        }
+
+        if (userDAO.findByUsername(user.getUsername()) != null) {
+            return BUSResult.error("Tên đăng nhập đã tồn tại trong hệ thống!");
+        }
+
+        String hashedPassword = PasswordUtil.hashPassword(user.getPassword());
+        user.setPassword(hashedPassword);
+        user.setIsActive(true);
+        if (userDAO.insert(user)) {
+            return BUSResult.successWithData("Đăng ký tài khoản thành công!", user);
+        }
+        return BUSResult.error("Đăng ký thất bại, vui lòng thử lại sau!");
+    }
+    
+    @Transactional
+    public BUSResult<User> login(String username, String password) {
+        if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+            return BUSResult.error("Vui lòng nhập đầy đủ thông tin!");
+        }
+        User user = userDAO.findByUsername(username);
+
+        if (user == null) {
+            return BUSResult.error("Tên đăng nhập không tồn tại!");
+        }
+
+        if (!PasswordUtil.checkPassword(password, user.getPassword())) {
+            return BUSResult.error("Mật khẩu không chính xác!");
+        }
+
+        if (user.getIsActive() != null && !user.getIsActive()) {
+            return BUSResult.error("Tài khoản của bạn đã bị khóa!");
+        }
+
+        return BUSResult.successWithData("Đăng nhập thành công!", user);
     }
 
     @Transactional

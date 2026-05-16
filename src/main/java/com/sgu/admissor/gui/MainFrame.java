@@ -5,6 +5,8 @@
 package com.sgu.admissor.gui;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.sgu.admissor.auth.AuthSession;
+import com.sgu.admissor.gui.frame.LoginFrame;
 import com.sgu.admissor.gui.panel.*;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -24,12 +26,24 @@ public class MainFrame extends JFrame {
     private final Provider<ThiSinhPanel> thiSinhPanelProvider;
     private final Provider<NganhPanel> nganhPanelProvider;
     private final Provider<NguyenVongPanel> nguyenVongPanelProvider;
+    private final DashboardPanel dashboardPanel;
+    private final Provider<LoginFrame> loginFrameProvider;
+    private final AuthSession authSession;
     
     @Inject
-    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider, Provider<NganhPanel> nganhPanelProvider, Provider<NguyenVongPanel> nguyenVongPanelProvider) {
+    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider,
+            Provider<NganhPanel> nganhPanelProvider,
+            Provider<NguyenVongPanel> nguyenVongPanelProvider,
+            DashboardPanel dashboardPanel,
+            Provider<LoginFrame> loginFrameProvider,
+            AuthSession authSession) {
         this.thiSinhPanelProvider = thiSinhPanelProvider;
         this.nganhPanelProvider = nganhPanelProvider;
         this.nguyenVongPanelProvider = nguyenVongPanelProvider;
+        this.dashboardPanel = dashboardPanel;
+        this.loginFrameProvider = loginFrameProvider;
+        this.authSession = authSession;
+        this.dashboardPanel.setHeaderActions(this::handleChangePassword, this::handleLogout);
         
         ImageIcon logo = new ImageIcon(getClass().getResource("/images/logo.png"));
         Image scaledImage = logo.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
@@ -42,8 +56,10 @@ public class MainFrame extends JFrame {
 
         initTabbedPane();
 
-        DashboardPanel homeDashboard = new DashboardPanel(this::openFunctionTab);
-        tabbedPane.addTab("Home", new FlatSVGIcon("icons/home.svg", 16, 16), homeDashboard);
+        this.dashboardPanel.setOnFunctionOpen(functionCode -> {
+            this.openFunctionTab(functionCode);
+        });
+        tabbedPane.addTab("Home", new FlatSVGIcon("icons/home.svg", 16, 16), dashboardPanel);
         
         add(tabbedPane);
     }
@@ -99,6 +115,20 @@ public class MainFrame extends JFrame {
     
     public void backToDashboard() {
         tabbedPane.setSelectedIndex(0);
+    }
+    
+    private void handleLogout() {
+        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            authSession.logout();
+            this.dispose();
+            loginFrameProvider.get().setVisible(true);
+        }
+    }
+
+
+    private void handleChangePassword() {
+        JOptionPane.showMessageDialog(this, "Form đổi mật khẩu sẽ hiện ở đây!");
     }
 
 }
