@@ -130,5 +130,5 @@ public class PaginatedTablePanel extends JPanel {
     public JTable getTable() {
         return this.table;
     }
-    
+
 }

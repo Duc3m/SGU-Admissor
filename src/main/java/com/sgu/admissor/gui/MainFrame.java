@@ -5,6 +5,9 @@
 package com.sgu.admissor.gui;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.sgu.admissor.auth.AuthSession;
+import com.sgu.admissor.gui.dialog.*;
+import com.sgu.admissor.gui.frame.LoginFrame;
 import com.sgu.admissor.gui.panel.*;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -24,12 +27,33 @@ public class MainFrame extends JFrame {
     private final Provider<ThiSinhPanel> thiSinhPanelProvider;
     private final Provider<NganhPanel> nganhPanelProvider;
     private final Provider<NguyenVongPanel> nguyenVongPanelProvider;
+    private final Provider<BangDiemPanel> bangDiemPanelProvider;
+    private final Provider<ThongKePanel> thongKePanelProvider;
+    private final DashboardPanel dashboardPanel;
+    private final Provider<LoginFrame> loginFrameProvider;
+    private final Provider<ChangePasswordDialog> changePassDialogProvider;
+    private final AuthSession authSession;
     
     @Inject
-    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider, Provider<NganhPanel> nganhPanelProvider, Provider<NguyenVongPanel> nguyenVongPanelProvider) {
+    public MainFrame(Provider<ThiSinhPanel> thiSinhPanelProvider,
+            Provider<NganhPanel> nganhPanelProvider,
+            Provider<NguyenVongPanel> nguyenVongPanelProvider,
+            Provider<BangDiemPanel> bangDiemPanelProvider,
+            Provider<ThongKePanel> thongKePanelProvider,
+            DashboardPanel dashboardPanel,
+            Provider<LoginFrame> loginFrameProvider,
+            Provider<ChangePasswordDialog> changePassDialogProvider,
+            AuthSession authSession) {
         this.thiSinhPanelProvider = thiSinhPanelProvider;
         this.nganhPanelProvider = nganhPanelProvider;
         this.nguyenVongPanelProvider = nguyenVongPanelProvider;
+        this.bangDiemPanelProvider = bangDiemPanelProvider;
+        this.thongKePanelProvider = thongKePanelProvider;
+        this.dashboardPanel = dashboardPanel;
+        this.loginFrameProvider = loginFrameProvider;
+        this.changePassDialogProvider = changePassDialogProvider;
+        this.authSession = authSession;
+        this.dashboardPanel.setHeaderActions(this::handleChangePassword, this::handleLogout);
         
         ImageIcon logo = new ImageIcon(getClass().getResource("/images/logo.png"));
         Image scaledImage = logo.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
@@ -42,8 +66,10 @@ public class MainFrame extends JFrame {
 
         initTabbedPane();
 
-        DashboardPanel homeDashboard = new DashboardPanel(this::openFunctionTab);
-        tabbedPane.addTab("Home", new FlatSVGIcon("icons/home.svg", 16, 16), homeDashboard);
+        this.dashboardPanel.setOnFunctionOpen(functionCode -> {
+            this.openFunctionTab(functionCode);
+        });
+        tabbedPane.addTab("Home", new FlatSVGIcon("icons/home.svg", 16, 16), dashboardPanel);
         
         add(tabbedPane);
     }
@@ -56,7 +82,9 @@ public class MainFrame extends JFrame {
         // Không cho phép đóng tab index 0 (Home)
         tabbedPane.putClientProperty("JTabbedPane.tabCloseCallback",
             (BiConsumer<JTabbedPane, Integer>) (pane, index) -> {
-                if (index > 0) pane.removeTabAt(index);
+                if (index > 0) {
+                    pane.removeTabAt(index);
+                }
             });
     }
 
@@ -77,7 +105,7 @@ public class MainFrame extends JFrame {
                 newIcon = new FlatSVGIcon("icons/candidate.svg");
                 break;
             case "Bảng điểm":
-                newForm = new BangDiemPanel();
+                newForm = bangDiemPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/score.svg");
                 break;
             case "Ngành":
@@ -87,6 +115,10 @@ public class MainFrame extends JFrame {
             case "Nguyện vọng":
                 newForm = nguyenVongPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/aspiration.svg");
+                break;
+            case "Thống kê":
+                newForm = thongKePanelProvider.get();
+                newIcon = new FlatSVGIcon("icons/statistic.svg");
                 break;
             default:
                 throw new AssertionError();
@@ -99,6 +131,29 @@ public class MainFrame extends JFrame {
     
     public void backToDashboard() {
         tabbedPane.setSelectedIndex(0);
+    }
+    
+    private void handleLogout() {
+        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            authSession.logout();
+            this.dispose();
+            loginFrameProvider.get().setVisible(true);
+        }
+    }
+
+
+    private void handleChangePassword() {
+        ChangePasswordDialog dialog = changePassDialogProvider.get();
+        
+        boolean isChanged = dialog.showDialog(this);
+        
+        if (isChanged) {
+            JOptionPane.showMessageDialog(this, "Vì lý do bảo mật, vui lòng đăng nhập lại bằng mật khẩu mới.");
+            authSession.logout();
+            this.dispose();
+            loginFrameProvider.get().setVisible(true);
+        }
     }
 
 }

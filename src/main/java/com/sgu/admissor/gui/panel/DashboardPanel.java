@@ -5,8 +5,9 @@
 package com.sgu.admissor.gui.panel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.sgu.admissor.gui.components.CutoutButton;
-import com.sgu.admissor.gui.components.RoundStatisticButton;
+import com.sgu.admissor.auth.AuthSession;
+import com.sgu.admissor.gui.components.*;
+import jakarta.inject.Inject;
 
 
 import javax.swing.*;
@@ -20,11 +21,24 @@ import net.miginfocom.swing.MigLayout;
  */
 public class DashboardPanel extends JPanel {
 
-    private final Consumer<String> onFunctionOpen;
-
-    public DashboardPanel(Consumer<String> onFunctionOpen) {
-        this.onFunctionOpen = onFunctionOpen;
+    private Consumer<String> onFunctionOpen;
+    private final HeaderPanel header;
+    private final AuthSession authSession;
+    
+    @Inject
+    public DashboardPanel(HeaderPanel header, AuthSession authSession) {
+        this.header = header;
+        this.authSession = authSession;
         initLayout();
+    }
+    
+    public void setHeaderActions(Runnable onChangePassword, Runnable onLogout) {
+        // Chuyền bóng thẳng xuống cho HeaderPanel
+        header.setPopupActions(onChangePassword, onLogout);
+    }
+    
+    public void setOnFunctionOpen(Consumer<String> onFunctionOpen) {
+        this.onFunctionOpen = onFunctionOpen;
     }
 
     private void initLayout() {
@@ -34,13 +48,22 @@ public class DashboardPanel extends JPanel {
 
         putClientProperty("JTabbedPane.tabClosable", false);
         
-        HeaderPanel header = new HeaderPanel();
         add(header, "w 90%!, wrap");
 
-        JLabel lblGreeting = new JLabel("<html><font color='#0066cc'>Xin chào</font>, Trần Đức Em</html>");
-        lblGreeting.setFont(new Font("Segoe UI", Font.BOLD, 25));
-        lblGreeting.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
-        add(lblGreeting, "w 700!, gaptop 15, wrap");
+        JPanel topActionPanel = new JPanel(new MigLayout("insets 0, fillx", "[]push[]", "[center]"));
+        topActionPanel.setOpaque(false);
+
+        JLabel lblGreeting = new JLabel("<html><font color='#0066cc'>Xin chào</font>, " + authSession.getCurrentUser().getUsername() + "</html>");
+        lblGreeting.setFont(new Font("Segoe UI", Font.BOLD, 22));
+
+        PastelButton btnQuanLyTK = new PastelButton(
+            "Quản lý tài khoản", 
+            "icons/users.svg", 
+            Color.decode("#64748b") 
+        );
+        topActionPanel.add(lblGreeting);
+        topActionPanel.add(btnQuanLyTK, "h 40!, w 180!");
+        add(topActionPanel, "w 700!, gaptop 15, wrap");
 
         JPanel gridPanel = new JPanel(new MigLayout("insets 0, gap 20", "[340!][340!]", "[160!][160!]"));
         gridPanel.setOpaque(false);
@@ -50,10 +73,9 @@ public class DashboardPanel extends JPanel {
         CutoutButton btnNganh = createMenuButton("Ngành", 2, "#eab308", "icons/major.svg", SwingConstants.RIGHT);
         CutoutButton btnNguyenVong = createMenuButton("Nguyện vọng", 1, "#f97316", "icons/aspiration.svg", SwingConstants.LEFT);
 
-        // Khởi tạo nút Thống kê với Class mới
         RoundStatisticButton btnThongKe = new RoundStatisticButton(
             "icons/statistic.svg", 
-            Color.decode("#0066cc") // Màu xanh dương chủ đạo
+            Color.decode("#0066cc")
         );
 
         btnThongKe.addActionListener(e -> onFunctionOpen.accept("Thống kê"));
@@ -89,5 +111,5 @@ public class DashboardPanel extends JPanel {
         btn.addActionListener(e -> onFunctionOpen.accept(title));
         return btn;
     }
-    
+
 }

@@ -287,4 +287,5 @@ public class NguyenVongPanel extends JPanel {
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
+
 }

@@ -5,6 +5,11 @@
 package com.sgu.admissor.gui.panel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.sgu.admissor.auth.AuthSession;
+import com.sgu.admissor.entity.User;
+import com.sgu.admissor.gui.components.UserPopup;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
@@ -14,12 +19,26 @@ import java.awt.*;
  * @author Duc3m
  */
 public class HeaderPanel extends JPanel {
+    
+    private final AuthSession authSession;
+    private final Provider<UserPopup> popupProvider;
+    private Runnable onChangePassword;
+    private Runnable onLogout;
 
-    public HeaderPanel() {
+    @Inject
+    public HeaderPanel(AuthSession authSession, Provider<UserPopup> popupProvider) {
+        this.authSession = authSession;
+        this.popupProvider = popupProvider;
         initLayout();
+    }
+    
+    public void setPopupActions(Runnable onChangePassword, Runnable onLogout) {
+        this.onChangePassword = onChangePassword;
+        this.onLogout = onLogout;
     }
 
     private void initLayout() {
+        User currentUser = authSession.getCurrentUser();
         // Cấu hình MigLayout:
         // insets 10 20: Padding trên/dưới 0px, trái/phải 20px
         // fillx: Giãn hết chiều ngang
@@ -47,7 +66,7 @@ public class HeaderPanel extends JPanel {
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblTitle.setForeground(new Color(40, 40, 40));
 
-        JButton btnUser = new JButton("Trần Đức Em");
+        JButton btnUser = new JButton(currentUser.getUsername());
         try {
             btnUser.setIcon(new FlatSVGIcon("icons/person.svg", 26, 26));
         } catch (Exception e) {
@@ -62,8 +81,20 @@ public class HeaderPanel extends JPanel {
         btnUser.setFocusable(false);
 
 
+        btnUser.addActionListener(e -> {
+            UserPopup popup = popupProvider.get();
+            popup.showPopup(
+                btnUser, 
+                5, 
+                btnUser.getHeight() + 5, 
+                this.onChangePassword, 
+                this.onLogout
+            );
+        });
+        
         add(lblLogo);
-        add(lblTitle, "gapleft 8"); // Cách logo 15px
+        add(lblTitle, "gapleft 8");
         add(btnUser, "h 44!");
     }
+
 }

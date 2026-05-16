@@ -408,4 +408,5 @@ public class NganhPanel extends JPanel {
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
+
 }
