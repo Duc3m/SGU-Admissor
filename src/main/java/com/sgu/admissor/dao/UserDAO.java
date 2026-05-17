@@ -5,7 +5,9 @@
 package com.sgu.admissor.dao;
 
 import com.sgu.admissor.entity.User;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -15,6 +17,41 @@ public class UserDAO extends GenericDAO<User>{
     
     public UserDAO() {
         super(User.class);
+    }
+    
+    public int countAdvanced(String username, String role, Integer status) {
+        Map<String, Object> params = new HashMap<>();
+        String whereClause = buildWhereClause(username, role, status, params);
+        
+        return countByCondition(whereClause, params); 
+    }
+    
+    public List<User> searchAdvanced(String username, String role, Integer status, int page, int limit) {
+        Map<String, Object> params = new HashMap<>();
+        String whereClause = buildWhereClause(username, role, status, params);
+        
+        return findByCondition(whereClause, params, page, limit); 
+    }
+    
+    private String buildWhereClause(String username, String role, Integer status, Map<String, Object> params) {
+        StringBuilder where = new StringBuilder("WHERE 1=1");
+
+        if (username != null && !username.trim().isEmpty()) {
+            where.append(" AND e.username LIKE :username");
+            params.put("username", "%" + username.trim() + "%");
+        }
+
+        if (role != null && !role.contains("Tất cả")) {
+            where.append(" AND e.role = :role");
+            params.put("role", role);
+        }
+
+        if (status != null && status >= 0) {
+            where.append(" AND e.isActive = :isActive");
+            params.put("isActive", status == 1);
+        }
+
+        return where.toString();
     }
     
     public User findByUsername(String userName){

@@ -58,7 +58,7 @@ public class ThiSinhPanel extends JPanel {
         setBackground(Color.WHITE);
 
         // Top Bar
-        JPanel topBar = new JPanel(new MigLayout("insets 0", "[]10[]"));
+        JPanel topBar = new JPanel(new MigLayout("insets 0", "[]10[grow]10[]"));
         topBar.setBackground(Color.WHITE);
 
         JButton btnBack = new JButton(new FlatSVGIcon("icons/arrow-left.svg", 22, 22));
@@ -72,14 +72,14 @@ public class ThiSinhPanel extends JPanel {
             }
         });
         
-        JButton btnImport = new JButton("Import Thí sinh", new FlatSVGIcon("icons/excel.svg"));
+        JButton btnImport = new JButton("Import Thí sinh", new FlatSVGIcon("icons/excel.svg", 16, 16));
         btnImport.setBackground(Color.decode("#10b981"));
         btnImport.setForeground(Color.WHITE);
         btnImport.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnImport.addActionListener(e -> { importExcelEvent(); });
 
         topBar.add(btnBack);
-        topBar.add(btnImport, "h 25!");
+        topBar.add(btnImport, "h 30!");
 
         // Side Bar
         JPanel filterPanel = new JPanel(new MigLayout("wrap 1, insets 20, gapy 12", "[fill]"));

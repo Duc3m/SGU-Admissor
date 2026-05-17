@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `bangquydoi` (
   UNIQUE KEY `maquydoi_UNIQUE` (`maquydoi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.bangquydoi: ~0 rows (approximately)
 
 -- Dumping structure for table sguadmissor.diemcong
 CREATE TABLE IF NOT EXISTS `diemcong` (
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `diemcong` (
   UNIQUE KEY `dc_keys_UNIQUE` (`dc_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.diemcong: ~0 rows (approximately)
 
 -- Dumping structure for table sguadmissor.diemthi
 CREATE TABLE IF NOT EXISTS `diemthi` (
@@ -85,16 +85,7 @@ CREATE TABLE IF NOT EXISTS `diemthi` (
   UNIQUE KEY `cccd_UNIQUE` (`cccd`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
-
--- Dumping structure for table sguadmissor.function
-CREATE TABLE IF NOT EXISTS `function` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.diemthi: ~0 rows (approximately)
 
 -- Dumping structure for table sguadmissor.nganh
 CREATE TABLE IF NOT EXISTS `nganh` (
@@ -116,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `nganh` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.nganh: ~0 rows (approximately)
 
 -- Dumping structure for table sguadmissor.nganh_tohop
 CREATE TABLE IF NOT EXISTS `nganh_tohop` (
@@ -146,7 +137,7 @@ CREATE TABLE IF NOT EXISTS `nganh_tohop` (
   UNIQUE KEY `key_UNIQUE` (`tb_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.nganh_tohop: ~0 rows (approximately)
 
 -- Dumping structure for table sguadmissor.nguyenvong
 CREATE TABLE IF NOT EXISTS `nguyenvong` (
@@ -166,30 +157,7 @@ CREATE TABLE IF NOT EXISTS `nguyenvong` (
   UNIQUE KEY `key_UNIQUE` (`nv_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
-
--- Dumping structure for table sguadmissor.role
-CREATE TABLE IF NOT EXISTS `role` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Data exporting was unselected.
-
--- Dumping structure for table sguadmissor.role_detail
-CREATE TABLE IF NOT EXISTS `role_detail` (
-  `role_id` int NOT NULL DEFAULT '0',
-  `function_id` int NOT NULL DEFAULT '0',
-  `action` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`role_id`,`function_id`),
-  KEY `function_id` (`function_id`),
-  KEY `role_id` (`role_id`),
-  CONSTRAINT `role_detail_ibfk_1` FOREIGN KEY (`function_id`) REFERENCES `function` (`id`),
-  CONSTRAINT `role_detail_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.nguyenvong: ~0 rows (approximately)
 
 -- Dumping structure for table sguadmissor.tohop
 CREATE TABLE IF NOT EXISTS `tohop` (
@@ -203,7 +171,7 @@ CREATE TABLE IF NOT EXISTS `tohop` (
   UNIQUE KEY `matohop_UNIQUE` (`matohop`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.tohop: ~0 rows (approximately)
 
 -- Dumping structure for table sguadmissor.thisinh2025
 CREATE TABLE IF NOT EXISTS `thisinh2025` (
@@ -224,21 +192,21 @@ CREATE TABLE IF NOT EXISTS `thisinh2025` (
   UNIQUE KEY `cccd_UNIQUE` (`cccd`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.thisinh2025: ~0 rows (approximately)
 
 -- Dumping structure for table sguadmissor.user
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(45) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
-  `role_id` int DEFAULT NULL,
+  `role` varchar(45) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
-  PRIMARY KEY (`id`),
-  KEY `FK_user_role` (`role_id`),
-  CONSTRAINT `FK_user_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table sguadmissor.user: ~1 rows (approximately)
+INSERT INTO `user` (`id`, `username`, `password`, `role`, `is_active`) VALUES
+	(1, 'ducem', '$2a$12$3tjwgyLnXsl2Xlk9/HyU4.OnRlX1H0p.xzTBuUMW38o62PkD1lmEK', 'admin', 1);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

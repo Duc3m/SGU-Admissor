@@ -29,6 +29,7 @@ public class MainFrame extends JFrame {
     private final Provider<NguyenVongPanel> nguyenVongPanelProvider;
     private final Provider<BangDiemPanel> bangDiemPanelProvider;
     private final Provider<ThongKePanel> thongKePanelProvider;
+    private final Provider<TaiKhoanPanel> taiKhoanPanelProvider;
     private final DashboardPanel dashboardPanel;
     private final Provider<LoginFrame> loginFrameProvider;
     private final Provider<ChangePasswordDialog> changePassDialogProvider;
@@ -40,6 +41,7 @@ public class MainFrame extends JFrame {
             Provider<NguyenVongPanel> nguyenVongPanelProvider,
             Provider<BangDiemPanel> bangDiemPanelProvider,
             Provider<ThongKePanel> thongKePanelProvider,
+            Provider<TaiKhoanPanel> taiKhoanPanelProvider,
             DashboardPanel dashboardPanel,
             Provider<LoginFrame> loginFrameProvider,
             Provider<ChangePasswordDialog> changePassDialogProvider,
@@ -49,6 +51,7 @@ public class MainFrame extends JFrame {
         this.nguyenVongPanelProvider = nguyenVongPanelProvider;
         this.bangDiemPanelProvider = bangDiemPanelProvider;
         this.thongKePanelProvider = thongKePanelProvider;
+        this.taiKhoanPanelProvider = taiKhoanPanelProvider;
         this.dashboardPanel = dashboardPanel;
         this.loginFrameProvider = loginFrameProvider;
         this.changePassDialogProvider = changePassDialogProvider;
@@ -119,6 +122,10 @@ public class MainFrame extends JFrame {
             case "Thống kê":
                 newForm = thongKePanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/statistic.svg");
+                break;
+            case "Tài khoản":
+                newForm = taiKhoanPanelProvider.get();
+                newIcon = new FlatSVGIcon("icons/users.svg");
                 break;
             default:
                 throw new AssertionError();

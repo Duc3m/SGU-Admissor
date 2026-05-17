@@ -85,7 +85,7 @@ public class HeaderPanel extends JPanel {
             UserPopup popup = popupProvider.get();
             popup.showPopup(
                 btnUser, 
-                5, 
+                0, 
                 btnUser.getHeight() + 5, 
                 this.onChangePassword, 
                 this.onLogout

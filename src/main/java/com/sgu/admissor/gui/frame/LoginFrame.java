@@ -146,7 +146,7 @@ public class LoginFrame extends JFrame {
         
         if (result.isSuccess()) {
             User loggedInUser = result.getData();
-            authSession.login(loggedInUser, null);
+            authSession.login(loggedInUser);
             
             MainFrame mainFrame = mainFrameProvider.get(); 
             mainFrame.setVisible(true);
