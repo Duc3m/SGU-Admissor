@@ -40,14 +40,9 @@ public class DiemCongDAO extends GenericDAO<DiemCong> {
                 .getResultList();
     }
     
-    // 1. Hàm tìm kiếm phân trang có JOIN lấy thứ tự nguyện vọng
-    public List<Object[]> searchAdvanced(String cccd, String maToHop, String phuongThuc , int offset, int limit) {
-        StringBuilder hql = new StringBuilder(
-            "SELECT dc, nv.thuTu FROM DiemCong dc " +
-            "LEFT JOIN NguyenVong nv ON dc.thiSinh.cccd = nv.thiSinh.cccd " +
-            "AND dc.nganh.maNganh = nv.nganh.maNganh AND dc.phuongThuc = nv.phuongThuc " +
-            "WHERE 1=1 "
-        );
+    // 1. Lấy danh sách CCCD
+    public List<Object[]> searchGroupedCandidates(String cccd, String maToHop, String phuongThuc, int offset, int limit) {
+        StringBuilder hql = new StringBuilder("SELECT DISTINCT dc.thiSinh.cccd, dc.thiSinh.hoTen, COUNT(dc.id) FROM DiemCong dc WHERE 1=1 ");
 
         if (cccd != null && !cccd.trim().isEmpty()) {
             hql.append("AND dc.thiSinh.cccd LIKE :cccd ");
@@ -55,12 +50,13 @@ public class DiemCongDAO extends GenericDAO<DiemCong> {
         if (maToHop != null && !maToHop.equals("Tất cả")) {
             hql.append("AND dc.toHop.maToHop = :maToHop ");
         }
-        
         if (phuongThuc != null && !phuongThuc.equals("Tất cả")) {
             hql.append("AND dc.phuongThuc = :phuongThuc ");
         }
 
-        hql.append("ORDER BY dc.id DESC");
+        // Gom nhóm theo CCCD và Tên
+        hql.append("GROUP BY dc.thiSinh.cccd, dc.thiSinh.hoTen ");
+        hql.append("ORDER BY dc.thiSinh.cccd ASC");
 
         var query = emProvider.get().createQuery(hql.toString(), Object[].class);
 
@@ -70,7 +66,6 @@ public class DiemCongDAO extends GenericDAO<DiemCong> {
         if (maToHop != null && !maToHop.equals("Tất cả")) {
             query.setParameter("maToHop", maToHop);
         }
-        
         if (phuongThuc != null && !phuongThuc.equals("Tất cả")) {
             query.setParameter("phuongThuc", phuongThuc);
         }
@@ -81,9 +76,9 @@ public class DiemCongDAO extends GenericDAO<DiemCong> {
         return query.getResultList();
     }
 
-    // 2. Hàm đếm tổng số bản ghi
-    public int countAdvanced(String cccd, String maToHop, String phuongThuc) {
-        StringBuilder hql = new StringBuilder("SELECT COUNT(dc.id) FROM DiemCong dc WHERE 1=1 ");
+    // 2. Đếm số lượng Thí sinh (để phân trang)
+    public int countDistinctCccd(String cccd, String maToHop, String phuongThuc) {
+        StringBuilder hql = new StringBuilder("SELECT COUNT(DISTINCT dc.thiSinh.cccd) FROM DiemCong dc WHERE 1=1 ");
         
         if (cccd != null && !cccd.trim().isEmpty()) {
             hql.append("AND dc.thiSinh.cccd LIKE :cccd ");
@@ -91,20 +86,19 @@ public class DiemCongDAO extends GenericDAO<DiemCong> {
         if (maToHop != null && !maToHop.equals("Tất cả")) {
             hql.append("AND dc.toHop.maToHop = :maToHop ");
         }
-        
         if (phuongThuc != null && !phuongThuc.equals("Tất cả")) {
             hql.append("AND dc.phuongThuc = :phuongThuc ");
         }
 
         var query = emProvider.get().createQuery(hql.toString(), Long.class);
 
+        // ... Set parameters y hệt như hàm trên ...
         if (cccd != null && !cccd.trim().isEmpty()) {
             query.setParameter("cccd", "%" + cccd.trim() + "%");
         }
         if (maToHop != null && !maToHop.equals("Tất cả")) {
             query.setParameter("maToHop", maToHop);
         }
-        
         if (phuongThuc != null && !phuongThuc.equals("Tất cả")) {
             query.setParameter("phuongThuc", phuongThuc);
         }

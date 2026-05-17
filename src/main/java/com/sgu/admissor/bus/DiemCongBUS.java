@@ -28,6 +28,7 @@ public class DiemCongBUS {
         return BUSResult.successWithData("Lấy toàn bộ điểm cộng thành công!", diemCongDAO.findAll());
     }
 
+    @Transactional
     public BUSResult<DiemCong> getDiemCongById(Integer id) {
         if (id == null || id <= 0) {
             return BUSResult.error("ID điểm cộng không hợp lệ!");
@@ -35,6 +36,7 @@ public class DiemCongBUS {
         return BUSResult.successWithData("Lấy điểm cộng thành công!", diemCongDAO.findById(id));
     }
 
+    @Transactional
     public BUSResult<List<DiemCong>> getDiemCongByCccd(String cccd) {
         if (cccd == null || cccd.trim().isEmpty()) {
             return BUSResult.error("CCCD không hợp lệ!");
@@ -57,9 +59,9 @@ public class DiemCongBUS {
     }
     
     @Transactional
-    public int countAdvanced(String cccd, String maToHop, String phuongThuc) {
+    public int countDistinctCccd(String cccd, String maToHop, String phuongThuc) {
         try {
-            return diemCongDAO.countAdvanced(cccd, maToHop, phuongThuc);
+            return diemCongDAO.countDistinctCccd(cccd, maToHop, phuongThuc);
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
@@ -67,14 +69,14 @@ public class DiemCongBUS {
     }
 
     @Transactional
-    public BUSResult<List<Object[]>> searchAdvanced(String cccd, String maToHop, String phuongThuc, int page, int limit) {
+    public BUSResult<List<Object[]>> searchGroupedCandidates(String cccd, String maToHop, String phuongThuc, int page, int limit) {
         try {
             int offset = (page - 1) * limit;
-            List<Object[]> list = diemCongDAO.searchAdvanced(cccd, maToHop, phuongThuc, offset, limit);
-            return BUSResult.successWithData("Truy xuất điểm cộng thành công!", list);
+            List<Object[]> list = diemCongDAO.searchGroupedCandidates(cccd, maToHop, phuongThuc, offset, limit);
+            return BUSResult.successWithData("Thành công!", list);
         } catch (Exception e) {
             e.printStackTrace();
-            return BUSResult.error("Lỗi khi lấy danh sách điểm cộng!");
+            return BUSResult.error("Lỗi khi lấy danh sách thí sinh!");
         }
     }
 
