@@ -38,6 +38,8 @@ public class BangDiemPanel extends JPanel {
         this.toHopBUS = toHopBUS;
         
         initLayout();
+        initPopupMenu();
+        
         loadFilterData(); 
         loadData(1);
     }
@@ -108,20 +110,16 @@ public class BangDiemPanel extends JPanel {
         add(filterPanel, "growy");
 
         // --- MAIN TABLE ---
-        String[] columns = {"ID", "CCCD", "Thứ Tự NV", "Tổ Hợp", "Phương thức", "Điểm CC", "Điểm ƯTXT", "Tổng Điểm Cộng"};
+        String[] columns = {"STT", "CCCD Thí Sinh", "Tên Thí Sinh", "Số Lượng ĐC"};
         tablePanel = new PaginatedTablePanel(columns, page -> loadData(page));
         add(tablePanel, "grow");
         
-        // Căn chỉnh độ rộng cột
+        // Căn chỉnh cột
         JTable table = tablePanel.getTable();
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);  table.getColumnModel().getColumn(0).setMaxWidth(80);
-        table.getColumnModel().getColumn(1).setPreferredWidth(120); table.getColumnModel().getColumn(1).setMaxWidth(150);
-        table.getColumnModel().getColumn(2).setPreferredWidth(100); table.getColumnModel().getColumn(2).setMaxWidth(120);
-        table.getColumnModel().getColumn(3).setPreferredWidth(100); table.getColumnModel().getColumn(3).setMaxWidth(130);
-        table.getColumnModel().getColumn(4).setPreferredWidth(120); 
-        table.getColumnModel().getColumn(5).setPreferredWidth(100); 
-        table.getColumnModel().getColumn(6).setPreferredWidth(100); 
-        table.getColumnModel().getColumn(7).setPreferredWidth(120);
+        table.getColumnModel().getColumn(0).setPreferredWidth(60);  table.getColumnModel().getColumn(0).setMaxWidth(80);
+        table.getColumnModel().getColumn(1).setPreferredWidth(150); table.getColumnModel().getColumn(1).setMaxWidth(200);
+        table.getColumnModel().getColumn(2).setPreferredWidth(250); 
+        table.getColumnModel().getColumn(3).setPreferredWidth(120); table.getColumnModel().getColumn(3).setMaxWidth(150); // Số lượng
 
         // --- EVENTS ---
         btnLoc.addActionListener(e -> loadData(1));
@@ -132,6 +130,14 @@ public class BangDiemPanel extends JPanel {
             cbPhuongThuc.setSelectedIndex(0);
             loadData(1);
         });
+    }
+    
+    private void initPopupMenu() {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem itemDetail = new JMenuItem("Xem chi tiết điểm");
+        itemDetail.addActionListener(e -> showDetailDialog());
+        popupMenu.add(itemDetail);
+        tablePanel.setRowPopupMenu(popupMenu);
     }
 
     private void loadFilterData() {
@@ -148,36 +154,80 @@ public class BangDiemPanel extends JPanel {
 
     private void loadData(int page) {
         String cccd = txtSearchCCCD.getText().trim();
+        String toHop = cbToHop.getSelectedItem() != null ? cbToHop.getSelectedItem().toString() : "Tất cả";
+        String phuongThuc = cbPhuongThuc.getSelectedItem() != null ? cbPhuongThuc.getSelectedItem().toString() : "Tất cả";
         
-        Object selTh = cbToHop.getSelectedItem();
-        String toHop = selTh != null ? selTh.toString() : "Tất cả";
-        
-        Object selPt = cbPhuongThuc.getSelectedItem();
-        String phuongThuc = selPt != null ? selPt.toString() : "Tất cả";
-        
-        int totalRecords = diemCongBUS.countAdvanced(cccd, toHop, phuongThuc);
-        BUSResult<List<Object[]>> result = diemCongBUS.searchAdvanced(cccd, toHop, phuongThuc, page, PAGE_LIMIT);
+        int totalRecords = diemCongBUS.countDistinctCccd(cccd, toHop, phuongThuc);
+        BUSResult<List<Object[]>> result = diemCongBUS.searchGroupedCandidates(cccd, toHop, phuongThuc, page, PAGE_LIMIT);
         
         tablePanel.getTableModel().setRowCount(0);
 
         if (result.isSuccess() && result.getData() != null) {
-             for (Object[] row : result.getData()) {
-                // row[0] là DiemCong, row[1] là Thứ tự (Integer)
-                DiemCong dc = (DiemCong) row[0];
-                Integer thuTu = (Integer) row[1];
-
+            int stt = (page - 1) * PAGE_LIMIT + 1;
+            for (Object[] row : result.getData()) {
+                // row[0] là CCCD, row[1] là Tên thí sinh, row[2] là Số lượng
                 tablePanel.getTableModel().addRow(new Object[]{
-                    dc.getId(),
-                    dc.getThiSinh() != null ? dc.getThiSinh().getCccd() : "",
-                    thuTu != null ? thuTu : "N/A", // Nếu không join được (ko có NV) thì để N/A
-                    dc.getToHop() != null ? dc.getToHop().getMaToHop() : "",
-                    dc.getPhuongThuc() != null ? dc.getPhuongThuc() : "",
-                    dc.getDiemCc() != null ? dc.getDiemCc() : "0.00",
-                    dc.getDiemUtxt() != null ? dc.getDiemUtxt() : "0.00",
-                    dc.getDiemTong() != null ? dc.getDiemTong() : "0.00",
+                    stt++,
+                    row[0] != null ? row[0].toString() : "",
+                    row[1] != null ? row[1].toString() : "N/A", 
+                    row[2] != null ? row[2].toString() : "0"
                 });
             }
         }
         tablePanel.syncPagination(page, totalRecords);
+    }
+    
+    private void showDetailDialog() {
+        int selectedRow = tablePanel.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một thí sinh để xem!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        String cccd = tablePanel.getTableModel().getValueAt(selectedRow, 1).toString();
+        
+        BUSResult<List<DiemCong>> res = diemCongBUS.getDiemCongByCccd(cccd);
+        if (!res.isSuccess() || res.getData() == null || res.getData().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Thí sinh này không có dữ liệu điểm cộng!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Bảng Điểm Cộng Chi Tiết - CCCD: " + cccd, Dialog.ModalityType.APPLICATION_MODAL);
+        JPanel panel = new JPanel(new MigLayout("fill, insets 15", "[grow]", "[][grow][]"));
+
+        panel.add(new JLabel("<html><b style='color:#3b82f6; font-size:14px;'>DANH SÁCH ĐIỂM CỘNG THEO TỔ HỢP/NGÀNH</b></html>"), "wrap, gapbottom 10");
+
+        // Tạo bảng con trong form
+        String[] cols = {"Mã Ngành", "Tên Ngành", "Phương Thức", "Tổ Hợp", "Điểm CC", "Điểm ƯTXT", "Tổng Cộng"};
+        javax.swing.table.DefaultTableModel model = new javax.swing.table.DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int row, int col) { return false; } // Không cho edit
+        };
+        JTable detailTable = new JTable(model);
+
+        // Đổ dữ liệu vào bảng con
+        for (DiemCong dc : res.getData()) {
+            model.addRow(new Object[]{
+                dc.getNganh() != null ? dc.getNganh().getMaNganh() : "",
+                dc.getNganh() != null ? dc.getNganh().getTenNganh() : "",
+                dc.getPhuongThuc() != null ? dc.getPhuongThuc() : "",
+                dc.getToHop() != null ? dc.getToHop().getMaToHop() : "",
+                dc.getDiemCc() != null ? dc.getDiemCc() : "0.00",
+                dc.getDiemUtxt() != null ? dc.getDiemUtxt() : "0.00",
+                dc.getDiemTong() != null ? dc.getDiemTong() : "0.00"
+            });
+        }
+
+        // Add ScrollPane để cuộn nếu thí sinh có quá nhiều tổ hợp
+        JScrollPane scrollPane = new JScrollPane(detailTable);
+        panel.add(scrollPane, "grow, w 800!, h 250!, wrap"); // Rộng 800px, cao 250px
+
+        JButton btnClose = new JButton("Đóng");
+        btnClose.addActionListener(e -> dialog.dispose());
+        panel.add(btnClose, "right, gaptop 10");
+
+        dialog.add(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 }
