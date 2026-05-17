@@ -92,6 +92,29 @@ public class NguyenVongDAO extends GenericDAO<NguyenVong>{
         return query.getResultList();
     }
 
+    public List<NguyenVong> findByMaNganhSorted(String maNganh) {
+        String hql = "FROM NguyenVong nv WHERE nv.nganh.maNganh = :maNganh "
+                   + "ORDER BY nv.diemXetTuyen DESC, nv.thuTu ASC";
+        return emProvider.get().createQuery(hql, NguyenVong.class)
+                .setParameter("maNganh", maNganh)
+                .getResultList();
+    }
+
+    public void updateBatch(List<NguyenVong> list, int batchSize) {
+        var em = emProvider.get();
+        for (int i = 0; i < list.size(); i++) {
+            em.merge(list.get(i));
+            if ((i + 1) % batchSize == 0) {
+                em.flush();
+                em.clear();
+            }
+        }
+        if (list.size() % batchSize != 0) {
+            em.flush();
+            em.clear();
+        }
+    }
+
     public int countAdvanced(String tieuChi, String giaTri, String phuongThuc, String toHop, String ketQua) {
         StringBuilder hql = new StringBuilder(
             "SELECT COUNT(nv.id) FROM NguyenVong nv " +
