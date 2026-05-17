@@ -31,7 +31,7 @@ public class UserPopup extends JPopupMenu {
 
         User currentUser = session.getCurrentUser();
         String userName = (currentUser != null) ? currentUser.getUsername() : "Guest";
-        String role = (currentUser != null && currentUser.getRole() != null) ? currentUser.getRole().getName() : "Unknown";
+        String role = (currentUser != null && currentUser.getRole() != null) ? currentUser.getRole() : "Unknown";
 
         
         profilePanel = new JPanel(new MigLayout("insets 10 10 10 15", "[min!]10[pref!]", "[]-5[]"));
@@ -77,15 +77,5 @@ public class UserPopup extends JPopupMenu {
             item.addActionListener(e -> action.run());
         }
         return item;
-    }
-
-
-    @Override
-    public Dimension getPreferredSize() {
-        Dimension size = super.getPreferredSize(); 
-        if (profilePanel != null) {
-            size.width = profilePanel.getPreferredSize().width;
-        }
-        return size;
     }
 }

@@ -61,6 +61,7 @@ public class DashboardPanel extends JPanel {
             "icons/users.svg", 
             Color.decode("#64748b") 
         );
+        btnQuanLyTK.addActionListener(e -> {onFunctionOpen.accept("Tài khoản");});
         topActionPanel.add(lblGreeting);
         topActionPanel.add(btnQuanLyTK, "h 40!, w 180!");
         add(topActionPanel, "w 700!, gaptop 15, wrap");

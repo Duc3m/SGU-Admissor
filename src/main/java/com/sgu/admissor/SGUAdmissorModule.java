@@ -21,8 +21,6 @@ public class SGUAdmissorModule extends AbstractModule {
         bind(AuthSession.class).in(Singleton.class);
 
         bind(UserDAO.class).in(Singleton.class);
-        bind(RoleDAO.class).in(Singleton.class);
-        bind(RoleDetailDAO.class).in(Singleton.class);
         bind(ThiSinh2025DAO.class).in(Singleton.class);
         bind(NganhDAO.class).in(Singleton.class);
         bind(NguyenVongDAO.class).in(Singleton.class);
@@ -31,11 +29,8 @@ public class SGUAdmissorModule extends AbstractModule {
         bind(ToHopDAO.class).in(Singleton.class);
         bind(NganhToHopDAO.class).in(Singleton.class);
         bind(BangQuyDoiDAO.class).in(Singleton.class);
-        bind(SysFunctionDAO.class).in(Singleton.class);
 
         bind(UserBUS.class).in(Singleton.class);
-        bind(RoleBUS.class).in(Singleton.class);
-        bind(RoleDetailBUS.class).in(Singleton.class);
         bind(ThiSinh2025BUS.class).in(Singleton.class);
         bind(NganhBUS.class).in(Singleton.class);
         bind(NguyenVongBUS.class).in(Singleton.class);
@@ -44,7 +39,6 @@ public class SGUAdmissorModule extends AbstractModule {
         bind(ToHopBUS.class).in(Singleton.class);
         bind(NganhToHopBUS.class).in(Singleton.class);
         bind(BangQuyDoiBUS.class).in(Singleton.class);
-        bind(SysFunctionBUS.class).in(Singleton.class);
         bind(ExcelImportBUS.class).in(Singleton.class);
     }
 }

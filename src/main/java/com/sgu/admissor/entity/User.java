@@ -38,12 +38,8 @@ public class User {
     @Column(name = "password", length = 255)
     private String password;
     
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(
-            name = "role_id",
-            referencedColumnName = "id"
-    )
-    private Role role;
+    @Column(name = "role", length = 45)
+    private String role;
     
     @Column(name = "is_active")
     private Boolean isActive;

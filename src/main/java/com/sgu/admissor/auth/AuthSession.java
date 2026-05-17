@@ -5,21 +5,15 @@
 package com.sgu.admissor.auth;
 
 import com.sgu.admissor.entity.User;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 /**
  *
  * @author Duc3m
  */
 public class AuthSession {
     private User currentUser;
-    private Map<String, Set<String>> permissionMap = new HashMap<>();
 
-    public void login(User user, Map<String, Set<String>> permissions) {
+    public void login(User user) {
         this.currentUser = user;
-        this.permissionMap = permissions;
     }
 
     public void logout() {
@@ -28,16 +22,8 @@ public class AuthSession {
 
     public User getCurrentUser() { return currentUser; }
 
-    public boolean hasPermission(String functionCode, String actionCode) {
+    public boolean isAdmin() {
         if (currentUser == null) return false;
-        
-        if ("ADMIN".equals(currentUser.getRole().getName())) return true;
-
-        Set<String> actions = permissionMap.get(functionCode);
-        return actions != null && actions.contains(actionCode);
-    }
-    
-    public boolean canAccessFunction(String functionCode) {
-        return "ADMIN".equals(currentUser.getRole().getName()) || permissionMap.containsKey(functionCode);
+        return currentUser.getRole().equals("admin");
     }
 }
