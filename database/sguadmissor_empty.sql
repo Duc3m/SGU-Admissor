@@ -81,8 +81,7 @@ CREATE TABLE IF NOT EXISTS `diemthi` (
   `NK4` decimal(8,2) DEFAULT NULL,
   `NK5` decimal(8,2) DEFAULT NULL,
   `NK6` decimal(8,2) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `cccd_UNIQUE` (`cccd`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table sguadmissor.diemthi: ~0 rows (approximately)

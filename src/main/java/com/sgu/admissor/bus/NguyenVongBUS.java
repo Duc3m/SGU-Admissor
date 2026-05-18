@@ -603,10 +603,10 @@ public class NguyenVongBUS {
         if (kv != null) {
             kv = kv.trim().toUpperCase();
             kvDiem = switch (kv) {
-                case "KV1"    -> new BigDecimal("0.75");
-                case "KV2-NT" -> new BigDecimal("0.5");
-                case "KV2"    -> new BigDecimal("0.25");
-                default       -> ZERO;
+                case "1"    -> new BigDecimal("0.75");
+                case "2NT"  -> new BigDecimal("0.5");
+                case "2"    -> new BigDecimal("0.25");
+                default     -> ZERO;
             };
         }
 

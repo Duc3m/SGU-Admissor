@@ -641,51 +641,52 @@ public class ExcelImportBUS {
                 // Dedup theo (maNganh, maToHop, phuongThuc) để tránh insert trùng trong 1 lần chạy
                 Set<String> seenDcKey = new HashSet<>();
 
+//                List<NguyenVong> nvList = nvMap.getOrDefault(cccd, new ArrayList<>());
+//                Set<String> seenDcKey = new HashSet<>();
+
                 for (NguyenVong nv : nvList) {
                     if (nv.getNganh() == null) continue;
-                    String maNganh = nv.getNganh().getMaNganh();
-                    List<NganhToHop> nthList = nganhToHopMap.getOrDefault(maNganh, new ArrayList<>());
+                    
+                    Nganh nganh = nv.getNganh();
+                    String maNganh = nganh.getMaNganh();
+                    String phuongThuc = nv.getPhuongThuc();
+                    if (phuongThuc == null) continue;
 
-                    for (NganhToHop nth : nthList) {
-                        if (nth.getToHop() == null) continue;
-                        String maToHop = nth.getToHop().getMaToHop();
+                    if (!isNganhAcceptsPhuongThuc(nganh, phuongThuc) ||
+                            phuongThuc.toUpperCase().contains("DGNL")) {
+                        continue;
+                    }
 
-                        // Kiểm tra tổ hợp có chứa mã môn đạt giải không
-                        boolean coMon = coMonTrongToHop(nth, maMon);
-                        BigDecimal diemUtxt = coMon ? diemCoMon : diemKhongCoMon;
+                    boolean isToHopMethod = (phuongThuc.toUpperCase().contains("THPT") 
+                            || phuongThuc.toUpperCase().contains("VSAT"));
 
-                        String phuongThuc = nv.getPhuongThuc();
-                        String dcKey = cccd + "_" + maNganh + "_" + maToHop + "_" + phuongThuc;
-                        if (!seenDcKey.add(dcKey)) continue;
+                    if (isToHopMethod) {
+                        // LUỒNG 1: Dùng tổ hợp -> Bung danh sách NganhToHop ra để tính điểm
+                        List<NganhToHop> nthList = nganhToHopMap.getOrDefault(maNganh, new ArrayList<>());
+                        
+                        for (NganhToHop nth : nthList) {
+                            if (nth.getToHop() == null) continue;
 
-                        DiemCong existing = dcExistingMap.get(dcKey);
-                        if (existing != null) {
-                            // Upsert: cập nhật diemUtxt, tính lại diemTong
-                            existing.setDiemUtxt(diemUtxt);
-                            existing.setDiemTong(tinhDiemTong(diemUtxt, existing.getDiemCc()));
-                            updateBatch.add(existing);
-                        } else {
-                            // Tạo mới
-                            DiemCong dc = new DiemCong();
-                            dc.setThiSinh(ts);
-                            dc.setNganh(nv.getNganh());
-                            dc.setToHop(nth.getToHop());
-                            dc.setPhuongThuc(nv.getPhuongThuc());
-                            dc.setDiemUtxt(diemUtxt);
-                            dc.setDiemCc(null);
-                            dc.setDiemTong(tinhDiemTong(diemUtxt, null));
-                            dc.setDcKey(dcKey);
-                            insertBatch.add(dc);
-                            // Đưa vào map để tránh insert trùng nếu thí sinh có nhiều dòng trong file
-                            dcExistingMap.put(dcKey, dc);
+                            boolean coMon = coMonTrongToHop(nth, maMon);
+                            BigDecimal diemUtxt = coMon ? diemCoMon : diemKhongCoMon;
+
+                            if (diemUtxt.compareTo(BigDecimal.ZERO) == 0) {
+                                continue;
+                            }
+                            
+                            upsertDiemCong(ts, nganh, nth.getToHop(), phuongThuc, diemUtxt, 
+                                           dcExistingMap, insertBatch, updateBatch, seenDcKey);
                         }
-
-                        if (insertBatch.size() >= BATCH_SIZE) {
-                            saveBatchAndClear(insertBatch, diemCongBUS::addListDiemCong);
+                    } else {
+                        // LUỒNG 2: Không xài tổ hợp (ĐGNL, VSAT, Tuyển thẳng...)
+                        // Chỉ tạo ĐÚNG 1 DÒNG duy nhất, không nhân bản!
+                        BigDecimal diemUtxt = diemKhongCoMon; // Vì không có tổ hợp, mặc định lấy điểm không có môn đính kèm
+                        // Truyền ToHop = null
+                        if (diemUtxt.compareTo(BigDecimal.ZERO) == 0) {
+                            continue;
                         }
-                        if (updateBatch.size() >= BATCH_SIZE) {
-                            saveBatchAndClear(updateBatch, diemCongBUS::updateBatchDiemCong);
-                        }
+                        upsertDiemCong(ts, nganh, null, phuongThuc, diemUtxt, 
+                                       dcExistingMap, insertBatch, updateBatch, seenDcKey);
                     }
                 }
             }
@@ -816,40 +817,37 @@ public class ExcelImportBUS {
 
                 // 2. Lấy nguyện vọng duy nhất (dedup theo thuTu+maNganh)
                 List<NguyenVong> nvList = nvMap.getOrDefault(cccd, new ArrayList<>());
-                // Dedup theo (maNganh, maToHop, phuongThuc) — tạo DiemCong cho từng phương thức riêng
                 Set<String> seenDcKey = new HashSet<>();
 
                 for (NguyenVong nv : nvList) {
                     if (nv.getNganh() == null) continue;
                     String maNganh = nv.getNganh().getMaNganh();
-                    List<NganhToHop> nthList = nganhToHopMap.getOrDefault(maNganh, new ArrayList<>());
+                    String phuongThuc = nv.getPhuongThuc();
+                    if (phuongThuc == null) continue;
 
-                    for (NganhToHop nth : nthList) {
-                        if (nth.getToHop() == null) continue;
+                    String ptUpper = phuongThuc.toUpperCase();
+                    
+                    // Phân loại phương thức: ĐGNL không dùng tổ hợp
+                    boolean isDgnl = ptUpper.contains("DGNL") || ptUpper.contains("ĐGNL");
 
-                        // Chỉ áp dụng cho tổ hợp KHÔNG có môn Ngoại ngữ/Tiếng Anh (N1)
-                        // Tổ hợp đã có N1 thì thí sinh dùng điểm thi thực tế, không dùng chứng chỉ để cộng
-                        Boolean coN1 = nth.getN1();
-                        if (Boolean.TRUE.equals(coN1)) continue;
-
-                        String maToHop = nth.getToHop().getMaToHop();
-                        String phuongThuc = nv.getPhuongThuc();
-                        String dcKey = cccd + "_" + maNganh + "_" + maToHop + "_" + phuongThuc;
+                    if (isDgnl) {
+                        // ==========================================
+                        // LUỒNG 1: DGNL (Chỉ tạo 1 dòng, ToHop = null, maToHop = "NONE")
+                        // ==========================================
+                        String dcKey = cccd + "_" + maNganh + "_NONE_" + phuongThuc;
                         if (!seenDcKey.add(dcKey)) continue;
 
                         DiemCong existing = dcExistingMap.get(dcKey);
                         if (existing != null) {
-                            // Cập nhật diemCc, tính lại diemTong
                             existing.setDiemCc(diemCongCc);
                             existing.setDiemTong(tinhDiemTong(existing.getDiemUtxt(), diemCongCc));
                             dcUpdateBatch.add(existing);
                         } else {
-                            // Tạo mới DiemCong chỉ có diemCc
                             DiemCong dc = new DiemCong();
                             dc.setThiSinh(ts);
                             dc.setNganh(nv.getNganh());
-                            dc.setToHop(nth.getToHop());
-                            dc.setPhuongThuc(nv.getPhuongThuc());
+                            dc.setToHop(null); // Ép null cho cột matohop
+                            dc.setPhuongThuc(phuongThuc);
                             dc.setDiemUtxt(null);
                             dc.setDiemCc(diemCongCc);
                             dc.setDiemTong(tinhDiemTong(null, diemCongCc));
@@ -857,13 +855,49 @@ public class ExcelImportBUS {
                             dcInsertBatch.add(dc);
                             dcExistingMap.put(dcKey, dc);
                         }
+                    } else {
+                        // ==========================================
+                        // LUỒNG 2: THPT (Quét các tổ hợp của ngành)
+                        // ==========================================
+                        List<NganhToHop> nthList = nganhToHopMap.getOrDefault(maNganh, new ArrayList<>());
+                        for (NganhToHop nth : nthList) {
+                            if (nth.getToHop() == null) continue;
 
-                        if (dcInsertBatch.size() >= BATCH_SIZE) {
-                            saveBatchAndClear(dcInsertBatch, diemCongBUS::addListDiemCong);
+                            // Chỉ áp dụng cho tổ hợp KHÔNG có môn Ngoại ngữ/Tiếng Anh (N1)
+                            Boolean coN1 = nth.getN1();
+                            if (Boolean.TRUE.equals(coN1)) continue;
+
+                            String maToHop = nth.getToHop().getMaToHop();
+                            String dcKey = cccd + "_" + maNganh + "_" + maToHop + "_" + phuongThuc;
+                            if (!seenDcKey.add(dcKey)) continue;
+
+                            DiemCong existing = dcExistingMap.get(dcKey);
+                            if (existing != null) {
+                                existing.setDiemCc(diemCongCc);
+                                existing.setDiemTong(tinhDiemTong(existing.getDiemUtxt(), diemCongCc));
+                                dcUpdateBatch.add(existing);
+                            } else {
+                                DiemCong dc = new DiemCong();
+                                dc.setThiSinh(ts);
+                                dc.setNganh(nv.getNganh());
+                                dc.setToHop(nth.getToHop()); // Gắn tổ hợp vào
+                                dc.setPhuongThuc(phuongThuc);
+                                dc.setDiemUtxt(null);
+                                dc.setDiemCc(diemCongCc);
+                                dc.setDiemTong(tinhDiemTong(null, diemCongCc));
+                                dc.setDcKey(dcKey);
+                                dcInsertBatch.add(dc);
+                                dcExistingMap.put(dcKey, dc);
+                            }
                         }
-                        if (dcUpdateBatch.size() >= BATCH_SIZE) {
-                            saveBatchAndClear(dcUpdateBatch, diemCongBUS::updateBatchDiemCong);
-                        }
+                    }
+
+                    // Flush batch (giữ nguyên logic của bạn)
+                    if (dcInsertBatch.size() >= BATCH_SIZE) {
+                        saveBatchAndClear(dcInsertBatch, diemCongBUS::addListDiemCong);
+                    }
+                    if (dcUpdateBatch.size() >= BATCH_SIZE) {
+                        saveBatchAndClear(dcUpdateBatch, diemCongBUS::updateBatchDiemCong);
                     }
                 }
             }
@@ -1171,6 +1205,62 @@ public class ExcelImportBUS {
         // NK1..NK6, CNCN, CNNN → đánh cờ "khác"
         if (dsMon.contains("NK") || dsMon.contains("CNCN") || dsMon.contains("CNNN")) {
             nth.setKhac(true);
+        }
+    }
+    
+    /**
+     * Hàm helper 1: Kiểm tra xem Ngành có bật cờ (flag 1) cho phương thức tương ứng không
+     */
+    private boolean isNganhAcceptsPhuongThuc(Nganh nganh, String phuongThuc) {
+        String pt = phuongThuc.toUpperCase();
+        
+        // Dựa vào các cột thpt, dgnl, vsat, tuyenthang trong bảng nganh của bạn
+        if (pt.contains("THPT")) {
+            return nganh.getThpt() != null && nganh.getThpt() == true;
+        } else if (pt.contains("DGNL") || pt.contains("ĐGNL")) {
+            return nganh.getDgnl() != null && nganh.getDgnl() == true;
+        } else if (pt.contains("VSAT") || pt.contains("V-SAT")) {
+            return nganh.getVsat() != null && nganh.getVsat() == true;
+        } else if (pt.contains("TUYỂN THẲNG") || pt.contains("XTT")) {
+            return nganh.getTuyenThang()!= null && nganh.getTuyenThang()== true;
+        }
+        
+        // Trả về false nếu gặp phương thức lạ
+        return false;
+    }
+
+    /**
+     * Hàm helper 2: Tối ưu khối code Insert/Update tránh lặp lại
+     */
+    private void upsertDiemCong(ThiSinh2025 ts, Nganh nganh, ToHop toHop, String phuongThuc,
+                                BigDecimal diemUtxt, Map<String, DiemCong> dcExistingMap,
+                                List<DiemCong> insertBatch, List<DiemCong> updateBatch, Set<String> seenDcKey) {
+
+        // Nếu phương thức không có tổ hợp (toHop == null), ta đặt mã là "NONE" để làm dc_key
+        String maToHop = toHop != null ? toHop.getMaToHop() : "NONE";
+        String dcKey = ts.getCccd() + "_" + nganh.getMaNganh() + "_" + maToHop + "_" + phuongThuc;
+
+        // Tránh trùng lặp trong cùng 1 lần duyệt file Excel
+        if (!seenDcKey.add(dcKey)) return;
+
+        DiemCong existing = dcExistingMap.get(dcKey);
+        if (existing != null) {
+            existing.setDiemUtxt(diemUtxt);
+            existing.setDiemTong(tinhDiemTong(diemUtxt, existing.getDiemCc())); // Giả sử bạn có hàm này
+            updateBatch.add(existing);
+        } else {
+            DiemCong dc = new DiemCong();
+            dc.setThiSinh(ts);
+            dc.setNganh(nganh);
+            dc.setToHop(toHop); // Sẽ gán null nếu là ĐGNL/VSAT, DB varchar hoàn toàn cho phép
+            dc.setPhuongThuc(phuongThuc);
+            dc.setDiemUtxt(diemUtxt);
+            dc.setDiemCc(null);
+            dc.setDiemTong(tinhDiemTong(diemUtxt, null));
+            dc.setDcKey(dcKey);
+            
+            insertBatch.add(dc);
+            dcExistingMap.put(dcKey, dc);
         }
     }
     
