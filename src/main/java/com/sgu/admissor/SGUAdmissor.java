@@ -10,7 +10,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.jpa.JpaPersistModule;
+import com.sgu.admissor.bus.ExcelImportBUS;
 import com.sgu.admissor.gui.frame.*;
+import java.io.File;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -30,7 +32,7 @@ public class SGUAdmissor {
             new JpaPersistModule("sgu_pu"),
             new SGUAdmissorModule()
         );
-        
+                
         if (!isDatabaseReady(injector)) {
             JOptionPane.showMessageDialog(null, 
                 "LỖI KẾT NỐI DATABASE:\n" +
@@ -41,6 +43,23 @@ public class SGUAdmissor {
             
             System.exit(1);
         }
+        
+        System.out.println("Đang tiến hành import dữ liệu từ Excel, vui lòng đợi...");
+        try {
+            ExcelImportBUS excelimportBUS = injector.getInstance(ExcelImportBUS.class);
+            
+            excelimportBUS.importThiSinhVaDiem(new File("data/Ds_thi_sinh.xlsx"));
+            excelimportBUS.importNganhVaToHop(new File("data/Chi_tieu_2025.xlsx"), new File("data/Nguong_dau_vao_2025.xlsx"), new File("data/tohopmon.xlsx"));
+            excelimportBUS.importNguyenVong(new File("data/Nguyenvong.xlsx"));
+            excelimportBUS.importDiemDGNLVaVSAT(new File("data/Diem DGNL VSAT - 0908.xlsx"));
+            excelimportBUS.importUuTienXetTuyen(new File("data/Uu tien xet tuyen.xlsx"));
+            
+            System.out.println("Import toàn bộ dữ liệu thành công!");
+        } catch (Exception e) {
+            System.err.println("Lỗi trong quá trình import!");
+            e.printStackTrace();
+        }
+        
         SwingUtilities.invokeLater(() -> {
             try {
                 LoginFrame loginFrame = injector.getInstance(LoginFrame.class);
