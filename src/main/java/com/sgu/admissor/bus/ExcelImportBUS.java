@@ -514,6 +514,8 @@ public class ExcelImportBUS {
                     if (phuongThucList.isEmpty()) continue;
                     
                     for (String pt : phuongThucList){
+                        if(!kiemTraNganhCoXetPhuongThuc(ng, pt)) continue;
+                        
                         NguyenVong nv = new NguyenVong();
                         nv.setThiSinh(ts);
                         nv.setThuTu(thuTuNV);
@@ -877,6 +879,26 @@ public class ExcelImportBUS {
             e.printStackTrace();
             System.err.println("Lỗi import quy đổi Tiếng Anh: " + e.getMessage());
             throw new RuntimeException(e);
+        }
+    }
+    
+    //Check xem ngành có xét pt này khi import nguyện vọng hay ko
+    private boolean kiemTraNganhCoXetPhuongThuc(Nganh ng, String phuongthuc){
+        if (ng == null || phuongthuc == null) return false;
+        
+        String pt = phuongthuc.trim().toUpperCase();
+        
+        switch (pt) {
+            case "THPT":
+                return Boolean.TRUE.equals(ng.getThpt());
+            case "DGNL":
+                return Boolean.TRUE.equals(ng.getDgnl());
+            case "VSAT":
+                return Boolean.TRUE.equals(ng.getVsat());
+            case "XTT":
+                return Boolean.TRUE.equals(ng.getTuyenThang());
+            default:
+                return false;
         }
     }
 
