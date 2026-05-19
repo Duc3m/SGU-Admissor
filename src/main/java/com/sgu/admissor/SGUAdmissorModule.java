@@ -24,6 +24,7 @@ public class SGUAdmissorModule extends AbstractModule {
         bind(ThiSinh2025DAO.class).in(Singleton.class);
         bind(NganhDAO.class).in(Singleton.class);
         bind(NguyenVongDAO.class).in(Singleton.class);
+        bind(ChiTietTrungTuyenDAO.class).in(Singleton.class);
         bind(DiemThiDAO.class).in(Singleton.class);
         bind(DiemCongDAO.class).in(Singleton.class);
         bind(ToHopDAO.class).in(Singleton.class);
@@ -34,6 +35,7 @@ public class SGUAdmissorModule extends AbstractModule {
         bind(ThiSinh2025BUS.class).in(Singleton.class);
         bind(NganhBUS.class).in(Singleton.class);
         bind(NguyenVongBUS.class).in(Singleton.class);
+        bind(ChiTietTrungTuyenBUS.class).in(Singleton.class);
         bind(DiemThiBUS.class).in(Singleton.class);
         bind(DiemCongBUS.class).in(Singleton.class);
         bind(ToHopBUS.class).in(Singleton.class);

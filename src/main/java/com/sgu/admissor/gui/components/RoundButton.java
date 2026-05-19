@@ -13,10 +13,10 @@ import java.awt.geom.Ellipse2D;
  *
  * @author Duc3m
  */
-public class RoundStatisticButton extends JButton {
+public class RoundButton extends JButton {
     private Color themeColor;
 
-    public RoundStatisticButton(String iconPath, Color themeColor) {
+    public RoundButton(String iconPath, Color themeColor) {
         super();
         this.themeColor = themeColor;
         
@@ -24,20 +24,20 @@ public class RoundStatisticButton extends JButton {
         setFocusPainted(false);
         setBorderPainted(false);
         setCursor(new Cursor(Cursor.HAND_CURSOR));
-        setFont(new Font("Segoe UI", Font.BOLD, 14));
+        setText(null);
 
         try {
-            FlatSVGIcon icon = new FlatSVGIcon(iconPath, 40, 40);
+            FlatSVGIcon icon = new FlatSVGIcon(iconPath, 44, 44);
 
             icon.setColorFilter(new FlatSVGIcon.ColorFilter(color -> themeColor));
             setIcon(icon);
         } catch (Exception e) {
-            System.err.println("Lỗi icon thống kê: " + e.getMessage());
+            System.err.println("Lỗi icon: " + e.getMessage());
         }
         
         setVerticalTextPosition(SwingConstants.BOTTOM);
         setHorizontalTextPosition(SwingConstants.CENTER);
-        setIconTextGap(8);
+//        setIconTextGap(8);
     }
 
     @Override

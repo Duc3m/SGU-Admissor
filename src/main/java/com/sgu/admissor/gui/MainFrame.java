@@ -28,7 +28,7 @@ public class MainFrame extends JFrame {
     private final Provider<NganhPanel> nganhPanelProvider;
     private final Provider<NguyenVongPanel> nguyenVongPanelProvider;
     private final Provider<BangDiemPanel> bangDiemPanelProvider;
-    private final Provider<ThongKePanel> thongKePanelProvider;
+    private final Provider<XetTuyenPanel> xetTuyenPanelProvider;
     private final Provider<TaiKhoanPanel> taiKhoanPanelProvider;
     private final DashboardPanel dashboardPanel;
     private final Provider<LoginFrame> loginFrameProvider;
@@ -40,7 +40,7 @@ public class MainFrame extends JFrame {
             Provider<NganhPanel> nganhPanelProvider,
             Provider<NguyenVongPanel> nguyenVongPanelProvider,
             Provider<BangDiemPanel> bangDiemPanelProvider,
-            Provider<ThongKePanel> thongKePanelProvider,
+            Provider<XetTuyenPanel> xetTuyenPanelProvider,
             Provider<TaiKhoanPanel> taiKhoanPanelProvider,
             DashboardPanel dashboardPanel,
             Provider<LoginFrame> loginFrameProvider,
@@ -50,7 +50,7 @@ public class MainFrame extends JFrame {
         this.nganhPanelProvider = nganhPanelProvider;
         this.nguyenVongPanelProvider = nguyenVongPanelProvider;
         this.bangDiemPanelProvider = bangDiemPanelProvider;
-        this.thongKePanelProvider = thongKePanelProvider;
+        this.xetTuyenPanelProvider = xetTuyenPanelProvider;
         this.taiKhoanPanelProvider = taiKhoanPanelProvider;
         this.dashboardPanel = dashboardPanel;
         this.loginFrameProvider = loginFrameProvider;
@@ -119,9 +119,9 @@ public class MainFrame extends JFrame {
                 newForm = nguyenVongPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/aspiration.svg");
                 break;
-            case "Thống kê":
-                newForm = thongKePanelProvider.get();
-                newIcon = new FlatSVGIcon("icons/statistic.svg");
+            case "Xét tuyển":
+                newForm = xetTuyenPanelProvider.get();
+                newIcon = new FlatSVGIcon("icons/play.svg");
                 break;
             case "Tài khoản":
                 newForm = taiKhoanPanelProvider.get();

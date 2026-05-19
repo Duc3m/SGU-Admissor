@@ -74,12 +74,12 @@ public class DashboardPanel extends JPanel {
         CutoutButton btnNganh = createMenuButton("Ngành", 2, "#eab308", "icons/major.svg", SwingConstants.RIGHT);
         CutoutButton btnNguyenVong = createMenuButton("Nguyện vọng", 1, "#f97316", "icons/aspiration.svg", SwingConstants.LEFT);
 
-        RoundStatisticButton btnThongKe = new RoundStatisticButton(
-            "icons/statistic.svg", 
+        RoundButton btnThongKe = new RoundButton(
+            "icons/play.svg", 
             Color.decode("#0066cc")
         );
 
-        btnThongKe.addActionListener(e -> onFunctionOpen.accept("Thống kê"));
+        btnThongKe.addActionListener(e -> onFunctionOpen.accept("Xét tuyển"));
 
         gridPanel.add(btnThiSinh, "cell 0 0, grow");
         gridPanel.add(btnBangDiem, "cell 1 0, grow");

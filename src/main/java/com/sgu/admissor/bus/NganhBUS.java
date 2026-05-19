@@ -44,6 +44,7 @@ public class NganhBUS {
         this.nguyenVongDAO = nguyenVongDAO;
     }
 
+    @Transactional
     public BUSResult<List<Nganh>> getAllNganh() {
         return BUSResult.successWithData("Lấy toàn bộ ngành thành công!", nganhDAO.findAll());
     }
@@ -56,6 +57,7 @@ public class NganhBUS {
         return BUSResult.successWithData("Lấy ngành thành công!", nganhDAO.findById(id));
     }
 
+    @Transactional
     public BUSResult<Nganh> getNganhByMaNganh(String maNganh) {
         if (maNganh == null || maNganh.trim().isEmpty()) {
             return BUSResult.error("Mã ngành không hợp lệ!");
@@ -63,6 +65,7 @@ public class NganhBUS {
         return BUSResult.successWithData("Lấy ngành thành công!", nganhDAO.findByMaNganh(maNganh));
     }
 
+    @Transactional
     public BUSResult<List<Nganh>> getNganhByTenNganh(String tenNganh) {
         if (tenNganh == null || tenNganh.trim().isEmpty()) {
             return BUSResult.error("Tên ngành không hợp lệ!");
@@ -70,6 +73,7 @@ public class NganhBUS {
         return BUSResult.successWithData("Lấy ngành thành công!", nganhDAO.findByTenNganh(tenNganh));
     }
 
+    @Transactional
     public BUSResult<List<Nganh>> getNganhTuyenThang() {
         return BUSResult.successWithData("Lấy ngành tuyển thẳng thành công!", nganhDAO.findByTuyenThang(true));
     }

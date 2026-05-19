@@ -612,9 +612,9 @@ public class NguyenVongBUS {
             kv = kv.trim().toUpperCase();
             kvDiem = switch (kv) {
                 case "1"    -> new BigDecimal("0.75");
-                case "2NT" -> new BigDecimal("0.5");
+                case "2NT"  -> new BigDecimal("0.5");
                 case "2"    -> new BigDecimal("0.25");
-                default       -> ZERO;
+                default     -> ZERO;
             };
         }
 
