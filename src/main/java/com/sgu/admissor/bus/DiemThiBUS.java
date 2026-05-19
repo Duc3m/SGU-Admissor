@@ -35,6 +35,7 @@ public class DiemThiBUS {
         return BUSResult.successWithData("Lấy điểm thi thành công!", diemThiDAO.findById(id));
     }
 
+    @Transactional
     public BUSResult<List<DiemThi>> getDiemThiByCccd(String cccd) {
         if (cccd == null || cccd.trim().isEmpty()) {
             return BUSResult.error("CCCD không hợp lệ!");

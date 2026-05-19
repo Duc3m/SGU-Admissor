@@ -6,14 +6,18 @@ package com.sgu.admissor.gui.dialog;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.google.inject.Inject;
+import com.sgu.admissor.bus.DiemThiBUS;
 import com.sgu.admissor.bus.ThiSinh2025BUS;
 import com.sgu.admissor.dto.BUSResult;
+import com.sgu.admissor.entity.DiemThi;
 import com.sgu.admissor.entity.ThiSinh2025;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import java.util.List;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -23,11 +27,14 @@ public class ThiSinhDetailDialog extends JDialog {
 
     private final ThiSinh2025BUS thiSinhBUS;
     private ThiSinh2025 currentThiSinh;
+    private DiemThiBUS diemThiBUS;
     private boolean isDataChanged = false;
 
     private JTextField txtCccd, txtSoBaoDanh, txtNgaySinh, txtGioiTinh, txtKhuVuc, txtDoiTuong;
     
     private JTextField txtHoTen, txtDienThoai, txtEmail, txtNoiSinh;
+    
+    private DefaultTableModel scoreTableModel;
 
     private JButton btnEditSave;
     private JButton btnCloseCancel;
@@ -35,8 +42,9 @@ public class ThiSinhDetailDialog extends JDialog {
     private boolean isEditMode = false;
 
     @Inject
-    public ThiSinhDetailDialog(ThiSinh2025BUS thiSinhBUS) {
+    public ThiSinhDetailDialog(ThiSinh2025BUS thiSinhBUS, DiemThiBUS diemThiBUS) {
         this.thiSinhBUS = thiSinhBUS;
+        this.diemThiBUS = diemThiBUS;
 
         setTitle("Chi tiết Thí sinh");
         setModal(true);
@@ -72,6 +80,8 @@ public class ThiSinhDetailDialog extends JDialog {
             "[right]15[grow, fill, 220::]40[right]15[grow, fill, 220::]", 
             "[]15[]"
         ));
+        
+        // Thông tin thí sinh
 
         add(new JLabel("CCCD:"));
         txtCccd = createReadOnlyTextField();
@@ -112,6 +122,25 @@ public class ThiSinhDetailDialog extends JDialog {
         add(new JLabel("Đối tượng:"));
         txtDoiTuong = createReadOnlyTextField();
         add(txtDoiTuong);
+        
+        // Điểm thi thí sinh
+        add(new JSeparator(), "span 4, growx, gapy 15 5");
+        add(new JLabel("<html><b style='color:#000000; font-size:13px; text-align:center; display: block'>BẢNG ĐIỂM</b></html>"), "span 4, gapbottom 5");
+
+        String[] cols = {"Môn Thi", "Điểm Số"};
+        scoreTableModel = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                return false;
+            }
+        };
+        JTable scoreTable = new JTable(scoreTableModel);
+        scoreTable.setRowHeight(25);
+        scoreTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+        // Đưa vào ScrollPane và add vào Form
+        JScrollPane scrollPane = new JScrollPane(scoreTable);
+        add(scrollPane, "span 4, growx, h 150!");
 
         btnEditSave = new JButton("Sửa thông tin");
         btnCloseCancel = new JButton("Đóng");
@@ -158,6 +187,57 @@ public class ThiSinhDetailDialog extends JDialog {
         txtDienThoai.setText(currentThiSinh.getDienThoai());
         txtEmail.setText(currentThiSinh.getEmail());
         txtNoiSinh.setText(currentThiSinh.getNoiSinh());
+        
+        // 2. Load bảng điểm
+        scoreTableModel.setRowCount(0);
+        BUSResult<List<DiemThi>> resDiem = diemThiBUS.getDiemThiByCccd(currentThiSinh.getCccd());
+        
+        if (resDiem.isSuccess() && resDiem.getData() != null && !resDiem.getData().isEmpty()) {
+            boolean hasScore = false;
+            
+            for (DiemThi dt : resDiem.getData()) {
+                String pt = dt.getPhuongThuc() != null ? " (" + dt.getPhuongThuc() + ")" : "";
+                
+                Object[][] monThiVaDiem = {
+                    {"Toán -" + pt, dt.getTo()},
+                    {"Vật Lý -" + pt, dt.getLi()},
+                    {"Hóa Học -" + pt, dt.getHo()},
+                    {"Sinh Học -" + pt, dt.getSi()},
+                    {"Lịch Sử -" + pt, dt.getSu()},
+                    {"Địa Lý -" + pt, dt.getDi()},
+                    {"Ngữ Văn -" + pt, dt.getVa()},
+                    {"Tiếng Anh (Thi) -" + pt, dt.getN1Thi()},
+                    {"Tiếng Anh (CC) -" + pt, dt.getN1Cc()},
+                    {"CN Chăn nuôi -" + pt, dt.getCncn()},
+                    {"CN Nông nghiệp -" + pt, dt.getCnnn()},
+                    {"Tin Học -" + pt, dt.getTi()},
+                    {"KT Pháp Luật -" + pt, dt.getKtpl()},
+                    {"Đánh giá năng lực -" + pt, dt.getNl1()},
+                    {"Năng Khiếu 1 -" + pt, dt.getNk1()},
+                    {"Năng Khiếu 2 -" + pt, dt.getNk2()},
+                    {"Năng Khiếu 3 -" + pt, dt.getNk3()},
+                    {"Năng Khiếu 4 -" + pt, dt.getNk4()},
+                    {"Năng Khiếu 5 -" + pt, dt.getNk5()},
+                    {"Năng Khiếu 6 -" + pt, dt.getNk6()}
+                };
+
+                // Chỉ những môn nào KHÁC NULL (có điểm) mới được add vào bảng
+                for (Object[] row : monThiVaDiem) {
+                    if (row[1] != null) {
+                        scoreTableModel.addRow(new Object[]{row[0], row[1].toString()});
+                        hasScore = true;
+                    }
+                }
+            }
+            
+            // Đề phòng trường hợp query ra nhưng toàn NULL hết
+            if (!hasScore) {
+                scoreTableModel.addRow(new Object[]{"Chưa có dữ liệu điểm", ""});
+            }
+            
+        } else {
+            scoreTableModel.addRow(new Object[]{"Chưa có dữ liệu điểm", ""});
+        }
     }
 
     private void setEditMode(boolean enable) {
