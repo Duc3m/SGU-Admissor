@@ -7,6 +7,7 @@ package com.sgu.admissor.gui.panel;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.sgu.admissor.bus.ChiTietTrungTuyenBUS;
 import com.sgu.admissor.bus.NganhBUS;
+import com.sgu.admissor.bus.NguyenVongBUS;
 import com.sgu.admissor.bus.ToHopBUS;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.Nganh;
@@ -27,6 +28,7 @@ public class ChiTietTrungTuyenPanel extends JPanel {
     private final ChiTietTrungTuyenBUS chiTietTrungTuyenBUS;
     private final NganhBUS nganhBUS;
     private final ToHopBUS toHopBUS;
+    private final NguyenVongBUS nguyenVongBUS;
     private JComboBox<String> cbNganh;
     private PaginatedTablePanel tablePanel;
     private JTextField txtCccd;
@@ -38,9 +40,13 @@ public class ChiTietTrungTuyenPanel extends JPanel {
     private JButton btnReload;
 
     @Inject
-    public ChiTietTrungTuyenPanel(NganhBUS nganhBUS, ToHopBUS toHopBUS, ChiTietTrungTuyenBUS chiTietTrungTuyenBUS) {
+    public ChiTietTrungTuyenPanel(NganhBUS nganhBUS,
+            ToHopBUS toHopBUS,
+            NguyenVongBUS nguyenVongBUS,
+            ChiTietTrungTuyenBUS chiTietTrungTuyenBUS) {
         this.nganhBUS = nganhBUS;
         this.toHopBUS = toHopBUS;
+        this.nguyenVongBUS = nguyenVongBUS;
         this.chiTietTrungTuyenBUS = chiTietTrungTuyenBUS;
         initLayout();
         loadNganhData();
@@ -52,7 +58,7 @@ public class ChiTietTrungTuyenPanel extends JPanel {
         setLayout(new MigLayout("fill, insets 15", "[300!]-40[grow, fill]", "[][grow, fill]"));
         setBackground(Color.WHITE);
 
-        JPanel topBar = new JPanel(new MigLayout("insets 0", "[]10[]push"));
+        JPanel topBar = new JPanel(new MigLayout("insets 0", "[]10[]10[]"));
         topBar.setBackground(Color.WHITE);
 
         JLabel lblNganh = new JLabel("Ngành:");
@@ -63,6 +69,20 @@ public class ChiTietTrungTuyenPanel extends JPanel {
 
         topBar.add(lblNganh);
         topBar.add(cbNganh, "w 220!, h 30!");
+
+        JButton btnTinhDiem = new JButton("Thực hiện tính điểm");
+        btnTinhDiem.putClientProperty("JButton.buttonType", "roundRect");
+        btnTinhDiem.setBackground(Color.decode("#16a34a"));
+        btnTinhDiem.setForeground(Color.WHITE);
+        btnTinhDiem.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        topBar.add(btnTinhDiem, "h 26!");
+        
+        JButton btnXetTuyen = new JButton("Thực hiện xét tuyển");
+        btnXetTuyen.putClientProperty("JButton.buttonType", "roundRect");
+        btnXetTuyen.setBackground(Color.decode("#2563eb"));
+        btnXetTuyen.setForeground(Color.WHITE);
+        btnXetTuyen.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        topBar.add(btnXetTuyen, "h 26!");
 
         JPanel filterPanel = new JPanel(new MigLayout("wrap 1, insets 20, gapy 8", "[fill]"));
         filterPanel.setBackground(new Color(252, 252, 252));
@@ -127,13 +147,11 @@ public class ChiTietTrungTuyenPanel extends JPanel {
         add(tablePanel,  "grow");
 
         btnLoc.addActionListener(e -> loadData(1));
-        txtCccd.addActionListener(e -> loadData(1));
-        txtHoTen.addActionListener(e -> loadData(1));
-        txtDiemMin.addActionListener(e -> loadData(1));
-        txtDiemMax.addActionListener(e -> loadData(1));
         cbNganh.addActionListener(e -> loadData(1));
-        cbToHop.addActionListener(e -> loadData(1));
 
+        btnTinhDiem.addActionListener(e -> nguyenVongBUS.tinhDiemTatCa());
+        btnXetTuyen.addActionListener(e -> nganhBUS.tinhKetQuaTatCaNganh());
+        
         btnReload.addActionListener(e -> resetFilters());
     }
 

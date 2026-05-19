@@ -17,25 +17,19 @@ import java.awt.*;
  */
 public class XetTuyenPanel extends JPanel {
     private final ChiTietTrungTuyenPanel chiTietTrungTuyenPanel;
+    private final ThongKeSoLuongPanel thongKeSoLuongPanel;
 
     @Inject
-    public XetTuyenPanel(ChiTietTrungTuyenPanel chiTietTrungTuyenPanel) {
+    public XetTuyenPanel(ChiTietTrungTuyenPanel chiTietTrungTuyenPanel, ThongKeSoLuongPanel thongKeSoLuongPanel) {
         this.chiTietTrungTuyenPanel = chiTietTrungTuyenPanel;
-        setLayout(new MigLayout("fill, insets 0", "[grow]", "[][grow]"));
+        this.thongKeSoLuongPanel = thongKeSoLuongPanel;
+        setLayout(new MigLayout("fill, insets 0", "[grow]", "[grow]"));
         setBackground(Color.WHITE);
-
-        // Nút Xét tuyển nổi bật
-        JButton btnXetTuyen = new JButton("🚀 THỰC HIỆN XÉT TUYỂN");
-        btnXetTuyen.putClientProperty("JButton.buttonType", "roundRect");
-        btnXetTuyen.setBackground(Color.decode("#ef4444"));
-        btnXetTuyen.setForeground(Color.WHITE);
-        btnXetTuyen.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        add(btnXetTuyen, "center, wrap 20");
 
         // Tabs con chứa chi tiết và thống kê
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Chi tiết trúng tuyển", chiTietTrungTuyenPanel);
-        tabbedPane.addTab("Thống kê số lượng", new ThongKeSoLuongPanel());
+        tabbedPane.addTab("Thống kê số lượng", thongKeSoLuongPanel);
         add(tabbedPane, "grow");
     }
 }

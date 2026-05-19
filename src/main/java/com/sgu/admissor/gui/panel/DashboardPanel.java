@@ -6,8 +6,11 @@ package com.sgu.admissor.gui.panel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.sgu.admissor.auth.AuthSession;
+import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.gui.components.*;
+import com.sgu.admissor.gui.dialog.MultiFileImportDialog;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 
 import javax.swing.*;
@@ -24,11 +27,15 @@ public class DashboardPanel extends JPanel {
     private Consumer<String> onFunctionOpen;
     private final HeaderPanel header;
     private final AuthSession authSession;
+    private final Provider<MultiFileImportDialog> importDialogProvider ;
     
     @Inject
-    public DashboardPanel(HeaderPanel header, AuthSession authSession) {
+    public DashboardPanel(HeaderPanel header,
+            AuthSession authSession,
+            Provider<MultiFileImportDialog> importDialogProvider) {
         this.header = header;
         this.authSession = authSession;
+        this.importDialogProvider = importDialogProvider;
         initLayout();
     }
     
@@ -50,20 +57,33 @@ public class DashboardPanel extends JPanel {
         
         add(header, "w 90%!, wrap");
 
-        JPanel topActionPanel = new JPanel(new MigLayout("insets 0, fillx", "[]push[]", "[center]"));
+        JPanel topActionPanel = new JPanel(new MigLayout("insets 0, fillx", "[]push[][]", "[center]"));
         topActionPanel.setOpaque(false);
 
         JLabel lblGreeting = new JLabel("<html><font color='#0066cc'>Xin chào</font>, " + authSession.getCurrentUser().getUsername() + "</html>");
         lblGreeting.setFont(new Font("Segoe UI", Font.BOLD, 22));
-
+        topActionPanel.add(lblGreeting);
+        
         PastelButton btnQuanLyTK = new PastelButton(
             "Quản lý tài khoản", 
             "icons/users.svg", 
             Color.decode("#64748b") 
         );
         btnQuanLyTK.addActionListener(e -> {onFunctionOpen.accept("Tài khoản");});
-        topActionPanel.add(lblGreeting);
         topActionPanel.add(btnQuanLyTK, "h 40!, w 180!");
+        add(topActionPanel, "w 700!, gaptop 15, wrap");
+        
+        PastelButton btnImport = new PastelButton(
+            "Import dữ liệu", 
+            "icons/excel.svg", 
+            Color.decode("#107C41") 
+        );
+        btnImport.addActionListener(e -> {
+            Window parentWindow = SwingUtilities.getWindowAncestor(this);
+            MultiFileImportDialog dialog = importDialogProvider.get();
+            dialog.showDialog(parentWindow);
+        });
+        topActionPanel.add(btnImport, "h 40!, w 180!");
         add(topActionPanel, "w 700!, gaptop 15, wrap");
 
         JPanel gridPanel = new JPanel(new MigLayout("insets 0, gap 20", "[340!][340!]", "[160!][160!]"));
