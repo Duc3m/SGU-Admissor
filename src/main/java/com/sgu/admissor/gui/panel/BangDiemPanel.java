@@ -185,6 +185,7 @@ public class BangDiemPanel extends JPanel {
         }
         
         String cccd = tablePanel.getTableModel().getValueAt(selectedRow, 1).toString();
+        String hoTen = tablePanel.getTableModel().getValueAt(selectedRow, 2).toString();
         
         BUSResult<List<DiemCong>> res = diemCongBUS.getDiemCongByCccd(cccd);
         if (!res.isSuccess() || res.getData() == null || res.getData().isEmpty()) {
@@ -192,11 +193,20 @@ public class BangDiemPanel extends JPanel {
             return;
         }
 
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Bảng Điểm Cộng Chi Tiết - CCCD: " + cccd, Dialog.ModalityType.APPLICATION_MODAL);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Bảng Điểm Cộng Chi Tiết", Dialog.ModalityType.APPLICATION_MODAL);
         JPanel panel = new JPanel(new MigLayout("fill, insets 15", "[grow]", "[][grow][]"));
 
         panel.add(new JLabel("<html><b style='color:#3b82f6; font-size:14px;'>DANH SÁCH ĐIỂM CỘNG THEO TỔ HỢP/NGÀNH</b></html>"), "wrap, gapbottom 10");
 
+        String infoHtml = String.format(
+            "<html>" +
+            "<div style='margin-bottom: 8px;'>Họ và tên: <b style='font-size:12px;'>%s</b></div>" +
+            "<div>CCCD: <b style='font-size:12px;'>%s</b></div>" +
+            "</html>", 
+            hoTen, cccd
+        );
+        panel.add(new JLabel(infoHtml), "wrap, gapbottom 12");
+        
         // Tạo bảng con trong form
         String[] cols = {"Mã Ngành", "Tên Ngành", "Phương Thức", "Tổ Hợp", "Điểm CC", "Điểm ƯTXT", "Tổng Cộng"};
         javax.swing.table.DefaultTableModel model = new javax.swing.table.DefaultTableModel(cols, 0) {

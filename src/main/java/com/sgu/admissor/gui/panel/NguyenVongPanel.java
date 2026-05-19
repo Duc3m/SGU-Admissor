@@ -112,7 +112,7 @@ public class NguyenVongPanel extends JPanel {
 
         // 4. Kết quả
         filterPanel.add(new JLabel("Kết quả xét tuyển:"));
-        cbKetQua = new JComboBox<>(new String[]{"Tất cả", "Trúng tuyển", "Không trúng tuyển", "Chưa xét"});
+        cbKetQua = new JComboBox<>(new String[]{"Tất cả", "PASSED", "FAILED", "HETSLOT"});
         filterPanel.add(cbKetQua);
 
         // Nút chức năng
@@ -259,6 +259,12 @@ public class NguyenVongPanel extends JPanel {
 
         // Add thông tin
         panel.add(new JLabel("<html><b>THÔNG TIN XÉT TUYỂN</b></html>"), "span 2, gapbottom 10");
+        
+        panel.add(new JLabel("Họ và tên:"));
+        panel.add(new JLabel(nv.getThiSinh().getHoTen() != null ? nv.getThiSinh().getHoTen() : "N/A"));
+        
+        panel.add(new JLabel("CCCD:"));
+        panel.add(new JLabel(nv.getThiSinh().getCccd() != null ? nv.getThiSinh().getCccd() : "N/A"));
         
         panel.add(new JLabel("Phương thức:")); 
         panel.add(new JLabel(nv.getPhuongThuc() != null ? nv.getPhuongThuc() : "N/A"));

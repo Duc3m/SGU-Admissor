@@ -176,8 +176,8 @@ public class ThiSinhPanel extends JPanel {
     private void initPopupMenu() {
         JPopupMenu popupMenu = new JPopupMenu();
         
-        JMenuItem itemEdit = new JMenuItem("Sửa thông tin");
-        JMenuItem itemScore = new JMenuItem("Xem điểm số");
+        JMenuItem itemEdit = new JMenuItem("Xem/Sửa thông tin");
+//        JMenuItem itemScore = new JMenuItem("Xem điểm số");
         JMenuItem itemDelete = new JMenuItem("Xóa thí sinh");
 
         itemDelete.setForeground(Color.RED); 
@@ -207,7 +207,7 @@ public class ThiSinhPanel extends JPanel {
         });
 
         popupMenu.add(itemEdit);
-        popupMenu.add(itemScore);
+//        popupMenu.add(itemScore);
         popupMenu.addSeparator();
         popupMenu.add(itemDelete);
 
