@@ -393,6 +393,10 @@ public class NguyenVongBUS {
 
                 // ĐTHGXT = ĐTHXT - doLech (doLech=null hoặc 0 nếu là tổ hợp gốc)
                 BigDecimal doLech  = nth.getDoLech() != null ? nth.getDoLech() : ZERO;
+                if (PHUONGTHUC.PT[2].compareTo(pt) == 0){
+                    doLech = ZERO;
+                }
+                
                 BigDecimal dthgxt  = dthxt.subtract(doLech);
 
                 if (bestDthgxt == null || dthgxt.compareTo(bestDthgxt) > 0) {
@@ -406,6 +410,10 @@ public class NguyenVongBUS {
 
             // --- Bước 2: Điểm cộng ---
             String     dcKey   = cccd + "_" + maNganh + "_" + bestToHop + "_" + pt;
+            if (PHUONGTHUC.PT[2].compareTo(pt) == 0){
+                dcKey = cccd + "_" + maNganh + "_" + "NONE" + "_" + pt;
+            }
+            
             DiemCong   dc      = dcMap.get(dcKey);
             BigDecimal diemCong = (dc != null && dc.getDiemTong() != null) ? dc.getDiemTong() : ZERO;
             // Điểm cộng không vượt quá 3
@@ -696,7 +704,7 @@ public class NguyenVongBUS {
         if (list == null || x == null) return null;
         for (BangQuyDoi bqd : list) {
             if (bqd.getDiemA() == null || bqd.getDiemB() == null) continue;
-            if (x.compareTo(bqd.getDiemA()) > 0 && x.compareTo(bqd.getDiemB()) <= 0) {
+            if (x.compareTo(bqd.getDiemA()) >= 0 && x.compareTo(bqd.getDiemB()) <= 0) {
                 return bqd;
             }
         }
