@@ -166,4 +166,14 @@ public class NguyenVongDAO extends GenericDAO<NguyenVong>{
 
         return ((Long) query.getSingleResult()).intValue();
     }
+
+    public List<Object[]> countPassedByNganhAndPhuongThuc() {
+        String hql = "SELECT nv.nganh.maNganh, nv.phuongThuc, COUNT(nv.id) "
+                   + "FROM NguyenVong nv "
+                   + "WHERE nv.ketQua = :ketQua "
+                   + "GROUP BY nv.nganh.maNganh, nv.phuongThuc";
+        return emProvider.get().createQuery(hql, Object[].class)
+                .setParameter("ketQua", "PASSED")
+                .getResultList();
+    }
 }

@@ -113,6 +113,17 @@ public class NguyenVongBUS {
     }
 
     @Transactional
+    public BUSResult<List<Object[]>> countPassedByNganhAndPhuongThuc() {
+        try {
+            List<Object[]> data = nguyenVongDAO.countPassedByNganhAndPhuongThuc();
+            return BUSResult.successWithData("Thống kê số lượng trúng tuyển thành công!", data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BUSResult.error("Lỗi khi thống kê số lượng trúng tuyển!");
+        }
+    }
+
+    @Transactional
     public BUSResult<NguyenVong> addNguyenVong(NguyenVong nv) {
         if (nv == null || nv.getThiSinh() == null || nv.getThiSinh().getCccd() == null
                 || nv.getThiSinh().getCccd().trim().isEmpty()) {

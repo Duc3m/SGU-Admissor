@@ -7,6 +7,7 @@ package com.sgu.admissor.bus;
 import com.google.inject.persist.Transactional;
 import com.monitorjbl.xlsx.StreamingReader;
 import com.sgu.admissor.constants.PHUONGTHUC;
+import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.dto.ToHopData;
 import com.sgu.admissor.entity.DiemCong;
 import com.sgu.admissor.entity.NganhToHop;
@@ -15,7 +16,11 @@ import com.sgu.admissor.entity.DiemThi;
 import com.sgu.admissor.entity.Nganh;
 import com.sgu.admissor.entity.ThiSinh2025;
 import com.sgu.admissor.entity.ToHop;
-import com.sgu.admissor.utils.PhanBoChiTieuUtil;
+import com.sgu.admissor.util.PhanBoChiTieuUtil;
+import com.sgu.admissor.util.TenMonUtil;
+import com.sgu.admissor.util.ExcelFileClassifier;
+import com.sgu.admissor.util.ExcelFileClassifier.ClassificationResult;
+import com.sgu.admissor.util.ExcelFileClassifier.FileType;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import java.io.File;
@@ -28,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.EnumMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.function.Consumer;
@@ -48,6 +54,7 @@ public class ExcelImportBUS {
     private final Provider<DiemCongBUS> diemCongBUSProvider;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final int BATCH_SIZE = 500;
+
 
     @Inject
     public ExcelImportBUS(
@@ -128,139 +135,302 @@ public class ExcelImportBUS {
      * @param file3_ToHopMon       File 3: tohopmon
      */
     @Transactional
-    public void importNganhVaToHop(File file1_ChiTieu, File file2_NguongDauVao, File file3_ToHopMon) {
+    public BUSResult importNganhVaToHop(File file1_ChiTieu, File file2_NguongDauVao, File file3_ToHopMon) {
+        BUSResult result1 = importChiTieu(file1_ChiTieu);
+        if (result1 != null && !result1.isSuccess()) {
+            return result1;
+        }
+        BUSResult result2 = importNguongDauVao(file2_NguongDauVao);
+        if (result2 != null && !result2.isSuccess()) {
+            return result2;
+        }
+        BUSResult result3 = importToHopMon(file3_ToHopMon);
+        if (result3 != null && !result3.isSuccess()) {
+            return result3;
+        }
+        return BUSResult.success("Import toàn bộ dữ liệu 3 file thành công!");
+    }
+
+    @Transactional
+    public BUSResult importFromFiles(File[] files) {
+        if (files == null || files.length == 0) {
+            return BUSResult.error("Không có file để import!");
+        }
+
+        List<ClassificationResult> classified = ExcelFileClassifier.classifyAll(files);
+        Map<FileType, File> fileMap = new EnumMap<>(FileType.class);
+        List<String> warnings = new ArrayList<>();
+
+        for (ClassificationResult result : classified) {
+            FileType type = result.getType();
+            if (type == FileType.UNKNOWN) {
+                warnings.add("Không nhận diện được file: " + safeFileName(result.getFile()));
+                continue;
+            }
+            if (fileMap.containsKey(type)) {
+                warnings.add("Trùng loại file " + type.name() + ": " + safeFileName(result.getFile()));
+                continue;
+            }
+            fileMap.put(type, result.getFile());
+        }
+
+        File chiTieu = fileMap.get(FileType.CHI_TIEU);
+        File nguong = fileMap.get(FileType.NGUONG_DAU_VAO);
+        File toHop = fileMap.get(FileType.TO_HOP_MON);
+        if (chiTieu != null) {
+            BUSResult result = importChiTieu(chiTieu);
+            if (result != null && !result.isSuccess()) return result;
+        }
+        if (nguong != null) {
+            BUSResult result = importNguongDauVao(nguong);
+            if (result != null && !result.isSuccess()) return result;
+        }
+        if (toHop != null) {
+            BUSResult result = importToHopMon(toHop);
+            if (result != null && !result.isSuccess()) return result;
+        }
+
+        File dsThiSinh = fileMap.get(FileType.DS_THI_SINH);
+        if (dsThiSinh != null) {
+            importThiSinhVaDiem(dsThiSinh);
+        }
+
+        File dgnlVsat = fileMap.get(FileType.DIEM_DGNL_VSAT);
+        if (dgnlVsat != null) {
+            importDiemDGNLVaVSAT(dgnlVsat);
+        }
+
+        File nguyenVong = fileMap.get(FileType.NGUYEN_VONG);
+        if (nguyenVong != null) {
+            importNguyenVong(nguyenVong);
+        }
+
+        File uuTien = fileMap.get(FileType.UU_TIEN_XET_TUYEN);
+        if (uuTien != null) {
+            importUuTienXetTuyen(uuTien);
+        }
+
+        File quyDoi = fileMap.get(FileType.QUY_DOI_TIENG_ANH);
+        if (quyDoi != null) {
+            importQuyDoiTiengAnh(quyDoi);
+        }
+
+        if (warnings.isEmpty()) {
+            return BUSResult.success("Import dữ liệu từ nhiều file thành công!");
+        }
+        return BUSResult.successWithData("Import dữ liệu từ nhiều file thành công!", warnings);
+    }
+
+    private String safeFileName(File file) {
+        if (file == null) {
+            return "(null)";
+        }
+        String name = file.getName();
+        return name != null ? name : file.getPath();
+    }
+
+    @Transactional
+    public BUSResult importChiTieu(File fileChiTieu) {
+        NganhBUS nganhBUS = nganhBUSProvider.get();
+        Map<String, Nganh> nganhMap = new HashMap<>();
+        Set<String> existingMaNganh = new HashSet<>();
+
+        List<Nganh> existing = nganhBUS.getAllNganh().getData();
+        if (existing != null) {
+            for (Nganh ng : existing) {
+                if (ng.getMaNganh() != null) {
+                    existingMaNganh.add(ng.getMaNganh());
+                }
+            }
+        }
+
+        try (InputStream is = new FileInputStream(fileChiTieu);
+             Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
+            for (Row row : wb.getSheetAt(0)) {
+                if (row.getRowNum() <= 1) continue; // Bỏ qua Header
+                String maNganh = getStringValue(row.getCell(1));
+                if (maNganh.isEmpty()) continue;
+                if (maNganh.length() > 10) break;
+                if (existingMaNganh.contains(maNganh)) continue;
+                Nganh ng = new Nganh();
+                fillNganhInfo1(ng, row);
+                nganhMap.put(maNganh, ng);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BUSResult.error("Lỗi Import Chi_tieu_2025: " + e.getMessage());
+        }
+
+        List<Nganh> nganhBatch = new ArrayList<>();
+        for (Nganh ng : nganhMap.values()) {
+            nganhBatch.add(ng);
+            if (nganhBatch.size() >= BATCH_SIZE) saveBatchAndClear(nganhBatch, nganhBUS::addListNganh);
+        }
+        saveBatchAndClear(nganhBatch, nganhBUS::addListNganh);
+        return BUSResult.success("Import Chi_tieu_2025 thành công!");
+    }
+
+    @Transactional
+    public BUSResult importNguongDauVao(File fileNguongDauVao) {
+        NganhBUS nganhBUS = nganhBUSProvider.get();
+        List<String> warnings = new ArrayList<>();
+        if (!hasAnyNganh(nganhBUS)) {
+            warnings.add("Cảnh báo: Chưa có dữ liệu Ngành trong DB. Hãy import Chi_tieu_2025 trước để đảm bảo khóa ngoại.");
+        }
+        try (InputStream is = new FileInputStream(fileNguongDauVao);
+             Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
+            for (Row row : wb.getSheetAt(0)) {
+                if (row.getRowNum() == 0) continue;
+                String maNganh = getStringValue(row.getCell(1));
+                if (maNganh.isEmpty()) continue;
+                BUSResult<Nganh> result = nganhBUS.getNganhByMaNganh(maNganh);
+                if (result != null && result.isSuccess() && result.getData() != null) {
+                    Nganh ng = result.getData();
+                    fillNganhInfo2(ng, row);
+                    nganhBUS.updateNganh(ng);
+                }
+            }
+            if (warnings.isEmpty()) {
+                return BUSResult.success("Import Nguong_dau_vao_2025 thành công!");
+            }
+            return BUSResult.successWithData("Import Nguong_dau_vao_2025 thành công!", warnings);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BUSResult.error("Lỗi Import Nguong_dau_vao_2025: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public BUSResult importToHopMon(File fileToHopMon) {
         NganhBUS nganhBUS = nganhBUSProvider.get();
         ToHopBUS toHopBUS = toHopBUSProvider.get();
         NganhToHopBUS nganhToHopBUS = nganhToHopBUSProvider.get();
+        List<String> warnings = new ArrayList<>();
+        if (!hasAnyNganh(nganhBUS)) {
+            warnings.add("Cảnh báo: Chưa có dữ liệu Ngành trong DB. Hãy import Chi_tieu_2025 trước để đảm bảo khóa ngoại.");
+        }
+        if (!hasAnyNganhDiemSan(nganhBUS)) {
+            warnings.add("Cảnh báo: Chưa thấy dữ liệu điểm sàn trong DB. Hãy import Nguong_dau_vao_2025 trước để đảm bảo thứ tự.");
+        }
 
         Map<String, Nganh> nganhMap = new HashMap<>();
         Map<String, ToHop> toHopMap = new HashMap<>();
-        
-        List<ToHop> toHopList = new ArrayList<>(); // Danh sách chờ Insert mới
+        List<ToHop> toHopList = new ArrayList<>();
         List<NganhToHop> nganhToHopList = new ArrayList<>();
+        Set<String> nganhNeedUpdate = new HashSet<>();
 
-        // Lấy dữ liệu cũ từ DB lên để không bị lỗi Duplicate
+        List<Nganh> existingNganh = nganhBUS.getAllNganh().getData();
+        if (existingNganh != null) {
+            for (Nganh ng : existingNganh) {
+                if (ng.getMaNganh() != null) {
+                    nganhMap.put(ng.getMaNganh(), ng);
+                }
+            }
+        }
+
         List<ToHop> existingToHops = toHopBUS.getAllToHop().getData();
         if (existingToHops != null) {
             for (ToHop t : existingToHops) {
-                toHopMap.put(t.getMaToHop(), t);
+                if (t.getMaToHop() != null) {
+                    toHopMap.put(t.getMaToHop(), t);
+                }
             }
         }
 
-        try {
-//          File 1: Chi_tieu_2025
-            try (InputStream is = new FileInputStream(file1_ChiTieu);
-                Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
-                for (Row row : wb.getSheetAt(0)) {
-                    if (row.getRowNum() <= 1) continue; // Bỏ qua Header
-                    String maNganh = getStringValue(row.getCell(1));
-                    if (maNganh.isEmpty()) continue;
-                    if (maNganh.length() > 10) break;
-                    Nganh ng = new Nganh();
-                    fillNganhInfo1(ng, row);
-                    nganhMap.put(maNganh, ng);
+        try (InputStream is = new FileInputStream(fileToHopMon);
+             Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
+            for (Row row : wb.getSheetAt(0)) {
+                if (row.getRowNum() == 0) continue;
+                String maNganh = getStringValue(row.getCell(1));
+                String chuoiToHop = getStringValue(row.getCell(3));
+                if (maNganh.isEmpty() || chuoiToHop.isEmpty()) continue;
+
+                ToHopData parsedData = parseToHopString(chuoiToHop);
+                String maToHop = parsedData.maToHop;
+                if (maToHop == null || maToHop.isEmpty()) continue;
+
+                ToHop th = toHopMap.get(maToHop);
+                if (th == null) {
+                    th = new ToHop();
+                    th.setMaToHop(maToHop);
+                    th.setMon1(parsedData.mon1);
+                    th.setMon2(parsedData.mon2);
+                    th.setMon3(parsedData.mon3);
+                    String tenToHop = buildTenToHop(th.getMon1(), th.getMon2(), th.getMon3());
+                    th.setTenToHop(tenToHop);
+
+                    toHopList.add(th);
+                    toHopMap.put(maToHop, th);
                 }
-            }
 
-//          File 2: Nguong_dau_vao_2025
-            try (InputStream is = new FileInputStream(file2_NguongDauVao);
-                Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
-                for (Row row : wb.getSheetAt(0)) {
-                    if (row.getRowNum() == 0) continue;
-                    String maNganh = getStringValue(row.getCell(1)); 
-                    if (maNganh.isEmpty()) continue;
-                    Nganh ng = nganhMap.get(maNganh);
-                    if (ng != null) {
-                        fillNganhInfo2(ng, row);
-                    }
-                }
-            }
-
-//          File 3: tohopmon
-            try (InputStream is = new FileInputStream(file3_ToHopMon);
-                 Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
-                 
-                for (Row row : wb.getSheetAt(0)) {
-                    if (row.getRowNum() == 0) continue;
-                    String maNganh = getStringValue(row.getCell(1));
-                    String chuoiToHop = getStringValue(row.getCell(3));
-                    if (maNganh.isEmpty() || chuoiToHop.isEmpty()) continue;
-
-                    // Bóc tách chuỗi Tổ hợp
-                    ToHopData parsedData = parseToHopString(chuoiToHop);
-                    String maToHop = parsedData.maToHop;
-
-                    // Kiểm tra xem Tổ hợp này đã có trên RAM chưa. Nếu chưa thì tạo mới
-                    ToHop th = toHopMap.get(maToHop);
-                    if (th == null && !maToHop.isEmpty()) {
-                        th = new ToHop();
-                        th.setMaToHop(maToHop);
-                        th.setMon1(parsedData.mon1);
-                        th.setMon2(parsedData.mon2);
-                        th.setMon3(parsedData.mon3);
-                        String tenToHop = buildTenToHop(th.getMon1(), th.getMon2(), th.getMon3());
-                        th.setTenToHop(tenToHop);
-                        
-                        toHopList.add(th);         // Thêm vào hàng chờ Insert DB
-                        toHopMap.put(maToHop, th); // Nạp lên RAM để tái sử dụng
-                    }
-
-                    // Cập nhật Tổ Hợp Gốc cho Ngành (cột G index 6 = flag "Gốc")
-                    Nganh ng = nganhMap.get(maNganh);
-                    if (ng != null) {
-                        String flagStr = getStringValue(row.getCell(6));
-                        if (!flagStr.isEmpty()) {
-                            // Lấy object ToHop từ trong Map ra để gán (cột F index 5 = TEN_TO_HOP = maToHopGoc)
-                            String maToHopGoc = getStringValue(row.getCell(5));
-                            ToHop thGoc = toHopMap.get(maToHopGoc);
-                            if (thGoc != null) {
-                                ng.setToHopGoc(thGoc); 
-                            }
+                Nganh ng = nganhMap.get(maNganh);
+                if (ng != null) {
+                    String flagStr = getStringValue(row.getCell(6));
+                    if (!flagStr.isEmpty()) {
+                        String maToHopGoc = getStringValue(row.getCell(5));
+                        ToHop thGoc = toHopMap.get(maToHopGoc);
+                        if (thGoc != null) {
+                            ng.setToHopGoc(thGoc);
+                            nganhNeedUpdate.add(maNganh);
                         }
                     }
+                }
 
-                    // Đọc độ lệch (cột H index 7)
-                    BigDecimal doLech = getBigDecimalValue(row.getCell(7));
+                BigDecimal doLech = getBigDecimalValue(row.getCell(7));
 
-                    // Tạo Nganh_ToHop dựa trên các Object trên RAM
-                    if (ng != null && th != null) {
-                        NganhToHop nth = buildNganhToHop(ng, th, parsedData, doLech);
-                        nganhToHopList.add(nth);
-                    }
+                if (ng != null && th != null) {
+                    NganhToHop nth = buildNganhToHop(ng, th, parsedData, doLech);
+                    nganhToHopList.add(nth);
                 }
             }
-
-            // Lưu database theo thứ tự khóa ngoại
-            // Bảng tohop
-            List<ToHop> toHopBatch = new ArrayList<>();
-            for (ToHop th : toHopList) {
-                toHopBatch.add(th);
-                if (toHopBatch.size() >= BATCH_SIZE) saveBatchAndClear(toHopBatch, toHopBUS::addListToHop);
-            }
-            saveBatchAndClear(toHopBatch, toHopBUS::addListToHop);
-
-            // Bảng nganh
-            List<Nganh> nganhBatch = new ArrayList<>();
-            for (Nganh ng : nganhMap.values()) {
-                nganhBatch.add(ng);
-                if (nganhBatch.size() >= BATCH_SIZE) saveBatchAndClear(nganhBatch, nganhBUS::addListNganh);
-            }
-            saveBatchAndClear(nganhBatch, nganhBUS::addListNganh);
-
-            // Bảng nganh_tohop
-            List<NganhToHop> nthBatch = new ArrayList<>();
-            for (NganhToHop nth : nganhToHopList) {
-                nthBatch.add(nth);
-                if (nthBatch.size() >= BATCH_SIZE) saveBatchAndClear(nthBatch, nganhToHopBUS::addListNganhToHop);
-            }
-            saveBatchAndClear(nthBatch, nganhToHopBUS::addListNganhToHop);
-
-            System.out.println("Import Toàn bộ dữ liệu 3 file thành công!");
-
         } catch (Exception e) {
-            System.err.println("Lỗi Import Dữ liệu: " + e.getMessage());
             e.printStackTrace();
+            return BUSResult.error("Lỗi Import tohopmon: " + e.getMessage());
         }
+
+        List<ToHop> toHopBatch = new ArrayList<>();
+        for (ToHop th : toHopList) {
+            toHopBatch.add(th);
+            if (toHopBatch.size() >= BATCH_SIZE) saveBatchAndClear(toHopBatch, toHopBUS::addListToHop);
+        }
+        saveBatchAndClear(toHopBatch, toHopBUS::addListToHop);
+
+        for (String maNganh : nganhNeedUpdate) {
+            Nganh ng = nganhMap.get(maNganh);
+            if (ng != null) {
+                nganhBUS.updateNganh(ng);
+            }
+        }
+
+        List<NganhToHop> nthBatch = new ArrayList<>();
+        for (NganhToHop nth : nganhToHopList) {
+            nthBatch.add(nth);
+            if (nthBatch.size() >= BATCH_SIZE) saveBatchAndClear(nthBatch, nganhToHopBUS::addListNganhToHop);
+        }
+        saveBatchAndClear(nthBatch, nganhToHopBUS::addListNganhToHop);
+
+        if (warnings.isEmpty()) {
+            return BUSResult.success("Import tohopmon thành công!");
+        }
+        return BUSResult.successWithData("Import tohopmon thành công!", warnings);
+    }
+
+    private boolean hasAnyNganh(NganhBUS nganhBUS) {
+        BUSResult<List<Nganh>> result = nganhBUS.getAllNganh();
+        return result != null && result.isSuccess() && result.getData() != null && !result.getData().isEmpty();
+    }
+
+    private boolean hasAnyNganhDiemSan(NganhBUS nganhBUS) {
+        BUSResult<List<Nganh>> result = nganhBUS.getAllNganh();
+        if (result == null || !result.isSuccess() || result.getData() == null) {
+            return false;
+        }
+        for (Nganh nganh : result.getData()) {
+            if (nganh != null && nganh.getDiemSan() != null) {
+                return true;
+            }
+        }
+        return false;
     }
     
     /**
@@ -741,6 +911,7 @@ public class ExcelImportBUS {
             for (DiemThi dt : allDiemThi) {
                 String cccd = dt.getThiSinh() != null ? dt.getThiSinh().getCccd() : null;
                 if (cccd == null) continue;
+                if (dt.getNl1() == null || dt.getNl1().compareTo(BigDecimal.ZERO) == 0) continue;
                 diemThiMap.computeIfAbsent(cccd, k -> new ArrayList<>()).add(dt);
             }
         }
@@ -1065,38 +1236,11 @@ public class ExcelImportBUS {
     private String buildTenToHop(String mon1, String mon2, String mon3) {
         java.util.List<String> dsMon = new java.util.ArrayList<>();
         
-        if (mon1 != null && !mon1.trim().isEmpty()) dsMon.add(getTenMon(mon1));
-        if (mon2 != null && !mon2.trim().isEmpty()) dsMon.add(getTenMon(mon2));
-        if (mon3 != null && !mon3.trim().isEmpty()) dsMon.add(getTenMon(mon3));
+        if (mon1 != null && !mon1.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon1));
+        if (mon2 != null && !mon2.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon2));
+        if (mon3 != null && !mon3.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon3));
         
         return String.join(", ", dsMon);
-    }
-
-    private String getTenMon(String maMon) {
-        if (maMon == null) return "";
-        
-        return switch (maMon.toUpperCase().trim()) {
-            case "TO" -> "Toán";
-            case "LI" -> "Vật lí";
-            case "HO" -> "Hóa học";
-            case "SI" -> "Sinh học";
-            case "SU" -> "Lịch sử";
-            case "DI" -> "Địa lí";
-            case "VA" -> "Ngữ văn";
-            case "N1" -> "Tiếng Anh";
-            case "CNCN" -> "Công nghệ Chăn nuôi";
-            case "CNNN" -> "Công nghệ Nông nghiệp";
-            case "TI" -> "Tin học";
-            case "KTPL" -> "Giáo dục KT & PL";
-            case "NK1" -> "Môn năng khiếu 1";
-            case "NK2" -> "Môn năng khiếu 2";
-            case "NK3" -> "Môn năng khiếu 3";
-            case "NK4" -> "Môn năng khiếu 4";
-            case "NK5" -> "Môn năng khiếu 5";
-            case "NK6" -> "Môn năng khiếu 6";
-            case "KHAC" -> "Môn năng khiếu";
-            default -> maMon;
-        };
     }
     
     private NganhToHop buildNganhToHop(Nganh ng, ToHop th, ToHopData parsedData, BigDecimal doLech) {
