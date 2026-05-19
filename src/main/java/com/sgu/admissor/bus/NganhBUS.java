@@ -227,8 +227,11 @@ public class NganhBUS {
             String cccd   = nv.getThiSinh().getCccd();
             String key    = cccd + "_" + nv.getThuTu();
             String ketQua;
-
-            if (passedCccd.contains(cccd)) {
+            
+            if(nv.getDiemXetTuyen() == null){
+                // thí sinh có điểm xét tuyển null tự đánh là failed
+                ketQua = KET_QUA_FAILED;
+            } else if (passedCccd.contains(cccd)) {
                 // Thí sinh đã đậu NV ưu tiên cao hơn → huỷ NV này
                 ketQua = KET_QUA_CANCELLED;
 
@@ -237,7 +240,7 @@ public class NganhBUS {
                 ketQua = KET_QUA_KOXET;
 
             } else if (diemSan != null && nv.getDiemXetTuyen() != null
-                    && nv.getDiemXetTuyen().compareTo(diemSan) < 0) {
+                    && nv.getDiemXetTuyen().compareTo(diemSan) <= 0) {
                 // Dưới điểm sàn
                 ketQua = KET_QUA_FAILED;
 
