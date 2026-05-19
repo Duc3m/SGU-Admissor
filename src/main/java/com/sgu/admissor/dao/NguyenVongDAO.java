@@ -92,6 +92,14 @@ public class NguyenVongDAO extends GenericDAO<NguyenVong>{
         return query.getResultList();
     }
 
+    public List<NguyenVong> findByCccdList(List<String> dsCccd) {
+        if (dsCccd == null || dsCccd.isEmpty()) return java.util.Collections.emptyList();
+        String hql = "FROM NguyenVong nv WHERE nv.thiSinh.cccd IN :dsCccd";
+        return emProvider.get().createQuery(hql, NguyenVong.class)
+                .setParameter("dsCccd", dsCccd)
+                .getResultList();
+    }
+
     public List<NguyenVong> findByMaNganhSorted(String maNganh) {
         String hql = "FROM NguyenVong nv WHERE nv.nganh.maNganh = :maNganh "
                    + "ORDER BY nv.diemXetTuyen DESC, nv.thuTu ASC";
