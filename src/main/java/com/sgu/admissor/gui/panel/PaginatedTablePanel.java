@@ -62,7 +62,7 @@ public class PaginatedTablePanel extends JPanel {
                 return c;
             }
         };
-
+        
         // Cấu hình kích thước và Font
         table.setRowHeight(35);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -72,12 +72,15 @@ public class PaginatedTablePanel extends JPanel {
         table.setGridColor(new Color(230, 230, 230));
         table.setFocusable(false);
 
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.setFillsViewportHeight(true);
+        table.setPreferredScrollableViewportSize(new Dimension(0, 0));
 
         JScrollPane scrollPane = new JScrollPane(table);
 
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(Color.WHITE); 
-        add(scrollPane);
+        add(scrollPane, "grow");
 
         paginationFooter = new PaginationFooter(page -> onPageLoad.accept(page));
         add(paginationFooter);

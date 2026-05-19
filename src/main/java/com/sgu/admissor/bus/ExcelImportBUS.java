@@ -198,7 +198,8 @@ public class ExcelImportBUS {
                         th.setMon1(parsedData.mon1);
                         th.setMon2(parsedData.mon2);
                         th.setMon3(parsedData.mon3);
-                        th.setTenToHop(maToHop);
+                        String tenToHop = buildTenToHop(th.getMon1(), th.getMon2(), th.getMon3());
+                        th.setTenToHop(tenToHop);
                         
                         toHopList.add(th);         // Thêm vào hàng chờ Insert DB
                         toHopMap.put(maToHop, th); // Nạp lên RAM để tái sử dụng
@@ -1028,23 +1029,6 @@ public class ExcelImportBUS {
         return dt;
     }
     
-    private ToHop buildToHopFromRow(Row row) {
-        String rawToHop = getStringValue(row.getCell(3));
-        if (rawToHop.isEmpty()) return null;
-
-        String chuoiToHop = getStringValue(row.getCell(3)); //B03(TO-3,VA-3,SI-1)
-        ToHopData parsedData = parseToHopString(chuoiToHop);
-
-        ToHop th = new ToHop();
-        th.setMaToHop(parsedData.maToHop); // Mã tổ hợp (VD: B03)
-        th.setMon1(parsedData.mon1);    // Tên môn 1 (VD: TO)
-        th.setMon2(parsedData.mon2);    // Tên môn 2 (VD: VA)
-        th.setMon3(parsedData.mon3);    // Tên môn 3 (VD: SI)
-        th.setTenToHop(parsedData.maToHop);
-
-        return th;
-    }
-    
 //  File Chi_tieu_2025
     private void fillNganhInfo1(Nganh ng, Row row) {
         String maNganh = getStringValue(row.getCell(1));
@@ -1077,16 +1061,42 @@ public class ExcelImportBUS {
         ng.setDiemSan(diemSan);
         ng.setDiemTrungTuyen(diemSan);
     }
-    
-//  File tohopmon
-    private void fillNganhInfo3(Nganh ng, Row row) {
-        String flagStr = getStringValue(row.getCell(6));
-        if( flagStr.equals("") || flagStr == null)
-            return;
-        String maToHop = getStringValue(row.getCell(5));
-        ToHop toHopGoc = new ToHop();
-        toHopGoc.setMaToHop(maToHop);
-        ng.setToHopGoc(toHopGoc);
+
+    private String buildTenToHop(String mon1, String mon2, String mon3) {
+        java.util.List<String> dsMon = new java.util.ArrayList<>();
+        
+        if (mon1 != null && !mon1.trim().isEmpty()) dsMon.add(getTenMon(mon1));
+        if (mon2 != null && !mon2.trim().isEmpty()) dsMon.add(getTenMon(mon2));
+        if (mon3 != null && !mon3.trim().isEmpty()) dsMon.add(getTenMon(mon3));
+        
+        return String.join(", ", dsMon);
+    }
+
+    private String getTenMon(String maMon) {
+        if (maMon == null) return "";
+        
+        return switch (maMon.toUpperCase().trim()) {
+            case "TO" -> "Toán";
+            case "LI" -> "Vật lí";
+            case "HO" -> "Hóa học";
+            case "SI" -> "Sinh học";
+            case "SU" -> "Lịch sử";
+            case "DI" -> "Địa lí";
+            case "VA" -> "Ngữ văn";
+            case "N1" -> "Tiếng Anh";
+            case "CNCN" -> "Công nghệ Chăn nuôi";
+            case "CNNN" -> "Công nghệ Nông nghiệp";
+            case "TI" -> "Tin học";
+            case "KTPL" -> "Giáo dục KT & PL";
+            case "NK1" -> "Môn năng khiếu 1";
+            case "NK2" -> "Môn năng khiếu 2";
+            case "NK3" -> "Môn năng khiếu 3";
+            case "NK4" -> "Môn năng khiếu 4";
+            case "NK5" -> "Môn năng khiếu 5";
+            case "NK6" -> "Môn năng khiếu 6";
+            case "KHAC" -> "Môn năng khiếu";
+            default -> maMon;
+        };
     }
     
     private NganhToHop buildNganhToHop(Nganh ng, ToHop th, ToHopData parsedData, BigDecimal doLech) {

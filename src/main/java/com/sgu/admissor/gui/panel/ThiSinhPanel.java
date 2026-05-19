@@ -10,7 +10,9 @@ import com.sgu.admissor.bus.ThiSinh2025BUS;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.ThiSinh2025;
 import com.sgu.admissor.gui.MainFrame;
+import com.sgu.admissor.gui.dialog.ThiSinhDetailDialog;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -27,6 +29,7 @@ public class ThiSinhPanel extends JPanel {
     private final int PAGE_LIMIT = 20;
     private final ThiSinh2025BUS thiSinhBUS;
     private final ExcelImportBUS excelImportBUS;
+    private final Provider<ThiSinhDetailDialog> thiSinhDetailProvider;
     private List<ThiSinh2025> currentList = new ArrayList<>();
     private SwingWorker<Void, Void> importWorker;
     private JDialog loadingDialog;
@@ -39,9 +42,12 @@ public class ThiSinhPanel extends JPanel {
     private JButton btnReload;
 
     @Inject
-    public ThiSinhPanel(ThiSinh2025BUS thiSinhBUS, ExcelImportBUS excelImportBUS) {
+    public ThiSinhPanel(ThiSinh2025BUS thiSinhBUS,
+            ExcelImportBUS excelImportBUS,
+            Provider<ThiSinhDetailDialog> thiSinhDetailProvider) {
         this.thiSinhBUS = thiSinhBUS;
         this.excelImportBUS = excelImportBUS;
+        this.thiSinhDetailProvider = thiSinhDetailProvider;
        
         initLayout();
         initPopupMenu();
@@ -177,12 +183,26 @@ public class ThiSinhPanel extends JPanel {
         itemDelete.setForeground(Color.RED); 
 
         itemEdit.addActionListener(e -> {
-            int selectedRow = tablePanel.getSelectedRow();
+            JTable table = tablePanel.getTable();
+            int selectedRow = table.getSelectedRow();
             if (selectedRow != -1) {
-                String cccd = tablePanel.getTableModel().getValueAt(selectedRow, 1).toString();
-                String ten = tablePanel.getTableModel().getValueAt(selectedRow, 2).toString();
-                
-                JOptionPane.showMessageDialog(this, "Mở form sửa cho thí sinh: " + ten + " - CCCD: " + cccd);
+                Window parentWindow = SwingUtilities.getWindowAncestor(this);
+
+                // Giả sử cột 0 chứa ID thí sinh
+                int idThiSinh = (int) table.getValueAt(selectedRow, 0); 
+
+                // Lấy object ThiSinh2025 từ DB lên
+                ThiSinh2025 thiSinh = thiSinhBUS.getThiSinhById(idThiSinh).getData(); 
+
+                if(thiSinh != null) {
+                    ThiSinhDetailDialog dialog = thiSinhDetailProvider.get();
+                    boolean isChanged = dialog.showDialog(parentWindow, thiSinh);
+
+                    // Nếu người dùng có bấm Lưu thay đổi thì load lại bảng
+                    if (isChanged) {
+                        loadData(1); 
+                    }
+                }
             }
         });
 

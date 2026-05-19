@@ -43,27 +43,15 @@ public class SGUAdmissor {
             
             System.exit(1);
         }
-
-        ExcelImportBUS excelimportBUS = injector.getInstance(ExcelImportBUS.class);
-        File excelFile = new File("data/Chi_tieu_2025.xlsx");
-        File excelFile2 = new File("data/Nguong_dau_vao_2025.xlsx");
-        File excelFile3 = new File("data/tohopmon.xlsx");
-        excelimportBUS.importNganhVaToHop(excelFile, excelFile2, excelFile3);
         
-        excelimportBUS.importThiSinhVaDiem(new File("data/Ds_thi_sinh.xlsx"));
-        excelimportBUS.importDiemDGNLVaVSAT(new File("data/Diem DGNL VSAT - 0908.xlsx"));
-        excelimportBUS.importNguyenVong(new File("data/Nguyenvong.xlsx"));
-        excelimportBUS.importUuTienXetTuyen(new File("data/Uu tien xet tuyen.xlsx"));
-        excelimportBUS.importQuyDoiTiengAnh(new File("data/Ds quy doi tieng Anh.xlsx"));
-        
-//        SwingUtilities.invokeLater(() -> {
-//            try {
-//                LoginFrame loginFrame = injector.getInstance(LoginFrame.class);
-//                loginFrame.setVisible(true);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        });
+        SwingUtilities.invokeLater(() -> {
+            try {
+                LoginFrame loginFrame = injector.getInstance(LoginFrame.class);
+                loginFrame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
     
     public static boolean isDatabaseReady(Injector injector) {

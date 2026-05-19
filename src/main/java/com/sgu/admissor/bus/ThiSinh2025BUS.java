@@ -114,6 +114,9 @@ public class ThiSinh2025BUS {
         if (thiSinh == null || thiSinh.getId() == null || thiSinh.getId() <= 0) {
             return BUSResult.error("ID thí sinh không hợp lệ!");
         }
+        if (thiSinh.getHoTen() == null || thiSinh.getHoTen().trim().isEmpty()) {
+            return BUSResult.error("Họ tên không được để trống!");
+        }
         ThiSinh2025 existing = thiSinh2025DAO.findById(thiSinh.getId());
         if (existing == null) {
             return BUSResult.error("Không tìm thấy thí sinh này trong hệ thống!");
