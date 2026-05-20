@@ -70,8 +70,7 @@ public class DashboardPanel extends JPanel {
             Color.decode("#64748b") 
         );
         btnQuanLyTK.addActionListener(e -> {onFunctionOpen.accept("Tài khoản");});
-        topActionPanel.add(btnQuanLyTK, "h 40!, w 180!");
-        add(topActionPanel, "w 700!, gaptop 15, wrap");
+        
         
         PastelButton btnImport = new PastelButton(
             "Import dữ liệu", 
@@ -83,9 +82,13 @@ public class DashboardPanel extends JPanel {
             MultiFileImportDialog dialog = importDialogProvider.get();
             dialog.showDialog(parentWindow);
         });
-        topActionPanel.add(btnImport, "h 40!, w 180!");
-        add(topActionPanel, "w 700!, gaptop 15, wrap");
 
+        if(authSession.isAdmin()) {
+            topActionPanel.add(btnQuanLyTK, "h 40!, w 180!");
+            topActionPanel.add(btnImport, "h 40!, w 180!");
+        }
+        add(topActionPanel, "w 700!, gaptop 15, wrap");
+        
         JPanel gridPanel = new JPanel(new MigLayout("insets 0, gap 20", "[340!][340!]", "[160!][160!]"));
         gridPanel.setOpaque(false);
 

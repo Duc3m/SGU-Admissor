@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.sgu.admissor.bus;
 
 import com.google.inject.persist.Transactional;
@@ -23,6 +19,7 @@ import com.sgu.admissor.util.ExcelFileClassifier.ClassificationResult;
 import com.sgu.admissor.util.ExcelFileClassifier.FileType;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import jakarta.persistence.EntityManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -43,7 +40,7 @@ import org.apache.poi.ss.usermodel.*;
  *
  * @author Duc3m
  */
-public class ExcelImportBUS {
+public class ExcelImportBUSV2 extends ExcelImportBUS {
     
     private final Provider<ThiSinh2025BUS> thiSinhBUSProvider;
     private final Provider<DiemThiBUS> diemThiBUSProvider;
@@ -52,20 +49,24 @@ public class ExcelImportBUS {
     private final Provider<NganhToHopBUS> nganhToHopBUSProvider;
     private final Provider<NguyenVongBUS> nguyenVongBUSProvider;
     private final Provider<DiemCongBUS> diemCongBUSProvider;
+    private final Provider<EntityManager> entityManagerProvider;
+    
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final int BATCH_SIZE = 2000;
-
+    private static final int BATCH_SIZE_V2 = 2000; 
 
     @Inject
-    public ExcelImportBUS(
+    public ExcelImportBUSV2(
             Provider<ThiSinh2025BUS> thiSinhBUSProvider, 
             Provider<DiemThiBUS> diemThiBUSProvider, 
             Provider<NganhBUS> nganhBUSProvider, 
             Provider<ToHopBUS> toHopBUSProvider, 
             Provider<NganhToHopBUS> nganhToHopBUSProvider,
             Provider<NguyenVongBUS> nguyenVongBUSProvider,
-            Provider<DiemCongBUS> diemCongBUSProvider
-            ) {
+            Provider<DiemCongBUS> diemCongBUSProvider,
+            Provider<EntityManager> entityManagerProvider
+    ) {
+        super(thiSinhBUSProvider, diemThiBUSProvider, nganhBUSProvider, toHopBUSProvider, nganhToHopBUSProvider, nguyenVongBUSProvider, diemCongBUSProvider);
+        
         this.thiSinhBUSProvider = thiSinhBUSProvider;
         this.diemThiBUSProvider = diemThiBUSProvider;
         this.nganhBUSProvider = nganhBUSProvider;
@@ -73,86 +74,13 @@ public class ExcelImportBUS {
         this.nganhToHopBUSProvider = nganhToHopBUSProvider;
         this.nguyenVongBUSProvider = nguyenVongBUSProvider;
         this.diemCongBUSProvider = diemCongBUSProvider;
-    }
-    
-    @Transactional
-    public void importThiSinhVaDiem(File excelFile) {
-        List<ThiSinh2025> thiSinhBatch = new ArrayList<>();
-        List<DiemThi> diemThiBatch = new ArrayList<>();
-        ThiSinh2025BUS thiSinhBUS = thiSinhBUSProvider.get();
-        DiemThiBUS diemThiBUS = diemThiBUSProvider.get();
-
-        // Sử dụng StreamingReader để không tải toàn bộ file vào RAM
-        try (InputStream is = new FileInputStream(excelFile);
-             Workbook workbook = StreamingReader.builder()
-                     .rowCacheSize(100)    // Số dòng lưu trong bộ nhớ tạm
-                     .bufferSize(4096)     // Kích thước buffer đọc file
-                     .open(is)) {
-
-            Sheet sheet = workbook.getSheetAt(0); // Đọc sheet đầu tiên
-            boolean isHeaderRow = true;
-
-            for (Row row : sheet) {
-                // Bỏ qua dòng tiêu đề
-                if (isHeaderRow) {
-                    isHeaderRow = false;
-                    continue;
-                }
-
-                // Nếu dòng trống (dựa trên cột CCCD) thì bỏ qua
-                if (row.getCell(1) == null || row.getCell(1).getStringCellValue().trim().isEmpty()) {
-                    continue;
-                }
-
-                // Map dữ liệu vào ThiSinh2025
-                ThiSinh2025 ts = buildThiSinhFromRow(row);
-                // Map dữ liệu vào DiemThi
-                DiemThi dt = buildDiemThiFromRow(row, ts);
-                thiSinhBatch.add(ts);
-                diemThiBatch.add(dt);
-
-                // Khi đạt đủ số lượng Batch thì lưu
-                if (thiSinhBatch.size() >= BATCH_SIZE) {
-                    saveBatchAndClear(thiSinhBatch, thiSinhBUS::addListThiSinh);
-                    saveBatchAndClear(diemThiBatch, diemThiBUS::addListDiemThi);
-                }
-            }
-            // Lưu nốt các bản ghi còn lại (cuối file chưa đủ batch_size)
-            if (!thiSinhBatch.isEmpty()) {
-                saveBatchAndClear(thiSinhBatch, thiSinhBUS::addListThiSinh);
-                saveBatchAndClear(diemThiBatch, diemThiBUS::addListDiemThi);
-            }
-            System.out.println("Import thành công!");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Lỗi trong quá trình Import: " + e.getMessage());
-        }
-    }
-  
-    /**
-     * @param file1_ChiTieu        File 1: Chi_tieu_2025
-     * @param file2_NguongDauVao   File 2: Nguong_dau_vao_2025
-     * @param file3_ToHopMon       File 3: tohopmon
-     */
-    @Transactional
-    public BUSResult importNganhVaToHop(File file1_ChiTieu, File file2_NguongDauVao, File file3_ToHopMon) {
-        BUSResult result1 = importChiTieu(file1_ChiTieu);
-        if (result1 != null && !result1.isSuccess()) {
-            return result1;
-        }
-        BUSResult result2 = importNguongDauVao(file2_NguongDauVao);
-        if (result2 != null && !result2.isSuccess()) {
-            return result2;
-        }
-        BUSResult result3 = importToHopMon(file3_ToHopMon);
-        if (result3 != null && !result3.isSuccess()) {
-            return result3;
-        }
-        return BUSResult.success("Import toàn bộ dữ liệu 3 file thành công!");
+        this.entityManagerProvider = entityManagerProvider;
     }
 
-    @Transactional
-    public BUSResult importFromFiles(File[] files) {
+    public BUSResult importFromFilesV2(File[] files, java.util.function.Consumer<Integer> progressCallback) {
+        if (progressCallback == null) progressCallback = p -> {};
+        progressCallback.accept(0);
+
         if (files == null || files.length == 0) {
             return BUSResult.error("Không có file để import!");
         }
@@ -177,60 +105,68 @@ public class ExcelImportBUS {
         File chiTieu = fileMap.get(FileType.CHI_TIEU);
         File nguong = fileMap.get(FileType.NGUONG_DAU_VAO);
         File toHop = fileMap.get(FileType.TO_HOP_MON);
-        if (chiTieu != null) {
-            BUSResult result = importChiTieu(chiTieu);
-            if (result != null && !result.isSuccess()) return result;
-        }
-        if (nguong != null) {
-            BUSResult result = importNguongDauVao(nguong);
-            if (result != null && !result.isSuccess()) return result;
-        }
-        if (toHop != null) {
-            BUSResult result = importToHopMon(toHop);
-            if (result != null && !result.isSuccess()) return result;
-        }
-
         File dsThiSinh = fileMap.get(FileType.DS_THI_SINH);
-        if (dsThiSinh != null) {
-            importThiSinhVaDiem(dsThiSinh);
-        }
-
         File dgnlVsat = fileMap.get(FileType.DIEM_DGNL_VSAT);
-        if (dgnlVsat != null) {
-            importDiemDGNLVaVSAT(dgnlVsat);
-        }
-
         File nguyenVong = fileMap.get(FileType.NGUYEN_VONG);
-        if (nguyenVong != null) {
-            importNguyenVong(nguyenVong);
-        }
-
         File uuTien = fileMap.get(FileType.UU_TIEN_XET_TUYEN);
-        if (uuTien != null) {
-            importUuTienXetTuyen(uuTien);
+        File quyDoi = fileMap.get(FileType.QUY_DOI_TIENG_ANH);
+        
+        if (chiTieu != null) {
+            importChiTieuV2(chiTieu, progressCallback, 0, 5);
+        } else {
+            progressCallback.accept(5);
         }
 
-        File quyDoi = fileMap.get(FileType.QUY_DOI_TIENG_ANH);
+        if (nguong != null) {
+            importNguongDauVaoV2(nguong, progressCallback, 5, 10);
+        } else {
+            progressCallback.accept(10);
+        }
+
+        if (toHop != null) {
+            importToHopMonV2(toHop, progressCallback, 10, 15);
+        } else {
+            progressCallback.accept(15);
+        }
+
+        if (dsThiSinh != null) {
+            importThiSinhVaDiemV2(dsThiSinh, progressCallback, 15, 45);
+        } else {
+            progressCallback.accept(45);
+        }
+
+        if (dgnlVsat != null) {
+            importDiemDGNLVaVSATV2(dgnlVsat, progressCallback, 45, 55);
+        } else {
+            progressCallback.accept(55);
+        }
+
+        if (nguyenVong != null) {
+            importNguyenVongV2(nguyenVong, progressCallback, 55, 75);
+        } else {
+            progressCallback.accept(75);
+        }
+
+        if (uuTien != null) {
+            importUuTienXetTuyenV2(uuTien, progressCallback, 75, 80);
+        } else {
+            progressCallback.accept(80);
+        }
+
         if (quyDoi != null) {
-            importQuyDoiTiengAnh(quyDoi);
+            importQuyDoiTiengAnhV2(quyDoi, progressCallback, 80, 100);
+        } else {
+            progressCallback.accept(100);
         }
 
         if (warnings.isEmpty()) {
-            return BUSResult.success("Import dữ liệu từ nhiều file thành công!");
+            return BUSResult.success("Import dữ liệu tuyển sinh thành công!");
         }
-        return BUSResult.successWithData("Import dữ liệu từ nhiều file thành công!", warnings);
-    }
-
-    private String safeFileName(File file) {
-        if (file == null) {
-            return "(null)";
-        }
-        String name = file.getName();
-        return name != null ? name : file.getPath();
+        return BUSResult.successWithData("Import thành công kèm cảnh báo!", warnings);
     }
 
     @Transactional
-    public BUSResult importChiTieu(File fileChiTieu) {
+    public BUSResult importChiTieuV2(File fileChiTieu, Consumer<Integer> callback, int start, int end) {
         NganhBUS nganhBUS = nganhBUSProvider.get();
         Map<String, Nganh> nganhMap = new HashMap<>();
         Set<String> existingMaNganh = new HashSet<>();
@@ -238,23 +174,31 @@ public class ExcelImportBUS {
         List<Nganh> existing = nganhBUS.getAllNganh().getData();
         if (existing != null) {
             for (Nganh ng : existing) {
-                if (ng.getMaNganh() != null) {
-                    existingMaNganh.add(ng.getMaNganh());
-                }
+                if (ng.getMaNganh() != null) existingMaNganh.add(ng.getMaNganh());
             }
         }
 
         try (InputStream is = new FileInputStream(fileChiTieu);
              Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
-            for (Row row : wb.getSheetAt(0)) {
-                if (row.getRowNum() <= 1) continue; // Bỏ qua Header
+            Sheet sheet = wb.getSheetAt(0);
+            int totalRows = sheet.getLastRowNum();
+            int current = 0;
+
+            for (Row row : sheet) {
+                current++;
+                if (row.getRowNum() <= 1) continue;
                 String maNganh = getStringValue(row.getCell(1));
                 if (maNganh.isEmpty()) continue;
                 if (maNganh.length() > 10) break;
                 if (existingMaNganh.contains(maNganh)) continue;
+                
                 Nganh ng = new Nganh();
                 fillNganhInfo1(ng, row);
                 nganhMap.put(maNganh, ng);
+
+                if (totalRows > 0 && callback != null) {
+                    callback.accept(start + (current * (end - start)) / totalRows);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -264,36 +208,47 @@ public class ExcelImportBUS {
         List<Nganh> nganhBatch = new ArrayList<>();
         for (Nganh ng : nganhMap.values()) {
             nganhBatch.add(ng);
-            if (nganhBatch.size() >= BATCH_SIZE) saveBatchAndClear(nganhBatch, nganhBUS::addListNganh);
+            if (nganhBatch.size() >= BATCH_SIZE_V2) saveBatchAndClear(nganhBatch, nganhBUS::addListNganh);
         }
         saveBatchAndClear(nganhBatch, nganhBUS::addListNganh);
         return BUSResult.success("Import Chi_tieu_2025 thành công!");
     }
 
     @Transactional
-    public BUSResult importNguongDauVao(File fileNguongDauVao) {
+    public BUSResult importNguongDauVaoV2(File fileNguongDauVao, Consumer<Integer> callback, int start, int end) {
         NganhBUS nganhBUS = nganhBUSProvider.get();
         List<String> warnings = new ArrayList<>();
         if (!hasAnyNganh(nganhBUS)) {
-            warnings.add("Cảnh báo: Chưa có dữ liệu Ngành trong DB. Hãy import Chi_tieu_2025 trước để đảm bảo khóa ngoại.");
+            warnings.add("Cảnh báo: Chưa có dữ liệu Ngành trong DB.");
         }
+
         try (InputStream is = new FileInputStream(fileNguongDauVao);
              Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
-            for (Row row : wb.getSheetAt(0)) {
+            Sheet sheet = wb.getSheetAt(0);
+            int totalRows = sheet.getLastRowNum();
+            int current = 0;
+
+            for (Row row : sheet) {
+                current++;
                 if (row.getRowNum() == 0) continue;
                 String maNganh = getStringValue(row.getCell(1));
                 if (maNganh.isEmpty()) continue;
+                
                 BUSResult<Nganh> result = nganhBUS.getNganhByMaNganh(maNganh);
                 if (result != null && result.isSuccess() && result.getData() != null) {
                     Nganh ng = result.getData();
                     fillNganhInfo2(ng, row);
-                    nganhBUS.updateNganh(ng);
+                    nganhBUS.updateNganh(ng); 
+                }
+
+                if (totalRows > 0 && callback != null) {
+                    callback.accept(start + (current * (end - start)) / totalRows);
                 }
             }
-            if (warnings.isEmpty()) {
-                return BUSResult.success("Import Nguong_dau_vao_2025 thành công!");
-            }
-            return BUSResult.successWithData("Import Nguong_dau_vao_2025 thành công!", warnings);
+            EntityManager em = entityManagerProvider.get();
+            if (em != null) { em.flush(); em.clear(); }
+            
+            return BUSResult.success("Import Nguong_dau_vao_2025 thành công!");
         } catch (Exception e) {
             e.printStackTrace();
             return BUSResult.error("Lỗi Import Nguong_dau_vao_2025: " + e.getMessage());
@@ -301,45 +256,40 @@ public class ExcelImportBUS {
     }
 
     @Transactional
-    public BUSResult importToHopMon(File fileToHopMon) {
+    public BUSResult importToHopMonV2(File fileToHopMon, Consumer<Integer> callback, int start, int end) {
         NganhBUS nganhBUS = nganhBUSProvider.get();
         ToHopBUS toHopBUS = toHopBUSProvider.get();
         NganhToHopBUS nganhToHopBUS = nganhToHopBUSProvider.get();
-        List<String> warnings = new ArrayList<>();
-        if (!hasAnyNganh(nganhBUS)) {
-            warnings.add("Cảnh báo: Chưa có dữ liệu Ngành trong DB. Hãy import Chi_tieu_2025 trước để đảm bảo khóa ngoại.");
-        }
-        if (!hasAnyNganhDiemSan(nganhBUS)) {
-            warnings.add("Cảnh báo: Chưa thấy dữ liệu điểm sàn trong DB. Hãy import Nguong_dau_vao_2025 trước để đảm bảo thứ tự.");
-        }
 
         Map<String, Nganh> nganhMap = new HashMap<>();
         Map<String, ToHop> toHopMap = new HashMap<>();
         List<ToHop> toHopList = new ArrayList<>();
         List<NganhToHop> nganhToHopList = new ArrayList<>();
+        List<Nganh> nganhUpdateList = new ArrayList<>();
         Set<String> nganhNeedUpdate = new HashSet<>();
 
         List<Nganh> existingNganh = nganhBUS.getAllNganh().getData();
         if (existingNganh != null) {
             for (Nganh ng : existingNganh) {
-                if (ng.getMaNganh() != null) {
-                    nganhMap.put(ng.getMaNganh(), ng);
-                }
+                if (ng.getMaNganh() != null) nganhMap.put(ng.getMaNganh(), ng);
             }
         }
 
         List<ToHop> existingToHops = toHopBUS.getAllToHop().getData();
         if (existingToHops != null) {
             for (ToHop t : existingToHops) {
-                if (t.getMaToHop() != null) {
-                    toHopMap.put(t.getMaToHop(), t);
-                }
+                if (t.getMaToHop() != null) toHopMap.put(t.getMaToHop(), t);
             }
         }
 
         try (InputStream is = new FileInputStream(fileToHopMon);
              Workbook wb = StreamingReader.builder().rowCacheSize(100).open(is)) {
-            for (Row row : wb.getSheetAt(0)) {
+            Sheet sheet = wb.getSheetAt(0);
+            int totalRows = sheet.getLastRowNum();
+            int current = 0;
+
+            for (Row row : sheet) {
+                current++;
                 if (row.getRowNum() == 0) continue;
                 String maNganh = getStringValue(row.getCell(1));
                 String chuoiToHop = getStringValue(row.getCell(3));
@@ -356,8 +306,7 @@ public class ExcelImportBUS {
                     th.setMon1(parsedData.mon1);
                     th.setMon2(parsedData.mon2);
                     th.setMon3(parsedData.mon3);
-                    String tenToHop = buildTenToHop(th.getMon1(), th.getMon2(), th.getMon3());
-                    th.setTenToHop(tenToHop);
+                    th.setTenToHop(buildTenToHop(th.getMon1(), th.getMon2(), th.getMon3()));
 
                     toHopList.add(th);
                     toHopMap.put(maToHop, th);
@@ -371,16 +320,20 @@ public class ExcelImportBUS {
                         ToHop thGoc = toHopMap.get(maToHopGoc);
                         if (thGoc != null) {
                             ng.setToHopGoc(thGoc);
-                            nganhNeedUpdate.add(maNganh);
+                            if (nganhNeedUpdate.add(maNganh)) {
+                                nganhUpdateList.add(ng);
+                            }
                         }
                     }
                 }
 
                 BigDecimal doLech = getBigDecimalValue(row.getCell(7));
-
                 if (ng != null && th != null) {
-                    NganhToHop nth = buildNganhToHop(ng, th, parsedData, doLech);
-                    nganhToHopList.add(nth);
+                    nganhToHopList.add(buildNganhToHop(ng, th, parsedData, doLech));
+                }
+
+                if (totalRows > 0 && callback != null) {
+                    callback.accept(start + (current * (end - start)) / totalRows);
                 }
             }
         } catch (Exception e) {
@@ -388,63 +341,70 @@ public class ExcelImportBUS {
             return BUSResult.error("Lỗi Import tohopmon: " + e.getMessage());
         }
 
-        List<ToHop> toHopBatch = new ArrayList<>();
-        for (ToHop th : toHopList) {
-            toHopBatch.add(th);
-            if (toHopBatch.size() >= BATCH_SIZE) saveBatchAndClear(toHopBatch, toHopBUS::addListToHop);
+        for (int i = 0; i < toHopList.size(); i += BATCH_SIZE_V2) {
+            toHopBUS.addListToHop(new ArrayList<>(toHopList.subList(i, Math.min(i + BATCH_SIZE_V2, toHopList.size()))));
         }
-        saveBatchAndClear(toHopBatch, toHopBUS::addListToHop);
-
-        for (String maNganh : nganhNeedUpdate) {
-            Nganh ng = nganhMap.get(maNganh);
-            if (ng != null) {
-                nganhBUS.updateNganh(ng);
-            }
+        for (Nganh ng : nganhUpdateList) {
+            nganhBUS.updateNganh(ng);
+        }
+        for (int i = 0; i < nganhToHopList.size(); i += BATCH_SIZE_V2) {
+            nganhToHopBUS.addListNganhToHop(new ArrayList<>(nganhToHopList.subList(i, Math.min(i + BATCH_SIZE_V2, nganhToHopList.size()))));
         }
 
-        List<NganhToHop> nthBatch = new ArrayList<>();
-        for (NganhToHop nth : nganhToHopList) {
-            nthBatch.add(nth);
-            if (nthBatch.size() >= BATCH_SIZE) saveBatchAndClear(nthBatch, nganhToHopBUS::addListNganhToHop);
-        }
-        saveBatchAndClear(nthBatch, nganhToHopBUS::addListNganhToHop);
-
-        if (warnings.isEmpty()) {
-            return BUSResult.success("Import tohopmon thành công!");
-        }
-        return BUSResult.successWithData("Import tohopmon thành công!", warnings);
+        EntityManager em = entityManagerProvider.get();
+        if (em != null) { em.flush(); em.clear(); }
+        return BUSResult.success("Import tohopmon thành công!");
     }
 
-    private boolean hasAnyNganh(NganhBUS nganhBUS) {
-        BUSResult<List<Nganh>> result = nganhBUS.getAllNganh();
-        return result != null && result.isSuccess() && result.getData() != null && !result.getData().isEmpty();
-    }
-
-    private boolean hasAnyNganhDiemSan(NganhBUS nganhBUS) {
-        BUSResult<List<Nganh>> result = nganhBUS.getAllNganh();
-        if (result == null || !result.isSuccess() || result.getData() == null) {
-            return false;
-        }
-        for (Nganh nganh : result.getData()) {
-            if (nganh != null && nganh.getDiemSan() != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    /**
-     * Import điểm thi từ file Excel có 2 sheet: VSAT (sheet 0) và DGNL (sheet 1).
-     * - VSAT: mỗi thí sinh có nhiều dòng (mỗi dòng 1 môn), gom thành 1 DiemThi duy nhất.
-     * - DGNL: mỗi dòng là 1 thí sinh, điểm lưu vào nl1.
-     * Phương thức xác định theo PHUONGTHUC.PT[3] (VSAT) và PHUONGTHUC.PT[2] (DGNL).
-     */
     @Transactional
-    public void importDiemDGNLVaVSAT(File excelFile) {
+    public void importThiSinhVaDiemV2(File excelFile, Consumer<Integer> callback, int start, int end) {
+        List<ThiSinh2025> thiSinhBatch = new ArrayList<>();
+        List<DiemThi> diemThiBatch = new ArrayList<>();
+        ThiSinh2025BUS thiSinhBUS = thiSinhBUSProvider.get();
+        DiemThiBUS diemThiBUS = diemThiBUSProvider.get();
+
+        try (InputStream is = new FileInputStream(excelFile);
+             Workbook workbook = StreamingReader.builder().rowCacheSize(100).bufferSize(4096).open(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            int totalRows = sheet.getLastRowNum();
+            int current = 0;
+            boolean isHeaderRow = true;
+
+            for (Row row : sheet) {
+                current++;
+                if (isHeaderRow) { isHeaderRow = false; continue; }
+                if (row.getCell(1) == null || row.getCell(1).getStringCellValue().trim().isEmpty()) continue;
+
+                ThiSinh2025 ts = buildThiSinhFromRow(row);
+                DiemThi dt = buildDiemThiFromRow(row, ts);
+                thiSinhBatch.add(ts);
+                diemThiBatch.add(dt);
+
+                if (thiSinhBatch.size() >= BATCH_SIZE_V2) {
+                    saveBatchAndClear(thiSinhBatch, thiSinhBUS::addListThiSinh);
+                    saveBatchAndClear(diemThiBatch, diemThiBUS::addListDiemThi);
+                }
+
+                if (totalRows > 0 && callback != null) {
+                    callback.accept(start + (current * (end - start)) / totalRows);
+                }
+            }
+            if (!thiSinhBatch.isEmpty()) {
+                saveBatchAndClear(thiSinhBatch, thiSinhBUS::addListThiSinh);
+                saveBatchAndClear(diemThiBatch, diemThiBUS::addListDiemThi);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi importThiSinhVaDiemV2: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public void importDiemDGNLVaVSATV2(File excelFile, Consumer<Integer> callback, int start, int end) {
         DiemThiBUS diemThiBUS = diemThiBUSProvider.get();
         ThiSinh2025BUS thiSinhBUS = thiSinhBUSProvider.get();
 
-        // Prefetch thí sinh để tránh query DB nhiều lần
         Map<String, ThiSinh2025> thiSinhMap = new HashMap<>();
         List<ThiSinh2025> allThiSinh = thiSinhBUS.getAllThiSinh().getData();
         if (allThiSinh != null) {
@@ -453,20 +413,27 @@ public class ExcelImportBUS {
             }
         }
 
-        // ---- Sheet 0: VSAT ----
-        // 1 thí sinh có thể thi nhiều đợt (DOTTHI) tại nhiều địa điểm (MADVTCTD).
-        // Mỗi combo (cccd + dotthi + madvtctd) là 1 DiemThi riêng — tất cả đều hợp lệ.
-        // Trong mỗi combo, nhiều dòng môn thi được gom thành 1 DiemThi duy nhất.
-        try (InputStream is = new FileInputStream(excelFile);
-             Workbook workbook = StreamingReader.builder()
-                     .rowCacheSize(100).bufferSize(4096).open(is)) {
+        int totalRows = 0;
+        try (InputStream checkIs = new FileInputStream(excelFile);
+             Workbook checkWb = StreamingReader.builder().rowCacheSize(10).open(checkIs)) {
+            Sheet s0 = checkWb.getSheetAt(0);
+            if (s0 != null) totalRows += s0.getLastRowNum();
+            Sheet s1 = checkWb.getSheetAt(1);
+            if (s1 != null) totalRows += s1.getLastRowNum();
+        } catch (Exception ignored) {}
 
-            // key = cccd + "_" + dotthi + "_" + madvtctd
+        int processedRows = 0;
+
+        // Sheet 0: VSAT
+        try (InputStream is = new FileInputStream(excelFile);
+             Workbook workbook = StreamingReader.builder().rowCacheSize(100).bufferSize(4096).open(is)) {
+
             Map<String, DiemThi> vsatDiemMap = new HashMap<>();
             Sheet vsatSheet = workbook.getSheetAt(0);
             if (vsatSheet != null) {
                 boolean isHeader = true;
                 for (Row row : vsatSheet) {
+                    processedRows++;
                     if (isHeader) { isHeader = false; continue; }
                     String cccd = getStringValue(row.getCell(1));
                     if (cccd.isEmpty()) continue;
@@ -477,137 +444,98 @@ public class ExcelImportBUS {
                     BigDecimal diem = getBigDecimalValue(row.getCell(8));
 
                     ThiSinh2025 ts = thiSinhMap.get(cccd);
-                    if (ts == null) {
-                        System.err.println("VSAT: Không tìm thấy thí sinh CCCD=" + cccd + ", bỏ qua dòng " + (row.getRowNum() + 1));
-                        continue;
-                    }
+                    if (ts == null) continue;
 
-                    // Key phân biệt từng lần thi (đợt + địa điểm)
                     String vsatKey = cccd + "_" + dotThi + "_" + maDvtctd;
+                    DiemThi dt = vsatDiemMap.computeIfAbsent(vsatKey, k -> {
+                        DiemThi newDt = new DiemThi();
+                        newDt.setThiSinh(ts);
+                        newDt.setPhuongThuc(PHUONGTHUC.PT[3]);
+                        return newDt;
+                    });
 
-                    // Lấy hoặc tạo mới DiemThi cho combo (thí sinh, đợt, địa điểm) này
-                    DiemThi dt = vsatDiemMap.get(vsatKey);
-                    if (dt == null) {
-                        dt = new DiemThi();
-                        dt.setThiSinh(ts);
-                        dt.setPhuongThuc(PHUONGTHUC.PT[3]);
-                        vsatDiemMap.put(vsatKey, dt);
-                    }
-
-                    // Bỏ hậu tố _VS để lấy mã môn chuẩn
-                    String maMon = maMonThi.endsWith("_VS")
-                            ? maMonThi.substring(0, maMonThi.length() - 3)
-                            : maMonThi;
-
+                    String maMon = maMonThi.endsWith("_VS") ? maMonThi.substring(0, maMonThi.length() - 3) : maMonThi;
                     switch (maMon) {
-                        case "TO":   dt.setTo(diem);    break;
-                        case "LI":   dt.setLi(diem);    break;
-                        case "HO":   dt.setHo(diem);    break;
-                        case "SI":   dt.setSi(diem);    break;
-                        case "SU":   dt.setSu(diem);    break;
-                        case "DI":   dt.setDi(diem);    break;
-                        case "VA":   dt.setVa(diem);    break;
-                        case "N1":   dt.setN1Thi(diem); break;
+                        case "TO": case "M1": dt.setTo(diem);    break;
+                        case "LI": case "M2": dt.setLi(diem);    break;
+                        case "HO": case "M3": dt.setHo(diem);    break;
+                        case "SI": case "M4": dt.setSi(diem);    break;
+                        case "VA": case "M5": dt.setVa(diem);    break;
+                        case "SU": case "M6": dt.setSu(diem);    break;
+                        case "DI": case "M7": dt.setDi(diem);    break;
+                        case "N1": case "M8": dt.setN1Thi(diem); break;
                         case "TI":   dt.setTi(diem);    break;
                         case "KTPL": dt.setKtpl(diem);  break;
-                        // M1-M8: map cứng theo thứ tự môn chuẩn VSAT
-                        case "M1": dt.setTo(diem);    break; // Toán
-                        case "M2": dt.setLi(diem);    break; // Vật lý
-                        case "M3": dt.setHo(diem);    break; // Hóa
-                        case "M4": dt.setSi(diem);    break; // Sinh
-                        case "M5": dt.setVa(diem);    break; // Văn
-                        case "M6": dt.setSu(diem);    break; // Lịch sử
-                        case "M7": dt.setDi(diem);    break; // Địa lý
-                        case "M8": dt.setN1Thi(diem); break; // Tiếng Anh
-                        default:
-                            System.err.println("VSAT: Mã môn không xác định: " + maMonThi + " dòng " + (row.getRowNum() + 1));
-                            break;
+                    }
+
+                    if (totalRows > 0 && callback != null) {
+                        callback.accept(start + (processedRows * (end - start)) / totalRows);
                     }
                 }
             }
 
-            // Lưu batch VSAT
             List<DiemThi> vsatBatch = new ArrayList<>(vsatDiemMap.values());
-            for (int i = 0; i < vsatBatch.size(); i += BATCH_SIZE) {
-                List<DiemThi> sub = vsatBatch.subList(i, Math.min(i + BATCH_SIZE, vsatBatch.size()));
-                diemThiBUS.addListDiemThi(new ArrayList<>(sub));
+            for (int i = 0; i < vsatBatch.size(); i += BATCH_SIZE_V2) {
+                saveBatchAndClear(new ArrayList<>(vsatBatch.subList(i, Math.min(i + BATCH_SIZE_V2, vsatBatch.size()))), diemThiBUS::addListDiemThi);
             }
-            System.out.println("Import VSAT thành công: " + vsatBatch.size() + " bản ghi (đợt/địa điểm).");
-
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Lỗi import điểm VSAT: " + e.getMessage());
             throw new RuntimeException(e);
         }
 
-        // ---- Sheet 1: DGNL ----
-        // 1 thí sinh có thể thi nhiều đợt → chỉ lưu 1 dòng với điểm NL1 cao nhất.
-        // Mở stream riêng vì StreamingReader không hỗ trợ seek ngược.
+        // Sheet 1: DGNL
         try (InputStream is2 = new FileInputStream(excelFile);
-             Workbook workbook2 = StreamingReader.builder()
-                     .rowCacheSize(100).bufferSize(4096).open(is2)) {
+             Workbook workbook2 = StreamingReader.builder().rowCacheSize(100).bufferSize(4096).open(is2)) {
 
-            // key = cccd, value = DiemThi đang giữ điểm cao nhất
             Map<String, DiemThi> dgnlDiemMap = new HashMap<>();
-
             Sheet dgnlSheet = workbook2.getSheetAt(1);
             if (dgnlSheet != null) {
                 boolean isHeader = true;
                 for (Row row : dgnlSheet) {
+                    processedRows++;
                     if (isHeader) { isHeader = false; continue; }
                     String cccd = getStringValue(row.getCell(1));
                     if (cccd.isEmpty()) continue;
 
                     BigDecimal diem = getBigDecimalValue(row.getCell(8));
-
                     ThiSinh2025 ts = thiSinhMap.get(cccd);
-                    if (ts == null) {
-                        System.err.println("DGNL: Không tìm thấy thí sinh CCCD=" + cccd + ", bỏ qua dòng " + (row.getRowNum() + 1));
-                        continue;
-                    }
+                    if (ts == null) continue;
 
                     DiemThi existing = dgnlDiemMap.get(cccd);
                     if (existing == null) {
-                        // Lần đầu gặp thí sinh này
                         DiemThi dt = new DiemThi();
                         dt.setThiSinh(ts);
                         dt.setPhuongThuc(PHUONGTHUC.PT[2]);
                         dt.setNl1(diem);
                         dgnlDiemMap.put(cccd, dt);
                     } else {
-                        // Đã có — giữ điểm cao hơn
                         BigDecimal currentNl1 = existing.getNl1();
                         if (diem != null && (currentNl1 == null || diem.compareTo(currentNl1) > 0)) {
                             existing.setNl1(diem);
                         }
                     }
+
+                    if (totalRows > 0 && callback != null) {
+                        callback.accept(start + (processedRows * (end - start)) / totalRows);
+                    }
                 }
             }
 
-            // Lưu batch DGNL
             List<DiemThi> dgnlBatch = new ArrayList<>(dgnlDiemMap.values());
-            for (int i = 0; i < dgnlBatch.size(); i += BATCH_SIZE) {
-                List<DiemThi> sub = dgnlBatch.subList(i, Math.min(i + BATCH_SIZE, dgnlBatch.size()));
-                diemThiBUS.addListDiemThi(new ArrayList<>(sub));
+            for (int i = 0; i < dgnlBatch.size(); i += BATCH_SIZE_V2) {
+                saveBatchAndClear(new ArrayList<>(dgnlBatch.subList(i, Math.min(i + BATCH_SIZE_V2, dgnlBatch.size()))), diemThiBUS::addListDiemThi);
             }
-            System.out.println("Import DGNL thành công: " + dgnlBatch.size() + " thí sinh (điểm cao nhất).");
-
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Lỗi import điểm DGNL: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
     @Transactional
-    public void importNguyenVong(File excelFilePath){
+    public void importNguyenVongV2(File excelFilePath, Consumer<Integer> callback, int start, int end) {
         NguyenVongBUS nguyenVongBUS = nguyenVongBUSProvider.get();
         DiemThiBUS diemThiBUS = diemThiBUSProvider.get();
         ThiSinh2025BUS thiSinhBUS = thiSinhBUSProvider.get();
         NganhBUS nganhBUS = nganhBUSProvider.get();
         
-        // Prefetch để khỏi phải query DB, tiết kiệm time
-        // Prefetch THI SINH
         Map<String, ThiSinh2025> thiSinhMap = new HashMap<>();
         List<ThiSinh2025> allThiSinh = thiSinhBUS.getAllThiSinh().getData();
         if (allThiSinh != null) {
@@ -616,7 +544,6 @@ public class ExcelImportBUS {
             }
         }
 
-        // Prefetch NGANH
         Map<String, Nganh> nganhMap = new HashMap<>();
         List<Nganh> allNganh = nganhBUS.getAllNganh().getData();
         if (allNganh != null) {
@@ -625,7 +552,6 @@ public class ExcelImportBUS {
             }
         }
 
-        // Prefetch DIEMTHI -> phuongthuc
         Map<String, Set<String>> phuongThucMap = new HashMap<>();
         List<DiemThi> allDiemThi = diemThiBUS.getAllDiemThi().getData();
         if (allDiemThi != null) {
@@ -633,111 +559,82 @@ public class ExcelImportBUS {
                 String cccd = dt.getThiSinh() != null ? dt.getThiSinh().getCccd() : null;
                 String pt = dt.getPhuongThuc();
                 if (cccd == null || pt == null || pt.trim().isEmpty()) continue;
-
                 phuongThucMap.computeIfAbsent(cccd, k -> new HashSet<>()).add(pt);
             }
         }
         
-        List<NguyenVong> nvBatch = new ArrayList();
+        List<NguyenVong> nvBatch = new ArrayList<>();
         
         try (InputStream is = new FileInputStream(excelFilePath);
-                Workbook workbook = StreamingReader.builder()
-                .rowCacheSize(100)
-                .bufferSize(4096)
-                .open(is)){
-            int[] sheets = {1, 2}; // sheet 2 và 3
-            int startRow = 5; // dòng 6
+             Workbook workbook = StreamingReader.builder().rowCacheSize(100).bufferSize(4096).open(is)) {
+            int[] sheets = {1, 2};
+            int startRow = 5;
             
-            for(int sheetIndex : sheets) {
+            int totalRows = 0;
+            for (int sheetIndex : sheets) {
+                Sheet s = workbook.getSheetAt(sheetIndex);
+                if (s != null) totalRows += s.getLastRowNum();
+            }
+            int processedRowsCount = 0;
+            
+            for (int sheetIndex : sheets) {
                 Sheet sheet = workbook.getSheetAt(sheetIndex);
                 if (sheet == null) continue;
                 
-                for (Row row : sheet){
+                for (Row row : sheet) {
+                    processedRowsCount++;
                     if (row.getRowNum() < startRow) continue;
                     
                     String cccd = getStringValue(row.getCell(1));
                     int thuTuNV = getIntegerValue(row.getCell(2));
                     String maNganh = getStringValue(row.getCell(5));
                     
-                    // CCCD trống thì skip
-                    if (cccd == null || cccd.isEmpty()) continue;
-                    
-                    // Thiếu mã ngành hoặc thứ tự nguyện vọng thì dừng import
-                    if (maNganh == null || maNganh.isEmpty() || thuTuNV == 0){
+                    if (cccd.isEmpty()) continue;
+                    if (maNganh.isEmpty() || thuTuNV == 0) {
                         throw new RuntimeException("Dữ liệu thiếu ở dòng " + (row.getRowNum() + 1));
                     }
                     
-                    // Nếu ko có sẵn thí sinh này thì dừng import
                     ThiSinh2025 ts = thiSinhMap.get(cccd);
-                    if (ts == null){
-                        throw new RuntimeException("Không tìm thấy thí sinh: " + cccd + " (dòng " + (row.getRowNum() + 1) + ")");
-                    }
-                    
-                    // Nếu ngành này chưa có thì dừng import
                     Nganh ng = nganhMap.get(maNganh);
-                    if (ng == null) {
-                        throw new RuntimeException("Không tìm thấy ngành: " + maNganh + " (dòng " + (row.getRowNum() + 1) + ")");
-                    }
+                    if (ts == null || ng == null) continue;
                     
-                    // Lấy danh sách phương thức từ BUS
                     Set<String> phuongThucList = phuongThucMap.getOrDefault(cccd, new HashSet<>());
-                    
-                    if (phuongThucList.isEmpty()) continue;
-                    
-                    for (String pt : phuongThucList){
-                        if(!kiemTraNganhCoXetPhuongThuc(ng, pt)) continue;
+                    for (String pt : phuongThucList) {
+                        if (!kiemTraNganhCoXetPhuongThuc(ng, pt)) continue;
                         
                         NguyenVong nv = new NguyenVong();
                         nv.setThiSinh(ts);
                         nv.setThuTu(thuTuNV);
                         nv.setNganh(ng);
                         nv.setPhuongThuc(pt);
-                        nv.setToHopMon(null);
-                        // nv_key tự set ở BUS
                         nvBatch.add(nv);
                     }
                     
-                    if (nvBatch.size() >= BATCH_SIZE){
+                    if (nvBatch.size() >= BATCH_SIZE_V2) {
                         saveBatchAndClear(nvBatch, nguyenVongBUS::addListNguyenVong);
+                    }
+
+                    if (totalRows > 0 && callback != null) {
+                        callback.accept(start + (processedRowsCount * (end - start)) / totalRows);
                     }
                 }
             }
-            
             if (!nvBatch.isEmpty()) {
                 saveBatchAndClear(nvBatch, nguyenVongBUS::addListNguyenVong);
             }
-            
-            System.out.println("Import nguyện vọng từ file Excel thành công!");
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Lỗi import nguyện vọng: " + e.getMessage());
-            throw new RuntimeException(e); // để rollback
+            throw new RuntimeException("Lỗi giải mã file nguyện vọng: " + e.getMessage());
         }
     }
 
-    /**
-     * Import file Ưu tiên xét tuyển (sheet 0: ds thi sinh).
-     * Cột: B=CCCD, E=Mã môn, F=Loại giải, G=Điểm cộng có môn đạt giải, H=Điểm cộng không có môn đạt giải.
-     *
-     * Logic:
-     * - Với mỗi thí sinh → lấy danh sách nguyện vọng (dedup theo thuTu+maNganh, bỏ trùng phương thức)
-     * - Với mỗi nguyện vọng duy nhất → lấy tất cả tổ hợp môn của ngành đó
-     * - Với mỗi tổ hợp môn → kiểm tra có chứa mã môn đạt giải không:
-     *     + Có → diemUtxt = cột G
-     *     + Không có → diemUtxt = cột H
-     * - Upsert DiemCong theo dc_key = cccd_maNganh_maToHop:
-     *     + Chưa có → tạo mới
-     *     + Đã có → chỉ cập nhật diemUtxt, tính lại diemTong
-     * - diemTong = min(diemUtxt + diemCc, 3.0), diemCc null thì coi là 0
-     */
     @Transactional
-    public void importUuTienXetTuyen(File excelFile) {
+    public void importUuTienXetTuyenV2(File excelFile, Consumer<Integer> callback, int start, int end) {
         DiemCongBUS diemCongBUS = diemCongBUSProvider.get();
         NguyenVongBUS nguyenVongBUS = nguyenVongBUSProvider.get();
         NganhToHopBUS nganhToHopBUS = nganhToHopBUSProvider.get();
         ThiSinh2025BUS thiSinhBUS = thiSinhBUSProvider.get();
 
-        // Prefetch toàn bộ thí sinh
         Map<String, ThiSinh2025> thiSinhMap = new HashMap<>();
         List<ThiSinh2025> allThiSinh = thiSinhBUS.getAllThiSinh().getData();
         if (allThiSinh != null) {
@@ -746,7 +643,6 @@ public class ExcelImportBUS {
             }
         }
 
-        // Prefetch nguyện vọng: cccd -> List<NguyenVong>
         Map<String, List<NguyenVong>> nvMap = new HashMap<>();
         List<NguyenVong> allNv = nguyenVongBUS.getAllNguyenVong().getData();
         if (allNv != null) {
@@ -757,7 +653,6 @@ public class ExcelImportBUS {
             }
         }
 
-        // Prefetch NganhToHop: maNganh -> List<NganhToHop>
         Map<String, List<NganhToHop>> nganhToHopMap = new HashMap<>();
         List<NganhToHop> allNth = nganhToHopBUS.getAllNganhToHop().getData();
         if (allNth != null) {
@@ -768,7 +663,6 @@ public class ExcelImportBUS {
             }
         }
 
-        // Prefetch DiemCong đã có: dcKey -> DiemCong (để upsert)
         Map<String, DiemCong> dcExistingMap = new HashMap<>();
         List<DiemCong> allDc = diemCongBUS.getAllDiemCong().getData();
         if (allDc != null) {
@@ -781,121 +675,82 @@ public class ExcelImportBUS {
         List<DiemCong> updateBatch = new ArrayList<>();
 
         try (InputStream is = new FileInputStream(excelFile);
-             Workbook workbook = StreamingReader.builder()
-                     .rowCacheSize(100).bufferSize(4096).open(is)) {
+             Workbook workbook = StreamingReader.builder().rowCacheSize(100).bufferSize(4096).open(is)) {
 
-            Sheet sheet = workbook.getSheetAt(0); // sheet "ds thi sinh"
-            if (sheet == null) {
-                System.err.println("Không tìm thấy sheet 0 trong file ưu tiên xét tuyển.");
-                return;
-            }
-
+            Sheet sheet = workbook.getSheetAt(0);
+            int totalRows = sheet.getLastRowNum();
+            int current = 0;
             boolean isHeader = true;
+
             for (Row row : sheet) {
+                current++;
                 if (isHeader) { isHeader = false; continue; }
 
                 String cccd   = getStringValue(row.getCell(1));
-                String maMon  = getStringValue(row.getCell(4)).toUpperCase().trim(); // Cột E (index 4)
-                BigDecimal diemCoMon     = getBigDecimalValue(row.getCell(6)); // Cột G (index 6)
-                BigDecimal diemKhongCoMon = getBigDecimalValue(row.getCell(7)); // Cột H (index 7)
+                String maMon  = getStringValue(row.getCell(4)).toUpperCase().trim();
+                BigDecimal diemCoMon     = getBigDecimalValue(row.getCell(6));
+                BigDecimal diemKhongCoMon = getBigDecimalValue(row.getCell(7));
 
                 if (cccd.isEmpty()) continue;
-
                 ThiSinh2025 ts = thiSinhMap.get(cccd);
-                if (ts == null) {
-                    System.err.println("UT: Không tìm thấy thí sinh CCCD=" + cccd);
-                    continue;
-                }
+                if (ts == null) continue;
 
-                // Lấy tất cả nguyện vọng của thí sinh — tạo DiemCong cho từng phương thức riêng
                 List<NguyenVong> nvList = nvMap.getOrDefault(cccd, new ArrayList<>());
-                // Dedup theo (maNganh, maToHop, phuongThuc) để tránh insert trùng trong 1 lần chạy
                 Set<String> seenDcKey = new HashSet<>();
-
-//                List<NguyenVong> nvList = nvMap.getOrDefault(cccd, new ArrayList<>());
-//                Set<String> seenDcKey = new HashSet<>();
 
                 for (NguyenVong nv : nvList) {
                     if (nv.getNganh() == null) continue;
-                    
                     Nganh nganh = nv.getNganh();
                     String maNganh = nganh.getMaNganh();
                     String phuongThuc = nv.getPhuongThuc();
-                    if (phuongThuc == null) continue;
+                    if (phuongThuc == null || phuongThuc.toUpperCase().contains("DGNL")) continue;
 
-                    if (!isNganhAcceptsPhuongThuc(nganh, phuongThuc) ||
-                            phuongThuc.toUpperCase().contains("DGNL")) {
-                        continue;
-                    }
+                    if (!isNganhAcceptsPhuongThuc(nganh, phuongThuc)) continue;
 
-                    boolean isToHopMethod = (phuongThuc.toUpperCase().contains("THPT") 
-                            || phuongThuc.toUpperCase().contains("VSAT"));
+                    boolean isToHopMethod = (phuongThuc.toUpperCase().contains("THPT") || phuongThuc.toUpperCase().contains("VSAT"));
 
                     if (isToHopMethod) {
-                        // LUỒNG 1: Dùng tổ hợp -> Bung danh sách NganhToHop ra để tính điểm
                         List<NganhToHop> nthList = nganhToHopMap.getOrDefault(maNganh, new ArrayList<>());
-                        
                         for (NganhToHop nth : nthList) {
                             if (nth.getToHop() == null) continue;
-
                             boolean coMon = coMonTrongToHop(nth, maMon);
                             BigDecimal diemUtxt = coMon ? diemCoMon : diemKhongCoMon;
-
-                            if (diemUtxt.compareTo(BigDecimal.ZERO) == 0) {
-                                continue;
-                            }
+                            if (diemUtxt.compareTo(BigDecimal.ZERO) == 0) continue;
                             
-                            upsertDiemCong(ts, nganh, nth.getToHop(), phuongThuc, diemUtxt, 
-                                           dcExistingMap, insertBatch, updateBatch, seenDcKey);
+                            upsertDiemCong(ts, nganh, nth.getToHop(), phuongThuc, diemUtxt, dcExistingMap, insertBatch, updateBatch, seenDcKey);
                         }
                     } else {
-                        // LUỒNG 2: Không xài tổ hợp (ĐGNL, VSAT, Tuyển thẳng...)
-                        // Chỉ tạo ĐÚNG 1 DÒNG duy nhất, không nhân bản!
-                        BigDecimal diemUtxt = diemKhongCoMon; // Vì không có tổ hợp, mặc định lấy điểm không có môn đính kèm
-                        // Truyền ToHop = null
-                        if (diemUtxt.compareTo(BigDecimal.ZERO) == 0) {
-                            continue;
-                        }
-                        upsertDiemCong(ts, nganh, null, phuongThuc, diemUtxt, 
-                                       dcExistingMap, insertBatch, updateBatch, seenDcKey);
+                        BigDecimal diemUtxt = diemKhongCoMon;
+                        if (diemUtxt.compareTo(BigDecimal.ZERO) == 0) continue;
+                        upsertDiemCong(ts, nganh, null, phuongThuc, diemUtxt, dcExistingMap, insertBatch, updateBatch, seenDcKey);
                     }
+                }
+
+                if (insertBatch.size() >= BATCH_SIZE_V2) saveBatchAndClear(insertBatch, diemCongBUS::addListDiemCong);
+                if (updateBatch.size() >= BATCH_SIZE_V2) saveBatchAndClear(updateBatch, diemCongBUS::updateBatchDiemCong);
+
+                if (totalRows > 0 && callback != null) {
+                    callback.accept(start + (current * (end - start)) / totalRows);
                 }
             }
 
-            // Flush còn lại
             if (!insertBatch.isEmpty()) saveBatchAndClear(insertBatch, diemCongBUS::addListDiemCong);
             if (!updateBatch.isEmpty()) saveBatchAndClear(updateBatch, diemCongBUS::updateBatchDiemCong);
 
-            System.out.println("Import ưu tiên xét tuyển thành công!");
-
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Lỗi import ưu tiên xét tuyển: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException("Lỗi importUuTienXetTuyenV2: " + e.getMessage());
         }
     }
 
-    /**
-     * Import file Danh sách quy đổi điểm Tiếng Anh (sheet 0: import_xettuyen).
-     * Cột: B=CCCD, E=Điểm quy đổi (thang 10), F=Điểm cộng (diemCc).
-     *
-     * Logic:
-     * 1. Cập nhật n1Cc trên tất cả DiemThi của thí sinh đó (mọi phương thức)
-     * 2. Với mỗi nguyện vọng duy nhất của thí sinh → lấy tổ hợp môn của ngành
-     * 3. Với tổ hợp KHÔNG có môn TI (tiếng anh) → upsert DiemCong.diemCc = diemCongCc
-     *    - Đã có → cộng dồn nếu chưa có diemCc, hoặc cập nhật; tính lại diemTong
-     *    - Chưa có → tạo mới với diemCc
-     * 4. diemTong = min(diemUtxt + diemCc, 3.0)
-     */
     @Transactional
-    public void importQuyDoiTiengAnh(File excelFile) {
+    public void importQuyDoiTiengAnhV2(File excelFile, Consumer<Integer> callback, int start, int end) {
         DiemCongBUS diemCongBUS = diemCongBUSProvider.get();
         DiemThiBUS diemThiBUS = diemThiBUSProvider.get();
         NguyenVongBUS nguyenVongBUS = nguyenVongBUSProvider.get();
         NganhToHopBUS nganhToHopBUS = nganhToHopBUSProvider.get();
         ThiSinh2025BUS thiSinhBUS = thiSinhBUSProvider.get();
 
-        // Prefetch thí sinh
         Map<String, ThiSinh2025> thiSinhMap = new HashMap<>();
         List<ThiSinh2025> allThiSinh = thiSinhBUS.getAllThiSinh().getData();
         if (allThiSinh != null) {
@@ -904,19 +759,16 @@ public class ExcelImportBUS {
             }
         }
 
-        // Prefetch DiemThi: cccd -> List<DiemThi> (cần update n1Cc)
         Map<String, List<DiemThi>> diemThiMap = new HashMap<>();
         List<DiemThi> allDiemThi = diemThiBUS.getAllDiemThi().getData();
         if (allDiemThi != null) {
             for (DiemThi dt : allDiemThi) {
                 String cccd = dt.getThiSinh() != null ? dt.getThiSinh().getCccd() : null;
-                if (cccd == null) continue;
-                if (dt.getNl1() != null) continue;
+                if (cccd == null || dt.getNl1() != null) continue;
                 diemThiMap.computeIfAbsent(cccd, k -> new ArrayList<>()).add(dt);
             }
         }
 
-        // Prefetch nguyện vọng
         Map<String, List<NguyenVong>> nvMap = new HashMap<>();
         List<NguyenVong> allNv = nguyenVongBUS.getAllNguyenVong().getData();
         if (allNv != null) {
@@ -927,7 +779,6 @@ public class ExcelImportBUS {
             }
         }
 
-        // Prefetch NganhToHop
         Map<String, List<NganhToHop>> nganhToHopMap = new HashMap<>();
         List<NganhToHop> allNth = nganhToHopBUS.getAllNganhToHop().getData();
         if (allNth != null) {
@@ -938,7 +789,6 @@ public class ExcelImportBUS {
             }
         }
 
-        // Prefetch DiemCong đã có
         Map<String, DiemCong> dcExistingMap = new HashMap<>();
         List<DiemCong> allDc = diemCongBUS.getAllDiemCong().getData();
         if (allDc != null) {
@@ -952,42 +802,34 @@ public class ExcelImportBUS {
         List<DiemCong> dcUpdateBatch = new ArrayList<>();
 
         try (InputStream is = new FileInputStream(excelFile);
-             Workbook workbook = StreamingReader.builder()
-                     .rowCacheSize(100).bufferSize(4096).open(is)) {
+             Workbook workbook = StreamingReader.builder().rowCacheSize(100).bufferSize(4096).open(is)) {
 
-            Sheet sheet = workbook.getSheetAt(0); // sheet "import_xettuyen"
-            if (sheet == null) {
-                System.err.println("Không tìm thấy sheet 0 trong file quy đổi tiếng Anh.");
-                return;
-            }
-
+            Sheet sheet = workbook.getSheetAt(0);
+            int totalRows = sheet.getLastRowNum();
+            int current = 0;
             boolean isHeader = true;
+
             for (Row row : sheet) {
+                current++;
                 if (isHeader) { isHeader = false; continue; }
 
                 String cccd        = getStringValue(row.getCell(1));
-                BigDecimal diemQuyDoi = getBigDecimalValue(row.getCell(4)); // Cột E: Điểm quy đổi
-                BigDecimal diemCongCc = getBigDecimalValue(row.getCell(5)); // Cột F: Điểm cộng
+                BigDecimal diemQuyDoi = getBigDecimalValue(row.getCell(4));
+                BigDecimal diemCongCc = getBigDecimalValue(row.getCell(5));
 
                 if (cccd.isEmpty()) continue;
-
                 ThiSinh2025 ts = thiSinhMap.get(cccd);
-                if (ts == null) {
-                    System.err.println("CC: Không tìm thấy thí sinh CCCD=" + cccd);
-                    continue;
-                }
+                if (ts == null) continue;
 
-                // 1. Cập nhật n1Cc trên tất cả DiemThi của thí sinh
                 List<DiemThi> dtList = diemThiMap.getOrDefault(cccd, new ArrayList<>());
                 for (DiemThi dt : dtList) {
                     dt.setN1Cc(diemQuyDoi);
                     diemThiUpdateBatch.add(dt);
-                    if (diemThiUpdateBatch.size() >= BATCH_SIZE) {
-                        flushDiemThiUpdate(diemThiUpdateBatch, diemThiBUS);
+                    if (diemThiUpdateBatch.size() >= BATCH_SIZE_V2) {
+                        flushDiemThiUpdateV2(diemThiUpdateBatch, diemThiBUS);
                     }
                 }
 
-                // 2. Lấy nguyện vọng duy nhất (dedup theo thuTu+maNganh)
                 List<NguyenVong> nvList = nvMap.getOrDefault(cccd, new ArrayList<>());
                 Set<String> seenDcKey = new HashSet<>();
 
@@ -997,15 +839,9 @@ public class ExcelImportBUS {
                     String phuongThuc = nv.getPhuongThuc();
                     if (phuongThuc == null) continue;
 
-                    String ptUpper = phuongThuc.toUpperCase();
-                    
-                    // Phân loại phương thức: ĐGNL không dùng tổ hợp
-                    boolean isDgnl = ptUpper.contains("DGNL") || ptUpper.contains("ĐGNL");
+                    boolean isDgnl = phuongThuc.toUpperCase().contains("DGNL") || phuongThuc.toUpperCase().contains("ĐGNL");
 
                     if (isDgnl) {
-                        // ==========================================
-                        // LUỒNG 1: DGNL (Chỉ tạo 1 dòng, ToHop = null, maToHop = "NONE")
-                        // ==========================================
                         String dcKey = cccd + "_" + maNganh + "_NONE_" + phuongThuc;
                         if (!seenDcKey.add(dcKey)) continue;
 
@@ -1018,9 +854,8 @@ public class ExcelImportBUS {
                             DiemCong dc = new DiemCong();
                             dc.setThiSinh(ts);
                             dc.setNganh(nv.getNganh());
-                            dc.setToHop(null); // Ép null cho cột matohop
+                            dc.setToHop(null);
                             dc.setPhuongThuc(phuongThuc);
-                            dc.setDiemUtxt(null);
                             dc.setDiemCc(diemCongCc);
                             dc.setDiemTong(tinhDiemTong(null, diemCongCc));
                             dc.setDcKey(dcKey);
@@ -1028,16 +863,10 @@ public class ExcelImportBUS {
                             dcExistingMap.put(dcKey, dc);
                         }
                     } else {
-                        // ==========================================
-                        // LUỒNG 2: THPT (Quét các tổ hợp của ngành)
-                        // ==========================================
                         List<NganhToHop> nthList = nganhToHopMap.getOrDefault(maNganh, new ArrayList<>());
                         for (NganhToHop nth : nthList) {
                             if (nth.getToHop() == null) continue;
-
-                            // Chỉ áp dụng cho tổ hợp KHÔNG có môn Ngoại ngữ/Tiếng Anh (N1)
-                            Boolean coN1 = nth.getN1();
-                            if (Boolean.TRUE.equals(coN1)) continue;
+                            if (Boolean.TRUE.equals(nth.getN1())) continue;
 
                             String maToHop = nth.getToHop().getMaToHop();
                             String dcKey = cccd + "_" + maNganh + "_" + maToHop + "_" + phuongThuc;
@@ -1052,9 +881,8 @@ public class ExcelImportBUS {
                                 DiemCong dc = new DiemCong();
                                 dc.setThiSinh(ts);
                                 dc.setNganh(nv.getNganh());
-                                dc.setToHop(nth.getToHop()); // Gắn tổ hợp vào
+                                dc.setToHop(nth.getToHop());
                                 dc.setPhuongThuc(phuongThuc);
-                                dc.setDiemUtxt(null);
                                 dc.setDiemCc(diemCongCc);
                                 dc.setDiemTong(tinhDiemTong(null, diemCongCc));
                                 dc.setDcKey(dcKey);
@@ -1064,99 +892,89 @@ public class ExcelImportBUS {
                         }
                     }
 
-                    // Flush batch (giữ nguyên logic của bạn)
-                    if (dcInsertBatch.size() >= BATCH_SIZE) {
-                        saveBatchAndClear(dcInsertBatch, diemCongBUS::addListDiemCong);
-                    }
-                    if (dcUpdateBatch.size() >= BATCH_SIZE) {
-                        saveBatchAndClear(dcUpdateBatch, diemCongBUS::updateBatchDiemCong);
-                    }
+                    if (dcInsertBatch.size() >= BATCH_SIZE_V2) saveBatchAndClear(dcInsertBatch, diemCongBUS::addListDiemCong);
+                    if (dcUpdateBatch.size() >= BATCH_SIZE_V2) saveBatchAndClear(dcUpdateBatch, diemCongBUS::updateBatchDiemCong);
+                }
+
+                if (totalRows > 0 && callback != null) {
+                    callback.accept(start + (current * (end - start)) / totalRows);
                 }
             }
 
-            // Flush còn lại
-            if (!diemThiUpdateBatch.isEmpty()) flushDiemThiUpdate(diemThiUpdateBatch, diemThiBUS);
+            if (!diemThiUpdateBatch.isEmpty()) flushDiemThiUpdateV2(diemThiUpdateBatch, diemThiBUS);
             if (!dcInsertBatch.isEmpty()) saveBatchAndClear(dcInsertBatch, diemCongBUS::addListDiemCong);
             if (!dcUpdateBatch.isEmpty()) saveBatchAndClear(dcUpdateBatch, diemCongBUS::updateBatchDiemCong);
 
-            System.out.println("Import quy đổi điểm Tiếng Anh thành công!");
-
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Lỗi import quy đổi Tiếng Anh: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-    
-    //Check xem ngành có xét pt này khi import nguyện vọng hay ko
-    private boolean kiemTraNganhCoXetPhuongThuc(Nganh ng, String phuongthuc){
-        if (ng == null || phuongthuc == null) return false;
-        
-        String pt = phuongthuc.trim().toUpperCase();
-        
-        switch (pt) {
-            case "THPT":
-                return Boolean.TRUE.equals(ng.getThpt());
-            case "DGNL":
-                return Boolean.TRUE.equals(ng.getDgnl());
-            case "VSAT":
-                return Boolean.TRUE.equals(ng.getVsat());
-            case "XTT":
-                return Boolean.TRUE.equals(ng.getTuyenThang());
-            default:
-                return false;
+            throw new RuntimeException("Lỗi importQuyDoiTiengAnhV2: " + e.getMessage());
         }
     }
 
-    /** Kiểm tra tổ hợp môn có chứa mã môn đạt giải không */
-    private boolean coMonTrongToHop(NganhToHop nth, String maMon) {
-        if (maMon == null || maMon.isEmpty()) return false;
-        switch (maMon) {
-            case "TO":   return Boolean.TRUE.equals(nth.getTo());
-            case "LI":   return Boolean.TRUE.equals(nth.getLi());
-            case "HO":   return Boolean.TRUE.equals(nth.getHo());
-            case "SI":   return Boolean.TRUE.equals(nth.getSi());
-            case "SU":   return Boolean.TRUE.equals(nth.getSu());
-            case "DI":   return Boolean.TRUE.equals(nth.getDi());
-            case "VA":   return Boolean.TRUE.equals(nth.getVa());
-            case "N1":   return Boolean.TRUE.equals(nth.getN1());
-            case "TI":   return Boolean.TRUE.equals(nth.getTi());
-            case "KTPL": return Boolean.TRUE.equals(nth.getKtpl());
-            case "KHAC": return false; // Môn khác không thuộc tổ hợp nào → luôn dùng mức thấp hơn
-            default:     return false;
-        }
-    }
-
-    /** Tính diemTong = min(diemUtxt + diemCc, 3.0); null coi là 0 */
-    private BigDecimal tinhDiemTong(BigDecimal diemUtxt, BigDecimal diemCc) {
-        BigDecimal tong = BigDecimal.ZERO;
-        if (diemUtxt != null) tong = tong.add(diemUtxt);
-        if (diemCc   != null) tong = tong.add(diemCc);
-        BigDecimal max = new BigDecimal("3.00");
-        return tong.compareTo(max) > 0 ? max : tong;
-    }
-
-    /** Flush batch update DiemThi (dùng merge từng cái qua BUS) */
-    private void flushDiemThiUpdate(List<DiemThi> batch, DiemThiBUS diemThiBUS) {
+    private void flushDiemThiUpdateV2(List<DiemThi> batch, DiemThiBUS diemThiBUS) {
         for (DiemThi dt : batch) {
             diemThiBUS.updateDiemThi(dt);
         }
         batch.clear();
     }
 
-  
-    /**
-     * Hàm Generic Import bảng
-     * @param <T> Kiểu dữ liệu của bảng
-     */
     private <T> void saveBatchAndClear(List<T> batch, Consumer<List<T>> saver) {
         if (batch != null && !batch.isEmpty()) {
             saver.accept(batch);
             batch.clear();
+            
+            EntityManager em = entityManagerProvider.get();
+            if (em != null) {
+                em.flush(); 
+                em.clear(); 
+            }
         }
     }
-    
-    
+
+    // =========================================================================
+    // CÁC HÀM HELPER KHÁC NẰM Ở LỚP CHA TRƯỚC ĐÓ
+    // =========================================================================
+
+    private String safeFileName(File file) {
+        if (file == null) return "(null)";
+        String name = file.getName();
+        return name != null ? name : file.getPath();
+    }
+
+    private boolean hasAnyNganh(NganhBUS nganhBUS) {
+        BUSResult<List<Nganh>> result = nganhBUS.getAllNganh();
+        return result != null && result.isSuccess() && result.getData() != null && !result.getData().isEmpty();
+    }
+
+    private String getStringValue(org.apache.poi.ss.usermodel.Cell cell) {
+        if (cell == null) return "";
+        return cell.getStringCellValue() != null ? cell.getStringCellValue().trim() : "";
+    }
+
+    private BigDecimal getBigDecimalValue(org.apache.poi.ss.usermodel.Cell cell) {
+        if (cell == null) return null;
+        try {
+            String val = cell.getStringCellValue().trim();
+            if (val.isEmpty()) return null;
+            return new BigDecimal(val);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Integer getIntegerValue(org.apache.poi.ss.usermodel.Cell cell) {
+        if (cell == null) return 0;
+        try {
+            return (int) cell.getNumericCellValue();
+        } catch (Exception e) {
+            try {
+                return Integer.parseInt(cell.getStringCellValue().trim());
+            } catch (Exception ex) {
+                return 0;
+            }
+        }
+    }
+
     private ThiSinh2025 buildThiSinhFromRow(Row row) {
         DateTimeFormatter passwordFormatter = DateTimeFormatter.ofPattern("ddMMyyyy");
         ThiSinh2025 ts = new ThiSinh2025();
@@ -1174,7 +992,7 @@ public class ExcelImportBUS {
         ts.setNoiSinh(getStringValue(row.getCell(35)));
         return ts;
     }
-    
+
     private DiemThi buildDiemThiFromRow(Row row, ThiSinh2025 ts) {
         DiemThi dt = new DiemThi();
         dt.setThiSinh(ts);
@@ -1199,8 +1017,7 @@ public class ExcelImportBUS {
         dt.setPhuongThuc(PHUONGTHUC.PT[4]);
         return dt;
     }
-    
-//  File Chi_tieu_2025
+
     private void fillNganhInfo1(Nganh ng, Row row) {
         String maNganh = getStringValue(row.getCell(1));
         int chiTieu = getIntegerValue(row.getCell(3));
@@ -1225,109 +1042,35 @@ public class ExcelImportBUS {
             ng.setSlThpt(phanBo.get("PT4"));
         }
     }
-    
-//  File Nguong_dau_vao_2025
+
     private void fillNganhInfo2(Nganh ng, Row row) {
         BigDecimal diemSan = getBigDecimalValue(row.getCell(3));
         ng.setDiemSan(diemSan);
         ng.setDiemTrungTuyen(diemSan);
     }
 
-    private String buildTenToHop(String mon1, String mon2, String mon3) {
-        java.util.List<String> dsMon = new java.util.ArrayList<>();
-        
-        if (mon1 != null && !mon1.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon1));
-        if (mon2 != null && !mon2.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon2));
-        if (mon3 != null && !mon3.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon3));
-        
-        return String.join(", ", dsMon);
-    }
-    
-    private NganhToHop buildNganhToHop(Nganh ng, ToHop th, ToHopData parsedData, BigDecimal doLech) {
-        NganhToHop nth = new NganhToHop();
-        
-        // Truyền thẳng Object có sẵn trên RAM vào
-        nth.setNganh(ng);
-        nth.setToHop(th);
-
-        // Gán các hệ số môn
-        nth.setHsMon1(parsedData.hs1);
-        nth.setHsMon2(parsedData.hs2);
-        nth.setHsMon3(parsedData.hs3);
-
-        // Gán độ lệch
-        nth.setDoLech(doLech);
-
-        // Bật Cờ
-        setMonHocFlags(nth, parsedData);
-
-        nth.setTbKey(ng.getMaNganh() + "_" + th.getMaToHop()); 
-
-        return nth;
-    }
-
-    
-    private String getStringValue(org.apache.poi.ss.usermodel.Cell cell) {
-        if (cell == null) return "";
-        return cell.getStringCellValue() != null ? cell.getStringCellValue().trim() : "";
-    }
-
-    private BigDecimal getBigDecimalValue(org.apache.poi.ss.usermodel.Cell cell) {
-        if (cell == null) return null;
-        try {
-            String val = cell.getStringCellValue().trim();
-            if (val.isEmpty()) return null;
-            return new BigDecimal(val);
-        } catch (Exception e) {
-            return null; // Trả về null nếu ô trống hoặc lỗi định dạng số
-        }
-    }
-    
-    private Integer getIntegerValue(org.apache.poi.ss.usermodel.Cell cell) {
-        if (cell == null) return 0;
-        try {
-            return (int) cell.getNumericCellValue();
-        } catch (Exception e) {
-            try {
-                return Integer.parseInt(cell.getStringCellValue().trim());
-            } catch (Exception ex) {
-                return 0; // Hoặc trả về null tuỳ nghiệp vụ
-            }
-        }
-    }
-    
     private ToHopData parseToHopString(String input) {
         ToHopData data = new ToHopData();
-
-        if (input == null || input.trim().isEmpty()) {
-            return data;
-        }
+        if (input == null || input.trim().isEmpty()) return data;
 
         if (input.contains("(")) {
             int openIdx = input.indexOf('(');
             int closeIdx = input.indexOf(')');
-            
-            // Lấy Mã Tổ hợp
             data.maToHop = input.substring(0, openIdx).trim();
 
             if (closeIdx > openIdx) {
-                // Lấy phần ruột: "TO-3,VA-3,SI-1"
                 String innerStr = input.substring(openIdx + 1, closeIdx);
                 String[] subjects = innerStr.split(",");
-
-                // Môn 1
                 if (subjects.length > 0) {
                     String[] parts = subjects[0].split("-");
                     data.mon1 = parts[0].trim();
                     if (parts.length > 1) data.hs1 = Integer.parseInt(parts[1].trim());
                 }
-                // Môn 2
                 if (subjects.length > 1) {
                     String[] parts = subjects[1].split("-");
                     data.mon2 = parts[0].trim();
                     if (parts.length > 1) data.hs2 = Integer.parseInt(parts[1].trim());
                 }
-                // Môn 3
                 if (subjects.length > 2) {
                     String[] parts = subjects[2].split("-");
                     data.mon3 = parts[0].trim();
@@ -1335,78 +1078,119 @@ public class ExcelImportBUS {
                 }
             }
         } else {
-            // Trường hợp không có ngoặc, toàn bộ là mã tổ hợp
             data.maToHop = input.trim();
         }
-
         return data;
     }
-    
-    private void setMonHocFlags(NganhToHop nth, ToHopData data) {
-        // Gộp 3 môn lại thành 1 chuỗi để check (VD: "TO VA SI")
-        String dsMon = (data.mon1 + " " + data.mon2 + " " + data.mon3).toUpperCase();
 
-        if (dsMon.contains("TO"))   nth.setTo(true);
-        if (dsMon.contains("VA"))   nth.setVa(true);
-        if (dsMon.contains("LI"))   nth.setLi(true);
-        if (dsMon.contains("HO"))   nth.setHo(true);
-        if (dsMon.contains("SI"))   nth.setSi(true);
-        if (dsMon.contains("SU"))   nth.setSu(true);
-        if (dsMon.contains("DI"))   nth.setDi(true);
-        if (dsMon.contains("TI"))   nth.setTi(true);
+    private String buildTenToHop(String mon1, String mon2, String mon3) {
+        List<String> dsMon = new ArrayList<>();
+        if (mon1 != null && !mon1.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon1));
+        if (mon2 != null && !mon2.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon2));
+        if (mon3 != null && !mon3.trim().isEmpty()) dsMon.add(TenMonUtil.getTenMon(mon3));
+        return String.join(", ", dsMon);
+    }
+
+    private NganhToHop buildNganhToHop(Nganh ng, ToHop th, ToHopData parsedData, BigDecimal doLech) {
+        NganhToHop nth = new NganhToHop();
+        nth.setNganh(ng);
+        nth.setToHop(th);
+        nth.setHsMon1(parsedData.hs1);
+        nth.setHsMon2(parsedData.hs2);
+        nth.setHsMon3(parsedData.hs3);
+        nth.setDoLech(doLech);
+        setMonHocFlags(nth, parsedData);
+        nth.setTbKey(ng.getMaNganh() + "_" + th.getMaToHop()); 
+        return nth;
+    }
+
+    private void setMonHocFlags(NganhToHop nth, ToHopData data) {
+        String dsMon = (data.mon1 + " " + data.mon2 + " " + data.mon3).toUpperCase();
+        if (dsMon.contains("TO"))    nth.setTo(true);
+        if (dsMon.contains("VA"))    nth.setVa(true);
+        if (dsMon.contains("LI"))    nth.setLi(true);
+        if (dsMon.contains("HO"))    nth.setHo(true);
+        if (dsMon.contains("SI"))    nth.setSi(true);
+        if (dsMon.contains("SU"))    nth.setSu(true);
+        if (dsMon.contains("DI"))    nth.setDi(true);
+        if (dsMon.contains("TI"))    nth.setTi(true);
         if (dsMon.contains("KTPL")) nth.setKtpl(true);
-        if (dsMon.contains("N1"))   nth.setN1(true);   // Ngoại ngữ (D01, D14...)
-        // NK1..NK6, CNCN, CNNN → đánh cờ "khác"
+        if (dsMon.contains("N1"))    nth.setN1(true);
         if (dsMon.contains("NK") || dsMon.contains("CNCN") || dsMon.contains("CNNN")) {
             nth.setKhac(true);
         }
     }
-    
-    /**
-     * Hàm helper 1: Kiểm tra xem Ngành có bật cờ (flag 1) cho phương thức tương ứng không
-     */
+
+    private boolean kiemTraNganhCoXetPhuongThuc(Nganh ng, String phuongthuc){
+        if (ng == null || phuongthuc == null) return false;
+        String pt = phuongthuc.trim().toUpperCase();
+        switch (pt) {
+            case "THPT": return Boolean.TRUE.equals(ng.getThpt());
+            case "DGNL": return Boolean.TRUE.equals(ng.getDgnl());
+            case "VSAT": return Boolean.TRUE.equals(ng.getVsat());
+            case "XTT":  return Boolean.TRUE.equals(ng.getTuyenThang());
+            default:     return false;
+        }
+    }
+
     private boolean isNganhAcceptsPhuongThuc(Nganh nganh, String phuongThuc) {
         String pt = phuongThuc.toUpperCase();
-        
-        // Dựa vào các cột thpt, dgnl, vsat, tuyenthang trong bảng nganh của bạn
         if (pt.contains("THPT")) {
-            return nganh.getThpt() != null && nganh.getThpt() == true;
+            return nganh.getThpt() != null && nganh.getThpt();
         } else if (pt.contains("DGNL") || pt.contains("ĐGNL")) {
-            return nganh.getDgnl() != null && nganh.getDgnl() == true;
+            return nganh.getDgnl() != null && nganh.getDgnl();
         } else if (pt.contains("VSAT") || pt.contains("V-SAT")) {
-            return nganh.getVsat() != null && nganh.getVsat() == true;
+            return nganh.getVsat() != null && nganh.getVsat();
         } else if (pt.contains("TUYỂN THẲNG") || pt.contains("XTT")) {
-            return nganh.getTuyenThang()!= null && nganh.getTuyenThang()== true;
+            return nganh.getTuyenThang() != null && nganh.getTuyenThang();
         }
-        
-        // Trả về false nếu gặp phương thức lạ
         return false;
     }
 
-    /**
-     * Hàm helper 2: Tối ưu khối code Insert/Update tránh lặp lại
-     */
+    private boolean coMonTrongToHop(NganhToHop nth, String maMon) {
+        if (maMon == null || maMon.isEmpty()) return false;
+        switch (maMon) {
+            case "TO":   return Boolean.TRUE.equals(nth.getTo());
+            case "LI":   return Boolean.TRUE.equals(nth.getLi());
+            case "HO":   return Boolean.TRUE.equals(nth.getHo());
+            case "SI":   return Boolean.TRUE.equals(nth.getSi());
+            case "SU":   return Boolean.TRUE.equals(nth.getSu());
+            case "DI":   return Boolean.TRUE.equals(nth.getDi());
+            case "VA":   return Boolean.TRUE.equals(nth.getVa());
+            case "N1":   return Boolean.TRUE.equals(nth.getN1());
+            case "TI":   return Boolean.TRUE.equals(nth.getTi());
+            case "KTPL": return Boolean.TRUE.equals(nth.getKtpl());
+            default:     return false;
+        }
+    }
+
+    private BigDecimal tinhDiemTong(BigDecimal diemUtxt, BigDecimal diemCc) {
+        BigDecimal tong = BigDecimal.ZERO;
+        if (diemUtxt != null) tong = tong.add(diemUtxt);
+        if (diemCc   != null) tong = tong.add(diemCc);
+        BigDecimal max = new BigDecimal("3.00");
+        return tong.compareTo(max) > 0 ? max : tong;
+    }
+    
+    // VÁ LỖI: Thêm hàm helper này vào cuối class ExcelImportBUSV2
     private void upsertDiemCong(ThiSinh2025 ts, Nganh nganh, ToHop toHop, String phuongThuc,
                                 BigDecimal diemUtxt, Map<String, DiemCong> dcExistingMap,
                                 List<DiemCong> insertBatch, List<DiemCong> updateBatch, Set<String> seenDcKey) {
-
-        // Nếu phương thức không có tổ hợp (toHop == null), ta đặt mã là "NONE" để làm dc_key
         String maToHop = toHop != null ? toHop.getMaToHop() : "NONE";
         String dcKey = ts.getCccd() + "_" + nganh.getMaNganh() + "_" + maToHop + "_" + phuongThuc;
 
-        // Tránh trùng lặp trong cùng 1 lần duyệt file Excel
         if (!seenDcKey.add(dcKey)) return;
 
         DiemCong existing = dcExistingMap.get(dcKey);
         if (existing != null) {
             existing.setDiemUtxt(diemUtxt);
-            existing.setDiemTong(tinhDiemTong(diemUtxt, existing.getDiemCc())); // Giả sử bạn có hàm này
+            existing.setDiemTong(tinhDiemTong(diemUtxt, existing.getDiemCc()));
             updateBatch.add(existing);
         } else {
             DiemCong dc = new DiemCong();
             dc.setThiSinh(ts);
             dc.setNganh(nganh);
-            dc.setToHop(toHop); // Sẽ gán null nếu là ĐGNL/VSAT, DB varchar hoàn toàn cho phép
+            dc.setToHop(toHop);
             dc.setPhuongThuc(phuongThuc);
             dc.setDiemUtxt(diemUtxt);
             dc.setDiemCc(null);
@@ -1417,5 +1201,4 @@ public class ExcelImportBUS {
             dcExistingMap.put(dcKey, dc);
         }
     }
-    
 }

@@ -4,6 +4,7 @@
  */
 package com.sgu.admissor.gui.dialog;
 
+import com.sgu.admissor.util.WindowUtil;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -20,10 +21,10 @@ public class FileSelectionDialog extends JDialog {
     private boolean isConfirmed = false;
 
     public FileSelectionDialog(Window parent) {
-        super(parent, "Chọn các tệp dữ liệu", ModalityType.APPLICATION_MODAL);
+        super(WindowUtil.findMainWindow(), "Chọn các tệp dữ liệu", ModalityType.APPLICATION_MODAL);
         initLayout();
         pack();
-        setLocationRelativeTo(parent);
+        setLocationRelativeTo(getOwner());
     }
 
     private void initLayout() {

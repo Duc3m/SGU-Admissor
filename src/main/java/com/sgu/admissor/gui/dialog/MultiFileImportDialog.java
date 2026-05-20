@@ -1,10 +1,11 @@
 package com.sgu.admissor.gui.dialog;
 
-import com.sgu.admissor.bus.ExcelImportBUS;
+import com.sgu.admissor.bus.ExcelImportBUSV2;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.util.ExcelFileClassifier;
 import com.sgu.admissor.util.ExcelFileClassifier.ClassificationResult;
 import com.sgu.admissor.util.ExcelFileClassifier.FileType;
+import com.sgu.admissor.util.WindowUtil;
 import net.miginfocom.swing.MigLayout;
 
 import jakarta.inject.Inject;
@@ -23,23 +24,22 @@ import java.util.Map;
 
 public class MultiFileImportDialog extends JDialog {
     private static final int EXPECTED_FILE_COUNT = 8;
-
-    private final ExcelImportBUS excelImportBUS;
+    
+    private final ExcelImportBUSV2 excelImportBUSV2;
     private JTextArea txtFiles;
     private JLabel lblCount;
     private final Map<String, File> selectedFiles = new LinkedHashMap<>();
     private BUSResult lastResult;
-    private JDialog loadingDialog;
-    private SwingWorker<BUSResult, Void> importWorker;
+    private LoadingDialog loadingDialog;
 
     @Inject
-    public MultiFileImportDialog(ExcelImportBUS excelImportBUS) {
-        super((Window) null, "Import dữ liệu xét tuyển", ModalityType.APPLICATION_MODAL);
-        this.excelImportBUS = excelImportBUS;
+    public MultiFileImportDialog(ExcelImportBUSV2 excelImportBUSV2) {
+        super(WindowUtil.findMainWindow(), "Import dữ liệu xét tuyển", ModalityType.APPLICATION_MODAL);
+        this.excelImportBUSV2 = excelImportBUSV2;
         initLayout();
         pack();
         setMinimumSize(new Dimension(640, 420));
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(getOwner());
     }
 
     private void initLayout() {
@@ -127,78 +127,61 @@ public class MultiFileImportDialog extends JDialog {
             return;
         }
 
-        if (importWorker != null) {
-            return;
-        }
-
-        importWorker = new SwingWorker<>() {
+        SwingWorker<BUSResult, Integer> worker = new SwingWorker<BUSResult, Integer>() {
             @Override
-            protected BUSResult doInBackground() {
-                return excelImportBUS.importFromFiles(selectedFiles.values().toArray(new File[0]));
+            protected BUSResult doInBackground() throws Exception {
+                try {
+                    File[] filesArray = selectedFiles.values().toArray(new File[0]);
+
+                    return excelImportBUSV2.importFromFilesV2(filesArray,
+                        progress -> {
+                            publish(progress);
+                    });
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    return BUSResult.error("Lỗi hệ thống: " + t.getMessage());
+                }
+            }
+
+            @Override
+            protected void process(List<Integer> chunks) {
+                int latestProgress = chunks.get(chunks.size() - 1);
+
+                if (loadingDialog != null) {
+                    loadingDialog.updateProgress(latestProgress);
+                }
             }
 
             @Override
             protected void done() {
-                hideLoading();
-                importWorker = null;
                 try {
-                    BUSResult result = get();
-                    if (result == null || !result.isSuccess()) {
-                        lastResult = result != null ? result : BUSResult.error("Import thất bại");
-                        String message = result != null ? result.getMessage() : "Import thất bại.";
-                        showMessage("Import thất bại", List.of(message), JOptionPane.ERROR_MESSAGE);
-                        return;
+                    lastResult = get(); // Lấy kết quả trả về từ hàm doInBackground
+                    if (loadingDialog != null) {
+                        loadingDialog.dispose(); 
+                        loadingDialog = null;
                     }
 
-                    lastResult = result;
-
-                    List<String> warnings = new ArrayList<>();
-                    Object data = result.getData();
-                    if (data instanceof List<?>) {
-                        for (Object item : (List<?>) data) {
-                            if (item != null) {
-                                warnings.add(item.toString());
-                            }
-                        }
-                    }
-
-                    if (warnings.isEmpty()) {
-                        JOptionPane.showMessageDialog(MultiFileImportDialog.this, result.getMessage(), "Import thành công", JOptionPane.INFORMATION_MESSAGE);
+                    if (lastResult != null && lastResult.isSuccess()) {
+                        JOptionPane.showMessageDialog(MultiFileImportDialog.this, 
+                                lastResult.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                        dispose();
                     } else {
-                        showMessage(result.getMessage(), warnings, JOptionPane.INFORMATION_MESSAGE);
+                        String errorMsg = (lastResult != null) ? lastResult.getMessage() : "Lỗi không xác định";
+                        JOptionPane.showMessageDialog(MultiFileImportDialog.this, 
+                                errorMsg, "Thất bại", JOptionPane.ERROR_MESSAGE);
                     }
-                    dispose();
-                } catch (Exception ex) {
-                    lastResult = BUSResult.error("Import thất bại");
-                    showMessage("Import thất bại", List.of("Lỗi khi import: " + ex.getMessage()), JOptionPane.ERROR_MESSAGE);
+                } catch (Exception e) {
+                    if (loadingDialog != null) loadingDialog.dispose();
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(MultiFileImportDialog.this, 
+                            "Có lỗi xảy ra: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
-        importWorker.execute();
-        showLoading();
-    }
 
-    private void showLoading() {
-        if (loadingDialog != null) {
-            return;
-        }
-        loadingDialog = new JDialog(this, "Đang xử lý...", ModalityType.MODELESS);
-        JPanel loadingPanel = new JPanel(new MigLayout("insets 20", "[center]"));
-        loadingPanel.add(new JLabel("Hệ thống đang nạp dữ liệu từ Excel, vui lòng không tắt ứng dụng!"), "wrap");
-        JProgressBar progressBar = new JProgressBar();
-        progressBar.setIndeterminate(true);
-        loadingPanel.add(progressBar, "growx, w 320!");
-        loadingDialog.add(loadingPanel);
-        loadingDialog.pack();
-        loadingDialog.setLocationRelativeTo(this);
+        loadingDialog = new LoadingDialog(this, "Đang import dữ liệu tuyển sinh...");
         loadingDialog.setVisible(true);
-    }
-
-    private void hideLoading() {
-        if (loadingDialog != null) {
-            loadingDialog.dispose();
-            loadingDialog = null;
-        }
+        worker.execute();
     }
 
     public BUSResult showDialog(Window parent) {

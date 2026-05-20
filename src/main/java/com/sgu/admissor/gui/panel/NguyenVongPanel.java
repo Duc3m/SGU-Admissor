@@ -5,6 +5,8 @@
 package com.sgu.admissor.gui.panel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.sgu.admissor.auth.AuthSession;
+import com.sgu.admissor.bus.ExcelImportBUSV2;
 import com.sgu.admissor.bus.NganhToHopBUS;
 import com.sgu.admissor.bus.NguyenVongBUS;
 import com.sgu.admissor.bus.ToHopBUS;
@@ -13,6 +15,8 @@ import com.sgu.admissor.entity.NganhToHop;
 import com.sgu.admissor.entity.NguyenVong;
 import com.sgu.admissor.entity.ToHop;
 import com.sgu.admissor.gui.MainFrame;
+import com.sgu.admissor.util.ExcelFileClassifier;
+import com.sgu.admissor.util.ExcelImportHelper;
 import jakarta.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
@@ -26,6 +30,8 @@ public class NguyenVongPanel extends JPanel {
     private final NguyenVongBUS nguyenVongBUS;
     private final ToHopBUS toHopBUS;
     private final NganhToHopBUS nganhToHopBUS;
+    private final ExcelImportBUSV2 excelImportV2;
+    private final AuthSession authSession;
     
     // Các Component bộ lọc
     private JComboBox<String> cbTieuChi;
@@ -38,10 +44,13 @@ public class NguyenVongPanel extends JPanel {
     private JButton btnReload;
 
     @Inject
-    public NguyenVongPanel(NguyenVongBUS nguyenVongBUS, ToHopBUS toHopBUS, NganhToHopBUS nganhToHopBUS) {
+    public NguyenVongPanel(NguyenVongBUS nguyenVongBUS, ToHopBUS toHopBUS, NganhToHopBUS nganhToHopBUS,
+            ExcelImportBUSV2 excelImportV2, AuthSession authSession) {
         this.nguyenVongBUS = nguyenVongBUS;
         this.toHopBUS = toHopBUS;
         this.nganhToHopBUS = nganhToHopBUS;
+        this.excelImportV2 = excelImportV2;
+        this.authSession = authSession;
         
         initLayout();
         initPopupMenu();
@@ -75,9 +84,18 @@ public class NguyenVongPanel extends JPanel {
         btnAddNV.setFont(new Font("Segoe UI", Font.BOLD, 13));
         // btnAddNV.addActionListener(...) -> Khoan làm theo yêu cầu
 
+        JButton btnImport = new JButton("Import Nguyện vọng", new FlatSVGIcon("icons/excel.svg", 16, 16));
+        btnImport.setBackground(Color.decode("#10b981"));
+        btnImport.setForeground(Color.WHITE);
+        btnImport.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnImport.addActionListener(e -> { importExcelEvent(); });
+        
         topBar.add(btnBack);
-        topBar.add(new JLabel(""), "growx"); 
-        topBar.add(btnAddNV, "h 28!");
+        topBar.add(new JLabel(""), "growx");
+        if(authSession.isAdmin()) {
+           topBar.add(btnImport, "h 30!");        
+        }
+//        topBar.add(btnAddNV, "h 28!");
 
         // --- SIDE BAR (BỘ LỌC) ---
         JPanel filterPanel = new JPanel(new MigLayout("wrap 1, insets 20, gapy 12", "[fill]"));
@@ -108,7 +126,7 @@ public class NguyenVongPanel extends JPanel {
         // 3. Tổ hợp môn
         filterPanel.add(new JLabel("Tổ hợp môn:"));
         cbToHop = new JComboBox<>();
-        filterPanel.add(cbToHop);
+        filterPanel.add(cbToHop, "w 200!");
 
         // 4. Kết quả
         filterPanel.add(new JLabel("Kết quả xét tuyển:"));
@@ -177,15 +195,38 @@ public class NguyenVongPanel extends JPanel {
 
     private void loadFilterData() {
         cbToHop.addItem("Tất cả");
-        // Tái sử dụng ToHopBUS để đổ dữ liệu vào combobox
         if (toHopBUS != null) {
-            List<ToHop> listToHop = toHopBUS.getAllToHop().getData(); 
-            if(listToHop != null) {
-                 for (ToHop th : listToHop) {
-                    cbToHop.addItem(th.getMaToHop());
+            List<ToHop> listToHop = toHopBUS.getAllToHop().getData();
+            if (listToHop != null) {
+                for (ToHop toHop : listToHop) {
+                    if (toHop != null && toHop.getMaToHop() != null) {
+                        String maToHop = toHop.getMaToHop();
+                        String tenToHop = toHop.getTenToHop() != null ? toHop.getTenToHop() : "";
+                        if (!tenToHop.isEmpty()) {
+                            cbToHop.addItem(maToHop + " - " + tenToHop);
+                        } else {
+                            cbToHop.addItem(maToHop);
+                        }
+                    }
                 }
             }
         }
+    }
+    
+    private String parseMaToHop() {
+        Object selected = cbToHop.getSelectedItem();
+        if (selected == null) {
+            return "Tất cả";
+        }
+        String value = selected.toString().trim();
+        if (value.equals("Tất cả")) {
+            return "Tất cả";
+        }
+        int splitIndex = value.indexOf(" - ");
+        if (splitIndex > 0) {
+            return value.substring(0, splitIndex).trim();
+        }
+        return value;
     }
 
     private void loadData(int page) {
@@ -194,9 +235,8 @@ public class NguyenVongPanel extends JPanel {
         
         Object selPt = cbPhuongThuc.getSelectedItem();
         String phuongThuc = selPt != null ? selPt.toString() : "Tất cả";
-        
-        Object selTh = cbToHop.getSelectedItem();
-        String toHop = selTh != null ? selTh.toString() : "Tất cả";
+
+        String toHop = parseMaToHop();
         
         Object selKq = cbKetQua.getSelectedItem();
         String ketQua = selKq != null ? selKq.toString() : "Tất cả";
@@ -294,4 +334,7 @@ public class NguyenVongPanel extends JPanel {
         dialog.setVisible(true);
     }
 
+    public void importExcelEvent() {
+        ExcelImportHelper.importSingleExcel(this, excelImportV2, ExcelFileClassifier.FileType.NGUYEN_VONG, () -> loadData(1));
+    }
 }

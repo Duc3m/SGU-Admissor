@@ -5,12 +5,16 @@
 package com.sgu.admissor.gui.panel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.sgu.admissor.auth.AuthSession;
 import com.sgu.admissor.bus.DiemCongBUS;
+import com.sgu.admissor.bus.ExcelImportBUSV2;
 import com.sgu.admissor.bus.ToHopBUS;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.DiemCong;
 import com.sgu.admissor.entity.ToHop;
 import com.sgu.admissor.gui.MainFrame;
+import com.sgu.admissor.util.ExcelFileClassifier;
+import com.sgu.admissor.util.ExcelImportHelper;
 import jakarta.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
@@ -23,6 +27,8 @@ public class BangDiemPanel extends JPanel {
     
     private final DiemCongBUS diemCongBUS;
     private final ToHopBUS toHopBUS;
+    private final ExcelImportBUSV2 excelImportV2;
+    private final AuthSession authSession;
     
     // Các Component bộ lọc
     private JTextField txtSearchCCCD;
@@ -33,9 +39,13 @@ public class BangDiemPanel extends JPanel {
     private JButton btnReload;
 
     @Inject
-    public BangDiemPanel(DiemCongBUS diemCongBUS, ToHopBUS toHopBUS) {
+    public BangDiemPanel(DiemCongBUS diemCongBUS, ToHopBUS toHopBUS,
+            ExcelImportBUSV2 excelImportV2,
+            AuthSession authSession) {
         this.diemCongBUS = diemCongBUS;
         this.toHopBUS = toHopBUS;
+        this.excelImportV2 = excelImportV2;
+        this.authSession = authSession;
         
         initLayout();
         initPopupMenu();
@@ -61,8 +71,24 @@ public class BangDiemPanel extends JPanel {
                 mainFrame.backToDashboard();
             }
         });
+        
+        JButton btnImport = new JButton("Import Điểm Utxt", new FlatSVGIcon("icons/excel.svg", 16, 16));
+        btnImport.setBackground(Color.decode("#10b981"));
+        btnImport.setForeground(Color.WHITE);
+        btnImport.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnImport.addActionListener(e -> { importExcelEvent(); });
+        
+        JButton btnImport2 = new JButton("Import Điểm QĐTA", new FlatSVGIcon("icons/excel.svg", 16, 16));
+        btnImport2.setBackground(Color.decode("#10b981"));
+        btnImport2.setForeground(Color.WHITE);
+        btnImport2.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnImport2.addActionListener(e -> { importExcelEvent2(); });
 
         topBar.add(btnBack);
+        if(authSession.isAdmin()) {
+            topBar.add(btnImport, "h 30!");
+            topBar.add(btnImport2, "h 30!");
+        }
         topBar.add(new JLabel(""), "growx"); 
 
         // --- SIDE BAR (BỘ LỌC) ---
@@ -84,7 +110,7 @@ public class BangDiemPanel extends JPanel {
         // 2. Tổ hợp môn và phương thức
         filterPanel.add(new JLabel("Tổ hợp môn:"));
         cbToHop = new JComboBox<>();
-        filterPanel.add(cbToHop);
+        filterPanel.add(cbToHop, "w 200!");
         
         filterPanel.add(new JLabel("Phương thức:"));
         cbPhuongThuc = new JComboBox<>(new String[]{"Tất cả", "THPT", "ĐGNL", "VSAT", "Tuyển thẳng"});
@@ -143,18 +169,42 @@ public class BangDiemPanel extends JPanel {
     private void loadFilterData() {
         cbToHop.addItem("Tất cả");
         if (toHopBUS != null) {
-            List<ToHop> listToHop = toHopBUS.getAllToHop().getData(); 
-            if(listToHop != null) {
-                 for (ToHop th : listToHop) {
-                    cbToHop.addItem(th.getMaToHop());
+            List<ToHop> listToHop = toHopBUS.getAllToHop().getData();
+            if (listToHop != null) {
+                for (ToHop toHop : listToHop) {
+                    if (toHop != null && toHop.getMaToHop() != null) {
+                        String maToHop = toHop.getMaToHop();
+                        String tenToHop = toHop.getTenToHop() != null ? toHop.getTenToHop() : "";
+                        if (!tenToHop.isEmpty()) {
+                            cbToHop.addItem(maToHop + " - " + tenToHop);
+                        } else {
+                            cbToHop.addItem(maToHop);
+                        }
+                    }
                 }
             }
         }
     }
+    
+    private String parseMaToHop() {
+        Object selected = cbToHop.getSelectedItem();
+        if (selected == null) {
+            return "Tất cả";
+        }
+        String value = selected.toString().trim();
+        if (value.equals("Tất cả")) {
+            return "Tất cả";
+        }
+        int splitIndex = value.indexOf(" - ");
+        if (splitIndex > 0) {
+            return value.substring(0, splitIndex).trim();
+        }
+        return value;
+    }
 
     private void loadData(int page) {
         String cccd = txtSearchCCCD.getText().trim();
-        String toHop = cbToHop.getSelectedItem() != null ? cbToHop.getSelectedItem().toString() : "Tất cả";
+        String toHop = parseMaToHop();
         String phuongThuc = cbPhuongThuc.getSelectedItem() != null ? cbPhuongThuc.getSelectedItem().toString() : "Tất cả";
         
         int totalRecords = diemCongBUS.countDistinctCccd(cccd, toHop, phuongThuc);
@@ -239,5 +289,13 @@ public class BangDiemPanel extends JPanel {
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
+    }
+    
+    public void importExcelEvent() {
+        ExcelImportHelper.importSingleExcel(this, excelImportV2, ExcelFileClassifier.FileType.UU_TIEN_XET_TUYEN, () -> loadData(1));
+    }
+    
+    public void importExcelEvent2() {
+        ExcelImportHelper.importSingleExcel(this, excelImportV2, ExcelFileClassifier.FileType.QUY_DOI_TIENG_ANH, () -> loadData(1));
     }
 }
