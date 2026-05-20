@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.sgu.admissor.auth.AuthSession;
 import com.sgu.admissor.bus.UserBUS;
 import com.sgu.admissor.dto.BUSResult;
+import com.sgu.admissor.util.WindowUtil;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.Window;
@@ -30,6 +31,7 @@ public class ChangePasswordDialog extends JDialog {
 
     @Inject
     public ChangePasswordDialog(UserBUS userBUS, AuthSession authSession) {
+        super(WindowUtil.findMainWindow(), "Đổi mật khẩu");
         this.userBUS = userBUS;
         this.authSession = authSession;
 
@@ -55,7 +57,7 @@ public class ChangePasswordDialog extends JDialog {
         setTitle(requireOldPassword ? "Đổi mật khẩu" : "Reset Mật khẩu");
 
         pack();
-        setLocationRelativeTo(parent);
+        setLocationRelativeTo(getOwner());
         setVisible(true);
         return isSuccess;
     }

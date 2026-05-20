@@ -7,10 +7,12 @@ package com.sgu.admissor.bus;
 import jakarta.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.sgu.admissor.dao.NganhDAO;
+import com.sgu.admissor.dao.NganhToHopDAO;
 import com.sgu.admissor.dao.NguyenVongDAO;
 import com.sgu.admissor.dto.BUSResult;
 import com.sgu.admissor.entity.Nganh;
 import com.sgu.admissor.entity.NguyenVong;
+import com.sgu.admissor.util.PhanBoChiTieuUtil;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,11 +40,13 @@ public class NganhBUS {
 
     private final NganhDAO nganhDAO;
     private final NguyenVongDAO nguyenVongDAO;
+    private final NganhToHopDAO nthDAO;
 
     @Inject
-    public NganhBUS(NganhDAO nganhDAO, NguyenVongDAO nguyenVongDAO) {
+    public NganhBUS(NganhDAO nganhDAO, NguyenVongDAO nguyenVongDAO, NganhToHopDAO nthDAO) {
         this.nganhDAO = nganhDAO;
         this.nguyenVongDAO = nguyenVongDAO;
+        this.nthDAO = nthDAO;
     }
 
     @Transactional
@@ -129,10 +133,24 @@ public class NganhBUS {
         existing.setDgnl(nganh.getDgnl());
         existing.setThpt(nganh.getThpt());
         existing.setVsat(nganh.getVsat());
-        existing.setSlXtt(nganh.getSlXtt());
-        existing.setSlDgnl(nganh.getSlDgnl());
-        existing.setSlVsat(nganh.getSlVsat());
-        existing.setSlThpt(nganh.getSlThpt());
+        int chiTieu = nganh.getChiTieu();
+        Map<String, Integer> phanBo = PhanBoChiTieuUtil.tinhPhanBoChiTieu(nganh.getMaNganh(), chiTieu);
+        if(phanBo.get("PT1") != 0) {
+            existing.setTuyenThang(Boolean.TRUE);
+            existing.setSlXtt(phanBo.get("PT1"));
+        }
+        if(phanBo.get("PT2") != 0) {
+            existing.setDgnl(Boolean.TRUE);
+            existing.setSlDgnl(phanBo.get("PT2"));
+        }
+        if(phanBo.get("PT3") != 0) {
+            existing.setVsat(Boolean.TRUE);
+            existing.setSlVsat(phanBo.get("PT3"));
+        }
+        if(phanBo.get("PT4") != 0) {
+            existing.setThpt(Boolean.TRUE);
+            existing.setSlThpt(phanBo.get("PT4"));
+        }
 
         if (nganhDAO.update(existing)) {
             return BUSResult.success("Cập nhật ngành thành công!");
@@ -149,10 +167,18 @@ public class NganhBUS {
         if (existing == null) {
             return BUSResult.error("Không tìm thấy ngành này trong hệ thống!");
         }
-        if (nganhDAO.delete(existing)) {
-            return BUSResult.success("Xóa ngành thành công!");
+        try {
+            nthDAO.deleteByMaNganh(existing.getMaNganh());
+
+            if (nganhDAO.delete(existing)) {
+                return BUSResult.success("Xóa ngành và các dữ liệu tổ hợp liên quan thành công!");
+            }
+
+            return BUSResult.error("Xóa ngành thất bại!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BUSResult.error("Lỗi hệ thống khi xóa ngành: " + e.getMessage());
         }
-        return BUSResult.error("Xóa ngành thất bại!");
     }
     
     @Transactional
@@ -304,7 +330,7 @@ public class NganhBUS {
         LOGGER.info("[KQ_ALL] === " + summary + " ===");
         return BUSResult.success(summary);
     }
-
+    
     // =========================================================
     // PRIVATE HELPERS
     // =========================================================
@@ -531,7 +557,7 @@ public class NganhBUS {
         LOGGER.info(String.format("[CONFLICT] Hoàn tất: xử lý %d thí sinh, đổi %d NV PASSED→CANCELLED",
                 tongThiSinh, conflictCount));
     }
-
+    
     /**
      * [PRIVATE] Bước 3: Tính lại slot được mở ra sau conflict.
      * Duyệt các NV HETSLOT → đổi PASSED nếu slot còn.
@@ -648,7 +674,7 @@ public class NganhBUS {
             }
         }
     }
-
+    
     // =========================================================
     // LOG HELPERS
     // =========================================================

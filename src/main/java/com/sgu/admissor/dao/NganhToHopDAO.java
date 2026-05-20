@@ -40,4 +40,11 @@ public class NganhToHopDAO extends GenericDAO<NganhToHop> {
                 .findFirst()
                 .orElse(null);
     }
+    
+    public int deleteByMaNganh(String maNganh) {
+        String hql = "DELETE FROM NganhToHop nt WHERE nt.nganh.maNganh = :maNganh";
+        return emProvider.get().createQuery(hql)
+                .setParameter("maNganh", maNganh)
+                .executeUpdate(); // Trả về số lượng dòng đã xóa dưới DB
+    }
 }

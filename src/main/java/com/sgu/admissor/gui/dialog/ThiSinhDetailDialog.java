@@ -6,6 +6,7 @@ package com.sgu.admissor.gui.dialog;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.google.inject.Inject;
+import com.sgu.admissor.auth.AuthSession;
 import com.sgu.admissor.bus.DiemThiBUS;
 import com.sgu.admissor.bus.ThiSinh2025BUS;
 import com.sgu.admissor.dto.BUSResult;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import javax.swing.table.DefaultTableModel;
+import com.sgu.admissor.util.WindowUtil;
 
 /**
  *
@@ -28,6 +30,7 @@ public class ThiSinhDetailDialog extends JDialog {
     private final ThiSinh2025BUS thiSinhBUS;
     private ThiSinh2025 currentThiSinh;
     private DiemThiBUS diemThiBUS;
+    private final AuthSession authSession;
     private boolean isDataChanged = false;
 
     private JTextField txtCccd, txtSoBaoDanh, txtNgaySinh, txtGioiTinh, txtKhuVuc, txtDoiTuong;
@@ -42,11 +45,13 @@ public class ThiSinhDetailDialog extends JDialog {
     private boolean isEditMode = false;
 
     @Inject
-    public ThiSinhDetailDialog(ThiSinh2025BUS thiSinhBUS, DiemThiBUS diemThiBUS) {
+    public ThiSinhDetailDialog(ThiSinh2025BUS thiSinhBUS, DiemThiBUS diemThiBUS, AuthSession authSession) {
+        super(WindowUtil.findMainWindow(), "Chi tiết Thí sinh");
         this.thiSinhBUS = thiSinhBUS;
         this.diemThiBUS = diemThiBUS;
+        this.authSession = authSession;
 
-        setTitle("Chi tiết Thí sinh");
+//        setTitle("Chi tiết Thí sinh");
         setModal(true);
         setResizable(false);
 
@@ -62,7 +67,7 @@ public class ThiSinhDetailDialog extends JDialog {
         setEditMode(false);
 
         pack();
-        setLocationRelativeTo(parent);
+        setLocationRelativeTo(getOwner());
         setVisible(true);
         
         return isDataChanged;
@@ -161,6 +166,11 @@ public class ThiSinhDetailDialog extends JDialog {
         });
 
         btnEditSave.addActionListener(e -> {
+            if(!authSession.isAdmin()) {
+                JOptionPane.showMessageDialog(null, "Chỉ có admin được sửa thông tin thí sinh", 
+                        "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             if (!isEditMode) {
                 setEditMode(true);
             } else {
