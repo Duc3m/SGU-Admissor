@@ -345,41 +345,18 @@ public class NguyenVongBUSV2 extends NguyenVongBUS {
     }
 
     private String getFlagName(NganhToHop nth, int viTri) {
-        if (Boolean.TRUE.equals(nth.getKhac()) && nth.getToHop() != null) {
-            String monName = switch (viTri) {
-                case 1 -> nth.getToHop().getMon1();
-                case 2 -> nth.getToHop().getMon2();
-                case 3 -> nth.getToHop().getMon3();
-                default -> null;
-            };
-            return monName != null ? monName.trim().toUpperCase() : null;
+        if (nth == null || nth.getToHop() == null) {
+            return null;
         }
-        String[] flags = {"TO", "LI", "HO", "SI", "SU", "DI", "VA", "N1", "TI", "KTPL"};
-        int count = 0;
-        for (String flag : flags) {
-            if (isFlagTrue(nth, flag)) {
-                count++;
-                if (count == viTri) return flag;
-            }
-        }
-        return null;
-    }
 
-    private boolean isFlagTrue(NganhToHop nth, String flag) {
-        return switch (flag) {
-            case "TO"   -> Boolean.TRUE.equals(nth.getTo());
-            case "LI"   -> Boolean.TRUE.equals(nth.getLi());
-            case "HO"   -> Boolean.TRUE.equals(nth.getHo());
-            case "SI"   -> Boolean.TRUE.equals(nth.getSi());
-            case "SU"   -> Boolean.TRUE.equals(nth.getSu());
-            case "DI"   -> Boolean.TRUE.equals(nth.getDi());
-            case "VA"   -> Boolean.TRUE.equals(nth.getVa());
-            case "N1"   -> Boolean.TRUE.equals(nth.getN1());
-            case "TI"   -> Boolean.TRUE.equals(nth.getTi());
-            case "KTPL" -> Boolean.TRUE.equals(nth.getKtpl());
-            case "KHAC" -> Boolean.TRUE.equals(nth.getKhac());
-            default     -> false;
+        String monName = switch (viTri) {
+            case 1 -> nth.getToHop().getMon1();
+            case 2 -> nth.getToHop().getMon2();
+            case 3 -> nth.getToHop().getMon3();
+            default -> null;
         };
+
+        return monName != null ? monName.trim().toUpperCase() : null;
     }
 
     private BigDecimal getDiemMon(DiemThi dt, String flagName, int viTri,
