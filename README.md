@@ -66,6 +66,13 @@ Dưới đây là thông tin các thành viên tham gia phát triển dự án:
 </p>
 
 
+## 🌐 Nền tảng tra cứu kết quả (Spring MVC)
+
+Dự án này đi kèm một nền tảng web để thí sinh tra cứu kết quả xét tuyển được xây dựng bằng **Spring MVC**. Tham khảo tại:
+
+- GitHub: [SGU-Admissor-SpringMVC](https://github.com/senseiikuiku/SGU-Admissor-SpringMVC)
+
+
 ## 🚀 Cách sử dụng
 
 *Ứng dụng hoạt động vô cùng đơn giản và trực quan thông qua 3 bước khép kín ngay trên giao diện chính:*
@@ -82,7 +89,7 @@ Dưới đây là thông tin các thành viên tham gia phát triển dự án:
 Hướng dẫn build và khởi chạy ứng dụng nhanh chóng bằng Maven:
 
 ```bash
-# Khởi tạo Database MySQL tên 'sguadmissor' và import database/sguadmissor_empty.sql
+# Khởi tạo Database MySQL tên 'sguadmissor', giải nén và import database/sguadmissor_init.zip
 # Cấu hình tài khoản database trong file src/main/resources/META-INF/persistence.xml
 
 # Biên dịch ứng dụng
