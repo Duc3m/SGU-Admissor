@@ -325,9 +325,9 @@ public class NganhPanel extends JPanel {
              for (NganhToHop nth : listNTH) {
                 model.addRow(new Object[]{
                     nth.getToHop().getMaToHop(), 
-                    nth.getToHop().getMon1() + (nth.getHsMon1() != null && nth.getHsMon1() == 2 ? " (x2)" : ""),
-                    nth.getToHop().getMon2() + (nth.getHsMon2() != null && nth.getHsMon2() == 2 ? " (x2)" : ""),
-                    nth.getToHop().getMon3() + (nth.getHsMon3() != null && nth.getHsMon3() == 2 ? " (x2)" : ""),
+                    nth.getToHop().getMon1() + " (" + nth.getHsMon1() + ")",
+                    nth.getToHop().getMon2() + " (" + nth.getHsMon2() + ")",
+                    nth.getToHop().getMon3() + " (" + nth.getHsMon3() + ")",
                     nth.getDoLech()
                 });
             }
