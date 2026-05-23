@@ -93,7 +93,7 @@ public class DashboardPanel extends JPanel {
         gridPanel.setOpaque(false);
 
         CutoutButton btnThiSinh = createMenuButton("Thí sinh", 4, "#06b6d4", "icons/candidate.svg", SwingConstants.RIGHT);
-        CutoutButton btnBangDiem = createMenuButton("Bảng điểm", 3, "#10b981", "icons/score.svg", SwingConstants.LEFT);
+        CutoutButton btnBangDiem = createMenuButton("Bảng điểm cộng", 3, "#10b981", "icons/score.svg", SwingConstants.LEFT);
         CutoutButton btnNganh = createMenuButton("Ngành", 2, "#eab308", "icons/major.svg", SwingConstants.RIGHT);
         CutoutButton btnNguyenVong = createMenuButton("Nguyện vọng", 1, "#f97316", "icons/aspiration.svg", SwingConstants.LEFT);
 

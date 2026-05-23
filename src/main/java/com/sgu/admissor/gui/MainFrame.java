@@ -107,7 +107,7 @@ public class MainFrame extends JFrame {
                 newForm = thiSinhPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/candidate.svg");
                 break;
-            case "Bảng điểm":
+            case "Bảng điểm cộng":
                 newForm = bangDiemPanelProvider.get();
                 newIcon = new FlatSVGIcon("icons/score.svg");
                 break;
