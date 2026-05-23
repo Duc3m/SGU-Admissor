@@ -109,4 +109,4 @@ Yêu cầu hệ thống tối thiểu:
 
 Vui lòng tạo Issue trong kho lưu trữ (repository) này để báo lỗi hoặc yêu cầu tính năng mới.
 
-Mọi ý kiến đóng góp và đóng góp mã nguồn nhằm cải thiện ứng dụng đều được chào đón! Hãy tham khảo hướng dẫn phát triển của dự án nếu có.
+Mọi ý kiến đóng góp và đóng góp mã nguồn nhằm cải thiện ứng dụng đều được chào đón!
